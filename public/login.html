@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden;
+background:var(--cream);background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.22) 0 3px,transparent 3px 30px)}
+.deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.dtile{position:absolute;width:48px;height:62px;border-radius:9px;background:var(--tile);border:1px solid var(--tile-edge);border-bottom:4px solid var(--gold-soft);
+box-shadow:0 8px 20px rgba(59,72,50,.10);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:1.5rem;color:var(--sage-soft);opacity:.5}
+.box{position:relative;z-index:1;background:var(--tile);border:1px solid var(--tile-edge);border-radius:22px;border-top:1px solid #fff;
+box-shadow:0 24px 56px rgba(59,72,50,.17);padding:40px 34px 34px;width:100%;max-width:410px;text-align:center}
+.mono{width:78px;height:78px;border-radius:50%;margin:0 auto 12px;background:radial-gradient(circle at 50% 40%,#fff,var(--cream-2));border:2px solid var(--gold);
+display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(201,162,75,.25);font-family:var(--script);color:var(--gold);font-size:2.1rem}
+.brand{font-family:var(--display);font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:.9rem;color:var(--sage)}
+h1{font-family:var(--display);font-weight:700;font-size:1.9rem;color:var(--sage-dk);margin-top:2px}
+.sub{color:var(--ink-soft);font-size:.92rem;font-weight:300;margin:2px 0 8px}
+.rule{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 18px}
+.rule:before,.rule:after{content:"";height:1px;width:52px;background:linear-gradient(90deg,transparent,var(--gold))}
+.rule:after{background:linear-gradient(90deg,var(--gold),transparent)}
+.rule .dot{width:8px;height:8px;background:var(--gold);transform:rotate(45deg)}
+form{text-align:left}
+label{display:block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);font-weight:700;margin:13px 0 5px}
+input{width:100%;padding:12px;border:1px solid var(--tile-edge);border-radius:11px;background:#fff;font-family:var(--body);font-size:1rem;color:var(--sage-dk)}
+input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+button{width:100%;margin-top:22px;padding:13px;border:none;border-radius:11px;background:linear-gradient(160deg,var(--sage),var(--sage-dk));color:var(--cream);font-family:var(--body);font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px rgba(59,72,50,.2)}
+button:hover{filter:brightness(1.06)}
+.hint{font-size:.72rem;color:var(--ink-soft);margin-top:5px}
+.msg{margin-top:14px;font-size:.88rem;text-align:center;min-height:1.2em}
+.msg.err{color:var(--red)}.msg.ok{color:var(--sage)}
+.switch{text-align:center;margin-top:14px}
+.switch a{color:var(--sage);font-size:.85rem;font-weight:700;text-decoration:none;cursor:pointer;border-bottom:1px solid var(--gold-soft)}
+.switch a:hover{color:var(--gold-dk)}
+.foot{margin-top:14px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:500}
+</style><script src="/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="deco" id="deco"></div>
+<div class="box">
+  <div class="mono">H</div>
+  <div class="brand">Tampa Bay Mahj</div>
+  <h1 id="title">Welcome back</h1>
+  <p class="sub" id="sub">Sign in to Holly's studio</p>
+  <div class="rule"><span class="dot"></span></div>
+  <form id="form" autocomplete="off">
+    <div id="setupFields" style="display:none">
+      <label>Your name</label><input name="name" id="name">
+      <label>Email</label><input name="email" id="email" type="email">
+    </div>
+    <div id="userWrap"><label id="userLabel">Login (email or username)</label><input name="identifier" id="identifier"></div>
+    <div id="passWrap"><label>Password</label><input name="password" id="password" type="password">
+      <div class="hint" id="passHint" style="display:none">At least 8 characters.</div></div>
+    <div id="codeWrap" style="display:none"><label>Invite code</label><input name="code" id="code" placeholder="ABCD1234">
+      <div class="hint">Ask the studio owner for an invite code.</div></div>
+    <button type="submit" id="submitBtn">Sign in</button>
+    <div class="msg" id="msg"></div>
+  </form>
+  <div class="switch"><a id="toggleMode">Have an invite code? Create an account</a></div>
+  <div class="switch" id="forgotWrap"><a id="forgotLink">Forgot your password?</a></div>
+  <div class="foot">Tampa &amp; St. Pete, Florida</div>
+</div>
+<script>
+(function(){var g=['中','發','南','西','八','北'],sp=[[6,10],[14,82],[74,6],[82,72],[40,90],[60,4]],d=document.getElementById('deco');
+sp.forEach(function(p,i){var t=document.createElement('div');t.className='dtile';t.style.top=p[0]+'%';t.style.left=p[1]+'%';t.style.transform='rotate('+((i%2?1:-1)*(5+i))+'deg)';t.textContent=g[i%g.length];d.appendChild(t);});})();
+var mode='signin'; // signin | setup | register
+function $(id){return document.getElementById(id);}
+function applyMode(){
+  var isSetup=mode==='setup', isReg=mode==='register';
+  $('setupFields').style.display=(isSetup||isReg)?'block':'none';
+  $('codeWrap').style.display=isReg?'block':'none';
+  $('passHint').style.display=(isSetup||isReg)?'block':'none';
+  $('userLabel').textContent=(isSetup||isReg)?'Username':'Login (email or username)';
+  $('title').textContent=isSetup?'Set up your studio':(isReg?'Create your account':'Welcome back');
+  $('sub').textContent=isSetup?'Create the first login for Tampa Bay Mahj':(isReg?'You will need an invite code':"Sign in to Holly's studio");
+  $('submitBtn').textContent=isSetup?'Create account':(isReg?'Create account':'Sign in');
+  var isForgot=mode==='forgot', isReset=mode==='reset';
+  if(isForgot||isReset){
+    $('setupFields').style.display='none'; $('codeWrap').style.display='none';
+    $('passHint').style.display=isReset?'block':'none';
+  }
+  var idRow=$('identifier').closest('label')||$('identifier').parentNode;
+  var pwRow=$('password').closest('label')||$('password').parentNode;
+  idRow.style.display=isReset?'none':'';
+  pwRow.style.display=isForgot?'none':'';
+  if(isForgot){
+    $('userLabel').textContent='Your email address';
+    $('title').textContent='Reset your password';
+    $('sub').textContent='We will email you a link that works for one hour';
+    $('submitBtn').textContent='Email me a reset link';
+  }
+  if(isReset){
+    $('title').textContent='Pick a new password';
+    $('sub').textContent='Then you will be signed straight in';
+    $('submitBtn').textContent='Save new password';
+  }
+  var sw=$('toggleMode');
+  if(isSetup||isForgot||isReset){sw.parentNode.style.display='none';}
+  else{sw.parentNode.style.display='';sw.textContent=isReg?'← Back to sign in':'Have an invite code? Create an account';}
+  var fw=$('forgotWrap');
+  if(fw)fw.style.display=(mode==='signin')?'':'none';
+}
+async function init(){
+  try{
+    var s=await fetch('/api/auth/state').then(function(r){return r.json();});
+    if(s.authed){ location.href='/dashboard'; return; }
+    if(s.needsSetup){ mode='setup'; }
+    else {
+      var qp=new URLSearchParams(location.search);
+      var inv=qp.get('invite');
+      if(qp.get('reset')&&qp.get('who')){ mode='reset'; }
+      else if(inv){ mode='register'; $('code').value=inv.toUpperCase(); }
+    }
+  }catch(e){}
+  applyMode();
+}
+$('toggleMode').addEventListener('click',function(){ mode=(mode==='register')?'signin':'register'; $('msg').textContent=''; applyMode(); });
+if($('forgotLink'))$('forgotLink').addEventListener('click',function(){ mode='forgot'; $('msg').textContent=''; applyMode(); });
+document.getElementById('form').addEventListener('submit',async function(ev){
+  ev.preventDefault();
+  var msg=$('msg'); msg.className='msg'; msg.textContent='Working…';
+  var url,body;
+  if(mode==='setup'){ url='/api/auth/setup'; body={name:$('name').value,email:$('email').value,username:$('identifier').value,password:$('password').value}; }
+  else if(mode==='register'){ url='/api/auth/register'; body={name:$('name').value,email:$('email').value,username:$('identifier').value,password:$('password').value,code:$('code').value}; }
+  else if(mode==='forgot'){ url='/api/auth/forgot'; body={email:$('identifier').value}; }
+  else if(mode==='reset'){
+    var qp=new URLSearchParams(location.search);
+    url='/api/auth/reset'; body={token:qp.get('reset'),who:qp.get('who'),password:$('password').value};
+  }
+  else { url='/api/auth/login'; body={identifier:$('identifier').value,password:$('password').value}; }
+  try{
+    var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(!d.ok){ msg.className='msg err'; msg.textContent=d.error||'Something went wrong.'; return; }
+    if(mode==='forgot'){
+      msg.className='msg ok';
+      msg.textContent=d.message||'If that address has an account, a reset link is on its way.';
+      return;
+    }
+    if(mode==='reset'){
+      msg.className='msg ok'; msg.textContent='Password saved — signing you in…';
+      var pw=$('password').value;
+      var who=new URLSearchParams(location.search).get('who');
+      var acct=await fetch('/api/auth/state').then(function(r){return r.json();}).catch(function(){return {};});
+      setTimeout(function(){ location.href='/login'; },1200);
+      return;
+    }
+    msg.className='msg ok'; msg.textContent='Welcome!'; location.href='/dashboard';
+  }catch(e){ msg.className='msg err'; msg.textContent='Network error.'; }
+});
+init();
+</script>
+<script src="/toast.js"></script>
+</body></html>

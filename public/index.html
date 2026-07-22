@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tampa Bay Mahj — Book Your Event</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF7E6;
+    --cream-stripe:#F6EEBA;
+    --green:#4C5B40;
+    --green-dark:#3B4832;
+    --green-soft:#6B7A5C;
+    --gold:#C9A24B;
+    --gold-soft:#E3CD96;
+    --red:#B3542E;
+    --white:#FFFDF8;
+    --shadow:0 18px 45px rgba(59,72,50,.16);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Jost',sans-serif;
+    background:
+      repeating-linear-gradient(90deg, var(--cream) 0 26px, var(--cream-stripe) 26px 52px);
+    color:var(--green-dark);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* ---------- floating background tiles ---------- */
+  .sky{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .drift{position:absolute;opacity:.5;animation:drift linear infinite;filter:drop-shadow(0 6px 8px rgba(59,72,50,.15))}
+  @keyframes drift{
+    0%{transform:translateY(105vh) rotate(-12deg)}
+    100%{transform:translateY(-15vh) rotate(14deg)}
+  }
+  /* ---------- tile component ---------- */
+  .tile{
+    display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#FFFEF9 0%,#F4EFDC 78%,#E4DBBB 100%);
+    border:1px solid #D8CFAF;
+    border-radius:14%;
+    box-shadow:inset 0 -5px 0 rgba(76,91,64,.28), 0 4px 9px rgba(59,72,50,.22);
+    font-family:'Cormorant Garamond',serif;font-weight:700;
+    user-select:none;
+  }
+  /* ---------- layout ---------- */
+  .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:48px 20px 90px}
+  header{text-align:center;margin-bottom:42px}
+  .logo{width:168px;height:168px;margin:0 auto 18px;animation:settle .9s cubic-bezier(.22,1.4,.36,1) both}
+  @keyframes settle{from{transform:scale(.6) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+  h1{
+    font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:.38em;
+    font-size:clamp(1.4rem,4vw,2.1rem);color:var(--green);text-transform:uppercase;
+  }
+  .script{font-family:'Great Vibes',cursive;font-size:clamp(2.4rem,6vw,3.6rem);color:var(--green);line-height:1;margin-top:-4px}
+  .tagline{margin-top:14px;font-weight:300;letter-spacing:.14em;text-transform:uppercase;font-size:.82rem;color:var(--green-soft)}
+  .tagline b{font-weight:500;color:var(--green)}
+  .divider{display:flex;align-items:center;gap:14px;justify-content:center;margin:22px auto 0;max-width:420px}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--gold)}
+  .divider span{color:var(--gold);font-size:1.1rem}
+
+  /* ---------- rack ---------- */
+  .rack-zone{text-align:center;margin-bottom:34px}
+  .rack-label{font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:var(--green-soft);margin-bottom:12px}
+  .rack{
+    display:inline-flex;gap:5px;padding:12px 16px 9px;
+    background:linear-gradient(180deg,var(--green) 0%,var(--green-dark) 100%);
+    border-radius:12px;box-shadow:var(--shadow);
+  }
+  .rack .slot{width:30px;height:41px;perspective:300px}
+  .rack .flip{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.34,1.45,.64,1)}
+  .slot.up .flip{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:4px}
+  .face.back{background:linear-gradient(160deg,#5E6F50,#46543C);border:1px solid #39462F;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+  .face.front{transform:rotateY(180deg);display:flex;align-items:center;justify-content:center;font-size:1rem;
+    background:linear-gradient(160deg,#FFFEF9,#F0EAD3);border:1px solid #D8CFAF;box-shadow:inset 0 -3px 0 rgba(76,91,64,.3)}
+  .rack-count{margin-top:10px;font-size:.8rem;color:var(--green-soft);letter-spacing:.05em}
+  .rack-count b{color:var(--green)}
+
+  /* ---------- form card ---------- */
+  form{
+    background:var(--white);
+    border:1px solid var(--gold-soft);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+    padding:clamp(26px,5vw,52px);
+    position:relative;
+  }
+  form::before{
+    content:"";position:absolute;inset:10px;border:1px solid var(--gold-soft);
+    border-radius:14px;pointer-events:none;
+  }
+  fieldset{border:none;margin-bottom:34px;position:relative;z-index:1}
+  legend{
+    font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--green);
+    display:flex;align-items:center;gap:12px;margin-bottom:20px;width:100%;
+  }
+  legend .num{
+    width:34px;height:34px;font-size:1.05rem;flex:none;
+  }
+  legend::after{content:"";flex:1;height:1px;background:var(--gold-soft)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid .full{grid-column:1/-1}
+  .grid-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:18px}
+  @media(max-width:620px){.grid,.grid-3{grid-template-columns:1fr}}
+  label{display:block;font-size:.8rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--green-soft);margin-bottom:7px}
+  label .req{color:var(--red)}
+  input,select,textarea{
+    width:100%;padding:13px 15px;font-family:'Jost',sans-serif;font-size:1rem;color:var(--green-dark);
+    background:var(--cream);border:1px solid #E2D9BE;border-radius:10px;outline:none;
+    transition:border-color .25s, box-shadow .25s, background .25s;
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--gold);background:#FFFEF9;
+    box-shadow:0 0 0 4px rgba(201,162,75,.16);
+  }
+  textarea{resize:vertical;min-height:110px}
+  .hint{font-size:.78rem;color:#9AA089;margin-top:5px;font-weight:300}
+
+  /* ---------- submit ---------- */
+  .submit-zone{text-align:center;position:relative;z-index:1}
+  button{
+    font-family:'Jost',sans-serif;font-size:1rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--cream);background:linear-gradient(160deg,var(--green) 0%,var(--green-dark) 100%);
+    border:none;border-radius:50px;padding:18px 54px;cursor:pointer;
+    box-shadow:0 10px 26px rgba(59,72,50,.35);
+    transition:transform .2s, box-shadow .2s;
+  }
+  button:hover{transform:translateY(-3px);box-shadow:0 16px 32px rgba(59,72,50,.4)}
+  button:active{transform:translateY(0)}
+  button:disabled{opacity:.6;cursor:wait;transform:none}
+  .submit-note{margin-top:14px;font-size:.82rem;font-weight:300;color:var(--green-soft)}
+
+  /* ---------- success ---------- */
+  .success{display:none;text-align:center;padding:70px 24px;background:var(--white);border:1px solid var(--gold-soft);border-radius:22px;box-shadow:var(--shadow)}
+  .success.show{display:block;animation:settle .8s cubic-bezier(.22,1.4,.36,1) both}
+  .success .big{font-family:'Great Vibes',cursive;font-size:3.2rem;color:var(--green)}
+  .success p{max-width:440px;margin:14px auto 0;font-weight:300;line-height:1.7;color:var(--green-soft)}
+  .success .tile{width:64px;height:86px;font-size:2.2rem;margin-bottom:18px;animation:bounce 1.6s ease-in-out infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}}
+
+  footer{text-align:center;margin-top:46px;font-size:.85rem;font-weight:300;color:var(--green-soft)}
+  footer a{color:var(--green);font-weight:500;text-decoration:none;border-bottom:1px solid var(--gold)}
+
+  /* flying tiles + confetti */
+  .fly{position:fixed;z-index:60;width:26px;height:36px;font-size:.95rem;pointer-events:none;
+    transition:all .8s cubic-bezier(.3,.7,.35,1.05)}
+  .confetti{position:fixed;z-index:60;pointer-events:none;font-size:1rem;
+    animation:fall 2.6s cubic-bezier(.2,.4,.6,1) forwards}
+  @keyframes fall{
+    0%{transform:translate(0,0) rotate(0);opacity:1}
+    100%{transform:translate(var(--dx),105vh) rotate(var(--rot));opacity:.9}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .drift,.confetti,.success .tile{animation:none}
+    .fly{transition:none}
+  }
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+
+<div id="tbmLoader">
+  <div class="tbmLoad-in">
+    <img src="/logo.png" alt="Tampa Bay Mahj"
+      onerror="this.style.display='none'">
+    <div class="tbmDots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<style>
+#tbmLoader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(90deg,#FBF7EC 0 26px,#F6EEBA 26px 52px);
+  transition:opacity .5s ease}
+#tbmLoader.tbm-gone{opacity:0;pointer-events:none}
+#tbmLoader .tbmLoad-in{text-align:center;transform:translateY(-4%)}
+#tbmLoader img{width:140px;height:auto;filter:drop-shadow(0 8px 22px rgba(59,92,65,.18));
+  animation:tbmBreathe 2.6s ease-in-out infinite}
+#tbmLoader .tbmDots{margin-top:22px;display:flex;gap:9px;justify-content:center}
+#tbmLoader .tbmDots span{width:10px;height:10px;border-radius:50%;background:#3B5C41;
+  animation:tbmDot 1.2s ease-in-out infinite}
+#tbmLoader .tbmDots span:nth-child(2){animation-delay:.18s}
+#tbmLoader .tbmDots span:nth-child(3){animation-delay:.36s}
+@keyframes tbmDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-7px)}}
+@keyframes tbmBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@media(prefers-reduced-motion:reduce){
+  #tbmLoader img,#tbmLoader .tbmDots span{animation:none}
+}
+</style>
+<script>
+(function(){
+  function hide(){
+    var l=document.getElementById('tbmLoader');
+    if(!l||l.classList.contains('tbm-gone'))return;
+    l.classList.add('tbm-gone');
+    setTimeout(function(){ if(l&&l.parentNode) l.parentNode.removeChild(l); },600);
+  }
+  // hide once everything is in, with a graceful minimum so it never just flashes
+  if(document.readyState==='complete'){ setTimeout(hide,400); }
+  else { window.addEventListener('load',function(){ setTimeout(hide,400); }); }
+  // failsafe: never trap the visitor behind the loader
+  setTimeout(hide,9000);
+  window.tbmHideLoader=hide;
+})();
+</script>
+
+
+<div class="sky" id="sky"></div>
+
+<div class="wrap">
+  <header>
+    <img class="logo" src="/logo.png" alt="Tampa Bay Mahj logo">
+    <h1>Tampa Bay Mahj</h1>
+    <div class="script">with Holly Lewis</div>
+    <p class="tagline">Elevated Mahjong Experiences &nbsp;•&nbsp; <b>Tampa&nbsp;|&nbsp;St.&nbsp;Pete</b></p>
+    <div class="divider"><span>🀄</span></div>
+  </header>
+
+  <div class="rack-zone">
+    <div class="rack-label">Build your hand — every answer flips a tile</div>
+    <div class="rack" id="rack"></div>
+    <div class="rack-count"><b id="rackCount">0</b> of 14 tiles — fill the form to declare Mahjong!</div>
+  </div>
+
+  <form id="inquiryForm" novalidate>
+    <fieldset>
+      <legend><span class="tile num">壹</span> About You</legend>
+      <div class="grid">
+        <div><label for="firstName">First Name <span class="req">*</span></label>
+          <input id="firstName" name="firstName" required autocomplete="given-name"></div>
+        <div><label for="lastName">Last Name <span class="req">*</span></label>
+          <input id="lastName" name="lastName" required autocomplete="family-name"></div>
+        <div><label for="email">Email <span class="req">*</span></label>
+          <input id="email" name="email" type="email" required autocomplete="email"></div>
+        <div><label for="phone">Phone Number <span class="req">*</span></label>
+          <input id="phone" name="phone" type="tel" required autocomplete="tel"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="tile num">貳</span> Your Event</legend>
+      <div class="grid">
+        <div><label for="eventType">Event Type <span class="req">*</span></label>
+          <select id="eventType" name="eventType" required>
+            <option value="">Choose one…</option>
+            <option>Private Lesson</option>
+            <option>Group Lesson</option>
+            <option>Game Night</option>
+            <option>Corporate Event</option>
+            <option>Bridal or Baby Shower</option>
+            <option>Birthday Celebration</option>
+            <option>Ladies&#39; Night</option>
+            <option>Country Club / Community Event</option>
+            <option>Other</option>
+          </select></div>
+        <div><label for="guestCount">How Many People Are You Expecting? <span class="req">*</span></label>
+          <input id="guestCount" name="guestCount" type="number" min="1" max="500" placeholder="e.g. 12" required></div>
+        <div><label for="eventDate">Event Date <span class="req">*</span></label>
+          <input id="eventDate" name="eventDate" type="date" required></div>
+        <div><label for="startTime">What Time Does Your Event Start? <span class="req">*</span></label>
+          <input id="startTime" name="startTime" type="time" required></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="tile num">叁</span> Where We&#39;re Playing <span style="font-family:'Jost',sans-serif;font-size:.75rem;letter-spacing:.14em;color:#9AA089;font-weight:400;text-transform:uppercase">Optional</span></legend>
+      <div class="grid">
+        <div class="full"><label for="locationName">Event Location</label>
+          <input id="locationName" name="locationName" placeholder="Home, clubhouse, restaurant, office…"></div>
+        <div class="full"><label for="streetAddress">Street Address</label>
+          <input id="streetAddress" name="streetAddress" autocomplete="street-address"></div>
+      </div>
+      <div class="grid-3" style="margin-top:18px">
+        <div><label for="city">City</label>
+          <input id="city" name="city" autocomplete="address-level2"></div>
+        <div><label for="state">State</label>
+          <input id="state" name="state" value="FL" autocomplete="address-level1"></div>
+        <div><label for="zip">Zip Code</label>
+          <input id="zip" name="zip" inputmode="numeric" autocomplete="postal-code"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="tile num">肆</span> The Details</legend>
+      <div class="grid">
+        <div class="full"><label for="aboutEvent">Tell Me About Your Event <span class="req">*</span></label>
+          <textarea id="aboutEvent" name="aboutEvent" placeholder="The occasion, the vibe, skill levels, what you're dreaming up…" required></textarea></div>
+        <div class="full"><label for="anythingElse">Anything Else I Need to Know?</label>
+          <textarea id="anythingElse" name="anythingElse" placeholder="Special requests, parking notes, surprises to keep secret…"></textarea>
+          <div class="hint">Optional — but Holly loves details.</div></div>
+      </div>
+    </fieldset>
+
+    <div class="submit-zone">
+      <button type="submit" id="submitBtn">Declare Mahjong 🀄</button>
+      <p class="submit-note">Holly replies personally, usually within one business day.</p>
+    </div>
+  </form>
+
+  <div class="success" id="successBox">
+    <div class="tile">🀄</div>
+    <div class="big">Mahjong!</div>
+    <p>Your inquiry is on Holly&#39;s rack. She&#39;ll be in touch shortly to start planning something wonderful. In the meantime, follow along at
+      <a href="https://www.instagram.com/tampabaymahj/" style="color:var(--green);font-weight:500">@tampabaymahj</a>.</p>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Tampa Bay Mahj · Holly Lewis · Tampa | St. Pete<br>
+    <a href="https://www.instagram.com/tampabaymahj/" target="_blank" rel="noopener">@tampabaymahj on Instagram</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  document.getElementById('year').textContent = new Date().getFullYear();
+  var FACES = ['🀇','🀈','🀉','🀙','🀚','🀛','🀐','🀑','🀒','🀄','🀅','🀆','🀀','🀂'];
+  var SIMPLE = ['中','發','一','二','三','四','五','六','七','八','九','東','南','西'];
+  function faceFor(i){ return SIMPLE[i % SIMPLE.length]; }
+
+  // ---- visit tracking ----
+  try {
+    fetch('/api/track', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({page:'/', referrer: document.referrer, screen: screen.width+'x'+screen.height})});
+  } catch(e){}
+
+  // ---- floating background tiles ----
+  var sky = document.getElementById('sky');
+  for (var i=0;i<10;i++){
+    var t = document.createElement('div');
+    t.className = 'tile drift';
+    var size = 26 + Math.random()*30;
+    t.style.width = size+'px'; t.style.height = (size*1.35)+'px';
+    t.style.fontSize = (size*.55)+'px';
+    t.style.left = (Math.random()*96)+'vw';
+    t.style.animationDuration = (26+Math.random()*30)+'s';
+    t.style.animationDelay = (-Math.random()*40)+'s';
+    t.style.color = Math.random()<.3 ? 'var(--red)' : 'var(--green)';
+    t.textContent = faceFor(Math.floor(Math.random()*14));
+    sky.appendChild(t);
+  }
+
+  // ---- rack ----
+  var FIELDS = ['firstName','lastName','email','phone','eventType','guestCount','eventDate','startTime','locationName','streetAddress','city','state','zip','aboutEvent'];
+  var rack = document.getElementById('rack');
+  FIELDS.forEach(function(f,i){
+    var slot = document.createElement('div');
+    slot.className = 'slot'; slot.id = 'slot-'+f;
+    slot.innerHTML = '<div class="flip"><div class="face back"></div><div class="face front" style="color:'+(i===13?'var(--red)':'var(--green)')+'">'+faceFor(i)+'</div></div>';
+    rack.appendChild(slot);
+  });
+  var flipped = {};
+  function refreshRack(){
+    var n = 0;
+    FIELDS.forEach(function(f,i){
+      var el = document.getElementById(f);
+      var has = el && el.value.trim() !== '' && el.checkValidity();
+      var slot = document.getElementById('slot-'+f);
+      if (has){ n++;
+        if (!slot.classList.contains('up')){
+          slot.classList.add('up');
+          if (!flipped[f]){ flipped[f]=true; flyTile(el, slot, faceFor(i)); }
+        }
+      } else { slot.classList.remove('up'); }
+    });
+    document.getElementById('rackCount').textContent = n;
+    var counter = document.querySelector('.rack-count');
+    if (form.checkValidity()) counter.innerHTML = n === FIELDS.length ? '<b>14 of 14</b> — that&#39;s a winning hand! Hit the button 🀄' : '<b>' + n + ' of 14</b> — enough to declare! (Optional tiles score bonus points 🀄)';
+  }
+
+  // ---- flying tile: input -> rack slot ----
+  function flyTile(fromEl, toEl, face){
+    var a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+    var fly = document.createElement('div');
+    fly.className = 'tile fly';
+    fly.textContent = face;
+    fly.style.left = (a.left + a.width/2 - 13)+'px';
+    fly.style.top = (a.top - 10)+'px';
+    fly.style.color = 'var(--green)';
+    document.body.appendChild(fly);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      fly.style.left = (b.left + b.width/2 - 13)+'px';
+      fly.style.top = (b.top + b.height/2 - 18)+'px';
+      fly.style.transform = 'rotate(360deg) scale(.6)';
+      fly.style.opacity = '0';
+    });});
+    setTimeout(function(){ fly.remove(); }, 900);
+  }
+
+  var form = document.getElementById('inquiryForm');
+  form.addEventListener('input', refreshRack);
+  form.addEventListener('change', refreshRack);
+
+  // ---- confetti ----
+  function confetti(){
+    for (var i=0;i<36;i++){
+      var c = document.createElement('div');
+      c.className = 'tile confetti';
+      var s = 16 + Math.random()*18;
+      c.style.width = s+'px'; c.style.height = (s*1.35)+'px'; c.style.fontSize=(s*.55)+'px';
+      c.style.left = (10+Math.random()*80)+'vw';
+      c.style.top = '-60px';
+      c.style.setProperty('--dx', (Math.random()*240-120)+'px');
+      c.style.setProperty('--rot', (Math.random()*720-360)+'deg');
+      c.style.animationDelay = (Math.random()*0.6)+'s';
+      c.style.color = Math.random()<.35 ? 'var(--red)' : 'var(--green)';
+      c.textContent = faceFor(Math.floor(Math.random()*14));
+      document.body.appendChild(c);
+      (function(el){ setTimeout(function(){ el.remove(); }, 3600); })(c);
+    }
+  }
+
+  // ---- submit ----
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Shuffling tiles…';
+    var data = {};
+    new FormData(form).forEach(function(v,k){ data[k]=v; });
+    try {
+      var r = await fetch('/api/inquiries', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+      var j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'error');
+      confetti();
+      form.style.display = 'none';
+      document.querySelector('.rack-zone').style.display = 'none';
+      document.getElementById('successBox').classList.add('show');
+      window.scrollTo({top:0, behavior:'smooth'});
+    } catch(err){
+      btn.disabled = false; btn.textContent = 'Declare Mahjong 🀄';
+      toast('That did not send — please check your connection and try again. If it keeps happening, email Holly directly.','bad');
+    }
+  });
+})();
+</script>
+<script>
+(async function(){
+  try{
+    var c=(await fetch('/api/inquiry-config').then(function(r){return r.json();})).config||{};
+    function setTxt(sel,v){if(v){var el=document.querySelector(sel);if(el)el.textContent=v;}}
+    setTxt('h1',c.heading); setTxt('.script',c.script); setTxt('.tagline',c.tagline); setTxt('.submit-note',c.submit_note);
+    if(c.submit_label){var b=document.getElementById('submitBtn');if(b)b.textContent=c.submit_label;}
+    if(c.custom_css){
+      var st=document.getElementById('customCss')||document.createElement('style');
+      st.id='customCss'; st.textContent=c.custom_css; document.head.appendChild(st);
+    }
+    if(c.event_types&&c.event_types.length){var sel=document.getElementById('eventType');if(sel){sel.innerHTML='<option value="">Choose one…</option>'+c.event_types.map(function(t){return '<option>'+String(t).replace(/</g,'&lt;')+'</option>';}).join('')+'<option>Other</option>';}}
+  }catch(e){}
+})();
+</script>
+<script src="/theme.js"></script>
+<script src="/toast.js"></script>
+<script src="/branding.js"></script>
+</body>
+</html>

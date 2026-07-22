@@ -1,0 +1,262 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Students — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="/theme.js"></script>
+<style>
+:root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh;background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.16) 0 3px,transparent 3px 30px)}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 22px}
+.top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+h1{font-family:var(--display);font-weight:700;font-size:1.95rem;color:var(--sage-dk)}
+.count{color:var(--ink-soft);font-size:.9rem;font-weight:300}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.toolbar input,.toolbar select{padding:10px 12px;border:1px solid var(--tile-edge);border-radius:10px;background:#fff;font-family:var(--body);font-size:.92rem;color:var(--sage-dk)}
+.toolbar .search{flex:1;min-width:220px}
+.filters{display:flex;gap:4px;background:var(--tile);border:1px solid var(--tile-edge);border-radius:10px;padding:3px}
+.fbtn{padding:7px 14px;border:none;border-radius:8px;background:none;color:var(--sage-soft);font-family:var(--body);font-weight:700;font-size:.8rem;cursor:pointer}
+.fbtn.active{background:var(--sage);color:var(--cream)}
+.addbtn{margin-left:auto;padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(160deg,var(--sage),var(--sage-dk));color:var(--cream);font-weight:700;font-size:.9rem;cursor:pointer}
+.addform{display:none;background:var(--tile);border:1px solid var(--tile-edge);border-radius:14px;padding:16px;margin-bottom:14px}
+.addform.open{display:block}
+.addform .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.addform input,.addform select{padding:9px 10px;border:1px solid var(--tile-edge);border-radius:8px;font-family:var(--body);font-size:.9rem;width:100%;background:#fff;color:var(--sage-dk)}
+.addform .go{margin-top:12px;padding:10px 20px;border:none;border-radius:9px;background:var(--sage);color:var(--cream);font-weight:700;cursor:pointer}
+.tablewrap{background:var(--tile);border:1px solid var(--tile-edge);border-radius:14px;overflow-x:auto;box-shadow:0 8px 22px rgba(59,72,50,.07)}
+table{width:100%;min-width:660px;border-collapse:collapse;font-size:.9rem}
+thead th{position:sticky;top:0;background:var(--sage-dk);color:var(--cream);text-align:left;padding:11px 14px;font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap;z-index:1}
+thead th .ar{opacity:.5;font-size:.7rem}
+tbody tr.row{border-bottom:1px solid var(--cream-2);cursor:pointer}
+tbody tr.row:nth-child(4n+1){background:rgba(255,255,255,.4)}
+tbody tr.row:hover{background:rgba(201,162,75,.1)}
+tbody td{padding:10px 14px;vertical-align:middle;color:var(--ink)}
+td.nm{font-family:var(--display);font-weight:700;font-size:1.02rem;color:var(--sage-dk)}
+.chip{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:12px;white-space:nowrap}
+.chip.lead{background:rgba(201,162,75,.2);color:var(--gold-dk)}
+.chip.student{background:rgba(76,91,64,.14);color:var(--sage)}
+.chip.skill{background:var(--cream-2);color:var(--ink-soft)}
+.muted{color:var(--ink-soft)}
+.detail td{background:var(--cream);padding:0}
+.detail .inner{padding:18px 20px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.dgrid label{display:block;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sage);font-weight:700;margin-bottom:4px}
+.dgrid input,.dgrid select,.dgrid textarea{width:100%;padding:9px 10px;border:1px solid var(--tile-edge);border-radius:8px;font-family:var(--body);font-size:.9rem;background:#fff;color:var(--sage-dk)}
+.dgrid .wide{grid-column:1/-1}
+.dgrid textarea{min-height:60px;resize:vertical}
+.dactions{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.dactions button{padding:9px 18px;border:none;border-radius:9px;font-family:var(--body);font-weight:700;font-size:.86rem;cursor:pointer}
+.dactions .save{background:var(--sage);color:var(--cream)}
+.dactions .convert{background:var(--gold);color:#2b2408}
+.dactions .archive{background:#fff;border:1px solid var(--tile-edge)!important;color:var(--ink-soft)}
+.dactions .msg{font-size:.85rem}.dactions .msg.ok{color:var(--sage)}.dactions .msg.err{color:var(--red)}
+.hist{margin-top:16px;border-top:1px dashed var(--tile-edge);padding-top:12px}
+.hist h4{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sage-soft);margin-bottom:6px}
+.hist .h{font-size:.85rem;color:var(--ink-soft);padding:3px 0}
+.hist .h b{color:var(--sage-dk)}
+.empty{padding:30px;text-align:center;color:var(--ink-soft);font-weight:300}
+@media(max-width:640px){
+.wrap{padding:16px 12px}
+.addbtn{margin-left:0;width:100%}
+.toolbar .search{min-width:100%}
+.filters,.toolbar select{width:100%}
+.dgrid{grid-template-columns:1fr}
+}
+  .notelog{background:var(--cream);border:1px solid var(--tile-edge);border-radius:8px;
+    padding:10px 12px;font-size:.86rem;line-height:1.6;max-height:190px;overflow:auto;white-space:normal}
+  .notelog .muted{color:var(--ink-soft)}
+</style>  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>Students</h1><span class="count" id="count">—</span></div>
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="Search name, email, phone, tag…">
+    <div class="filters"><button class="fbtn active" data-f="">All</button><button class="fbtn" data-f="lead">Leads</button><button class="fbtn" data-f="student">Students</button><button class="fbtn" data-f="waiting">Waiting on me</button></div>
+    <select id="skillFilter"><option value="">All skill levels</option><option value="beginner">Beginner</option><option value="advanced_beginner">Advanced beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+    <button class="addbtn" id="exportBtn" style="background:transparent;color:var(--sage-dk);border:1px solid var(--tile-edge)">Export CSV</button>
+    <button class="addbtn" id="addToggle">+ Add student</button>
+  </div>
+  <div class="addform" id="addform">
+    <div class="grid">
+      <input id="a_first" placeholder="First name*"><input id="a_last" placeholder="Last name">
+      <input id="a_email" placeholder="Email"><input id="a_phone" placeholder="Phone">
+      <select id="a_skill"><option value="beginner">Beginner</option><option value="advanced_beginner">Advanced beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+      <input id="a_tags" placeholder="Tags (comma sep)">
+    </div>
+    <button class="go" id="a_save">Add student</button> <span class="msg" id="a_msg" style="font-size:.85rem"></span>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th data-s="name">Name <span class="ar"></span></th>
+        <th data-s="status">Status <span class="ar"></span></th>
+        <th data-s="skill_level">Skill <span class="ar"></span></th>
+        <th data-s="email">Email <span class="ar"></span></th>
+        <th data-s="phone">Phone <span class="ar"></span></th>
+        <th data-s="tags">Tags <span class="ar"></span></th>
+        <th data-s="updated_at">Last touched <span class="ar"></span></th>
+      </tr></thead>
+      <tbody id="tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script src="/toast.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+<script>
+var SKILL={beginner:'Beginner',advanced_beginner:'Adv. beginner',intermediate:'Intermediate',advanced:'Advanced'};
+var curFilter='',curSkill='',sortKey='updated_at',sortDir=-1,rows=[],openId=null;
+function daysSince(d){ if(!d) return null;
+  return Math.floor((Date.now()-new Date(d).getTime())/86400000); }
+// A lead nobody has replied to in five days is the thing most likely to be lost.
+function isWaiting(s){ var n=daysSince(s.updated_at); return s.status==='lead'&&n!==null&&n>=5; }
+function ageCell(s){
+  var n=daysSince(s.updated_at);
+  if(n===null) return '';
+  var t=n===0?'today':(n===1?'yesterday':n+' days ago');
+  if(isWaiting(s)) return '<span class="chip" style="background:#F6E2D8;color:#B3542E">'+t+'</span>';
+  return t;
+}
+function $(id){return document.getElementById(id);}
+function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function val(id){return $(id).value.trim();}
+function nm(s){return ((s.first_name||'')+' '+(s.last_name||'')).trim()||'—';}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}):'';}
+async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if(!s.authed){location.href='/login';return false;}return true;}
+
+function sortRows(){
+  rows.sort(function(a,b){
+    var av,bv;
+    if(sortKey==='name'){av=(a.last_name||a.first_name||'').toLowerCase();bv=(b.last_name||b.first_name||'').toLowerCase();}
+    else{av=(a[sortKey]||'').toString().toLowerCase();bv=(b[sortKey]||'').toString().toLowerCase();}
+    if(sortKey==='updated_at'){av=a.updated_at||'';bv=b.updated_at||'';}
+    return av<bv?-sortDir:av>bv?sortDir:0;
+  });
+}
+function render(){
+  var list=rows.filter(function(s){return !curSkill||s.skill_level===curSkill;});
+  if(curFilter==='waiting') list=list.filter(isWaiting);
+  $('count').textContent=list.length+(curFilter==='lead'?' lead':curFilter==='student'?' student':' record')+(list.length===1?'':'s');
+  var tb=$('tbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="7" class="empty">Nothing here yet.</td></tr>';return;}
+  tb.innerHTML=list.map(function(s){
+    var st=s.status==='lead'?'<span class="chip lead">Lead</span>':'<span class="chip student">Student</span>';
+    return '<tr class="row" data-id="'+s.id+'">'+
+      '<td class="nm">'+esc(nm(s))+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td><span class="chip skill">'+(SKILL[s.skill_level]||s.skill_level||'')+'</span></td>'+
+      '<td class="muted">'+esc(s.email||'')+'</td>'+
+      '<td class="muted">'+esc(s.phone||'')+'</td>'+
+      '<td class="muted">'+esc(s.tags||'')+'</td>'+
+      '<td class="muted">'+ageCell(s)+'</td></tr>'+
+      '<tr class="detail" id="d_'+s.id+'" style="display:none"><td colspan="7"><div class="inner" id="di_'+s.id+'"></div></td></tr>';
+  }).join('');
+  Array.prototype.forEach.call(tb.querySelectorAll('tr.row'),function(tr){tr.addEventListener('click',function(){toggle(tr.getAttribute('data-id'));});});
+  updateArrows();
+}
+function updateArrows(){
+  Array.prototype.forEach.call(document.querySelectorAll('thead th'),function(th){
+    var ar=th.querySelector('.ar');if(!ar)return;
+    ar.textContent=(th.getAttribute('data-s')===sortKey)?(sortDir>0?'▲':'▼'):'';
+  });
+}
+async function toggle(id){
+  var d=$('d_'+id);
+  if(openId&&openId!==id){$('d_'+openId).style.display='none';}
+  if(d.style.display!=='none'){d.style.display='none';openId=null;return;}
+  d.style.display='';openId=id;
+  var inner=$('di_'+id);inner.innerHTML='Loading…';
+  var res=await fetch('/api/students/'+id).then(r=>r.json());
+  if(!res.ok){inner.innerHTML='Could not load.';return;}
+  var s=res.student,h=res.history||{bookings:[],inquiries:[]};
+  var skillOpts=Object.keys(SKILL).map(function(k){return '<option value="'+k+'"'+(s.skill_level===k?' selected':'')+'>'+SKILL[k]+'</option>';}).join('');
+  var hist='';
+  (h.bookings||[]).forEach(function(b){hist+='<div class="h"><b>Booking</b> · '+(b.seats||1)+' seat(s) · '+esc(b.status||'')+' · '+fmtDate(b.created_at)+'</div>';});
+  (h.inquiries||[]).forEach(function(q){hist+='<div class="h"><b>Inquiry</b> · '+esc(q.event_type||'')+' · '+esc(q.event_date||'')+' · '+esc(q.status||'')+'</div>';});
+  if(!hist)hist='<div class="h">No bookings or inquiries linked to this email yet.</div>';
+  inner.innerHTML=
+    '<div class="dgrid">'+
+    '<div><label>First name</label><input id="e_first_'+id+'" value="'+esc(s.first_name)+'"></div>'+
+    '<div><label>Last name</label><input id="e_last_'+id+'" value="'+esc(s.last_name||'')+'"></div>'+
+    '<div><label>Email</label><input id="e_email_'+id+'" value="'+esc(s.email||'')+'"></div>'+
+    '<div><label>Phone</label><input id="e_phone_'+id+'" value="'+esc(s.phone||'')+'"></div>'+
+    '<div><label>Skill level</label><select id="e_skill_'+id+'">'+skillOpts+'</select></div>'+
+    '<div><label>Status</label><select id="e_status_'+id+'"><option value="lead"'+(s.status==='lead'?' selected':'')+'>Lead</option><option value="student"'+(s.status!=='lead'?' selected':'')+'>Student</option></select></div>'+
+    '<div><label>Birthday</label><input type="date" id="e_bday_'+id+'" value="'+esc(s.birthday||'')+'"></div>'+
+    '<div class="wide"><label>Tags</label><input id="e_tags_'+id+'" value="'+esc(s.tags||'')+'"></div>'+
+    '<div class="wide"><label>Add a note</label>'+
+      '<textarea id="e_newnote_'+id+'" placeholder="Plays Wednesdays · knows Nancy · nervous about the Charleston pass"></textarea>'+
+      '<div class="hint" style="font-size:.75rem;color:var(--ink-soft);margin-top:4px">Dated and added to the list below. Nothing gets overwritten.</div></div>'+
+    '<div class="wide"><label>Everything you have written</label>'+
+      '<div class="notelog" id="e_notes_view_'+id+'">'+(s.notes?esc(s.notes).replace(/\n/g,'<br>'):'<span class="muted">Nothing yet.</span>')+'</div>'+
+      '<textarea id="e_notes_'+id+'" style="display:none">'+esc(s.notes||'')+'</textarea>'+
+      '<button type="button" class="archive" id="e_editnotes_'+id+'" style="margin-top:6px;font-size:.76rem">Edit older notes</button></div>'+
+    '</div>'+
+    '<div class="dactions"><button class="save" id="e_save_'+id+'">Save</button>'+
+      (s.status==='lead'?'<button class="convert" id="e_conv_'+id+'">✓ Convert to student</button>':'')+
+      '<button class="archive" id="e_arch_'+id+'">Archive</button><span class="msg" id="e_msg_'+id+'"></span></div>'+
+    '<div class="hist"><h4>History</h4>'+hist+'</div>';
+  // stop row-collapse when interacting inside detail
+  inner.addEventListener('click',function(e){e.stopPropagation();});
+  $('e_save_'+id).addEventListener('click',async function(){
+    var m=$('e_msg_'+id);m.className='msg';m.textContent='Saving…';
+    var existing=$('e_notes_'+id).value;
+    var fresh=($('e_newnote_'+id)?$('e_newnote_'+id).value.trim():'');
+    if(fresh){
+      var stamp=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      existing=(stamp+' — '+fresh)+(existing?'\n'+existing:'');
+    }
+    var body={first_name:val('e_first_'+id),last_name:val('e_last_'+id),email:val('e_email_'+id),phone:val('e_phone_'+id),skill_level:$('e_skill_'+id).value,status:$('e_status_'+id).value,birthday:val('e_bday_'+id),tags:val('e_tags_'+id),notes:existing};
+    var r=await fetch('/api/students/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json());
+    if(r.ok){m.className='msg ok';m.textContent='Saved ✓';load(true);}else{m.className='msg err';m.textContent=r.error||'Error';}
+  });
+  var en=$('e_editnotes_'+id);
+  if(en)en.addEventListener('click',function(){
+    var ta=$('e_notes_'+id), vw=$('e_notes_view_'+id);
+    var showing=ta.style.display!=='none';
+    ta.style.display=showing?'none':'block';
+    vw.style.display=showing?'block':'none';
+    en.textContent=showing?'Edit older notes':'Done editing';
+  });
+  var cv=$('e_conv_'+id);if(cv)cv.addEventListener('click',async function(){await fetch('/api/students/'+id+'/convert',{method:'POST'});load(true);});
+  $('e_arch_'+id).addEventListener('click',async function(){await fetch('/api/students/'+id+'/archive',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({archived:true})});openId=null;load(true);});
+}
+async function load(keepOpen){
+  var q=val('search'),qs=[];if(q)qs.push('q='+encodeURIComponent(q));
+  if(curFilter==='waiting')qs.push('status=lead');
+  else if(curFilter)qs.push('status='+curFilter);
+  var d=await fetch('/api/students'+(qs.length?'?'+qs.join('&'):'')).then(r=>r.json());
+  rows=d.students||[];sortRows();render();
+}
+// events
+var st;$('search').addEventListener('input',function(){clearTimeout(st);st=setTimeout(load,220);});
+if($('exportBtn'))$('exportBtn').addEventListener('click',function(){
+  var list=rows.filter(function(s){return !curSkill||s.skill_level===curSkill;});
+  if(curFilter==='waiting')list=list.filter(isWaiting);
+  if(!list.length){ if(window.toast)toast('Nothing to export in this view.','bad'); return; }
+  var cols=['first_name','last_name','status','skill_level','email','phone','tags','source','notes','updated_at'];
+  var q=function(v){ v=String(v==null?'':v); return '"'+v.replace(/"/g,'""')+'"'; };
+  var csv=cols.join(',')+'\n'+list.map(function(r){return cols.map(function(c){return q(r[c]);}).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='tampa-bay-mahj-'+(curFilter||'all')+'-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  if(window.toast)toast('Exported '+list.length+' record'+(list.length===1?'':'s')+' to your downloads.');
+});
+Array.prototype.forEach.call(document.querySelectorAll('.fbtn'),function(b){b.addEventListener('click',function(){document.querySelectorAll('.fbtn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');curFilter=b.getAttribute('data-f');load();});});
+$('skillFilter').addEventListener('change',function(){curSkill=this.value;render();});
+Array.prototype.forEach.call(document.querySelectorAll('thead th'),function(th){th.addEventListener('click',function(){var k=th.getAttribute('data-s');if(k===sortKey)sortDir=-sortDir;else{sortKey=k;sortDir=1;}sortRows();render();});});
+$('addToggle').addEventListener('click',function(){$('addform').classList.toggle('open');});
+$('a_save').addEventListener('click',async function(){
+  var m=$('a_msg');if(!val('a_first')){m.textContent='First name required';m.style.color='#B3542E';return;}
+  m.style.color='';m.textContent='Adding…';
+  var body={first_name:val('a_first'),last_name:val('a_last'),email:val('a_email'),phone:val('a_phone'),skill_level:$('a_skill').value,tags:val('a_tags')};
+  var d=await fetch('/api/students',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+  if(d.ok){['a_first','a_last','a_email','a_phone','a_tags'].forEach(function(i){$(i).value='';});$('addform').classList.remove('open');load();}
+  else{m.textContent=d.error||'Error';m.style.color='#B3542E';}
+});
+(async function(){if(await guard())load();})();
+</script>
+</body></html>

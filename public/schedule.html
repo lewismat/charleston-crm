@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheduling — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-dk:#3B4832;--gold:#C9A24B;
+  --ink:#2C3327;--ink-soft:#5D6656;--tile-face:#FBF8EF;--tile-edge:#DED3B4;
+  --display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);color:var(--ink);background:var(--cream)}
+.wrap{max-width:1360px;margin:0 auto;padding:22px 18px 60px;display:flex;gap:22px;align-items:flex-start}
+h1{font-family:var(--display);font-size:2.4rem;margin:0 0 4px;font-weight:600}
+.sub{color:var(--ink-soft);margin:0 0 24px}
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tabs a{padding:9px 15px;border-radius:999px;text-decoration:none;font-size:.88rem;font-weight:700;
+  color:var(--ink-soft);border:1.5px solid var(--tile-edge)}
+.tabs a.on{background:var(--sage);color:var(--cream);border-color:var(--sage)}
+.card{background:var(--tile-face);border:1px solid var(--tile-edge);border-radius:14px;padding:20px;margin-bottom:20px}
+.card h2{font-family:var(--display);font-size:1.5rem;margin:0 0 14px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+input,select,textarea{font-family:var(--body);font-size:.92rem;padding:9px 11px;border-radius:8px;
+  border:1.5px solid var(--tile-edge);background:var(--cream);color:var(--ink);width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(198,162,72,.18)}
+.cta{margin-top:14px;background:var(--sage);color:var(--cream);border:none;border-radius:9px;
+  padding:12px 22px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:var(--body)}
+.cta:hover:not(:disabled){background:var(--sage-dk)}
+.cta:disabled{opacity:.5}
+.slot{border:1.5px solid var(--tile-edge);border-radius:11px;padding:14px;margin-bottom:10px;background:var(--cream)}
+.slot.past{opacity:.5}
+.slot.unpub{border-style:dashed}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.when{font-family:var(--display);font-size:1.2rem;font-weight:700}
+.meta{font-size:.8rem;color:var(--ink-soft);margin-top:3px}
+.pill{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;background:rgba(123,140,106,.16);color:var(--sage-dk)}
+.pill.full{background:rgba(198,162,72,.22);color:#8A6D14}
+.pill.hold{background:rgba(198,162,72,.3);color:#8A6D14}
+.pill.wait{background:rgba(44,51,39,.1);color:var(--ink-soft)}
+.waitline{border-top:1px solid var(--tile-edge)}
+.linehead{font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:4px}
+.ord{display:inline-block;min-width:16px;font-family:var(--display);font-weight:700;color:var(--gold)}
+.offered{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 7px;border-radius:999px;background:rgba(198,162,72,.25);color:#8A6D14;margin-left:6px}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.mini{font-size:.74rem;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;
+  border:1.5px solid var(--tile-edge);background:var(--tile-face);color:var(--ink-soft);font-family:var(--body)}
+.mini:hover{border-color:var(--sage);color:var(--sage-dk)}
+.mini.danger:hover{border-color:#9B3B2E;color:#9B3B2E}
+.guests{margin-top:11px;border-top:1px dashed var(--tile-edge);padding-top:10px}
+.guest{font-size:.85rem;padding:6px 0;border-bottom:1px solid rgba(222,211,180,.5)}
+.guest:last-child{border:none}
+.guest.cx{text-decoration:line-through;opacity:.5}
+.guest a{color:var(--sage-dk)}
+.guest .note{color:var(--ink-soft);font-size:.8rem;display:block;margin-top:2px}
+.empty{color:var(--ink-soft);text-align:center;padding:26px;font-size:.92rem}
+.err{color:#9B3B2E;font-size:.85rem;min-height:1em;margin-top:8px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.sched-main{flex:1;min-width:0}
+.sched-preview{flex:none;width:392px;position:sticky;top:16px}
+.pv-label{text-align:center;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sage-soft,#6B7A5C);font-weight:700;margin-bottom:8px}
+#bookPv{width:100%;height:640px;border:1px solid var(--tile-edge);border-radius:16px;background:#fff;box-shadow:0 12px 30px rgba(59,72,50,.12)}
+.pv-refresh{margin-top:8px;width:100%;padding:8px;border:1px solid var(--tile-edge);border-radius:9px;background:#fff;color:var(--sage-dk,#3B4832);font-family:'Karla',sans-serif;font-weight:700;cursor:pointer;font-size:.82rem}
+.pv-copy{width:100%;margin:0 0 8px;padding:14px;border:none;border-radius:14px;background:linear-gradient(160deg,var(--gold,#C9A24B),#B18A2C);color:#2b2408;font-family:'Karla',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 8px 20px rgba(201,162,75,.3);display:flex;align-items:center;justify-content:center;gap:8px}
+.pv-copy:hover{filter:brightness(1.05)}
+.pv-copymsg{text-align:center;font-size:.85rem;color:var(--sage,#4C5B40);font-weight:700;min-height:1.1em;margin-top:6px}
+@media(max-width:1000px){.wrap{flex-direction:column}.sched-preview{width:100%;position:static}}
+@media(max-width:640px){.wrap{padding:16px 12px}}
+#attList{overflow-x:auto}
+.atbl{width:100%;min-width:520px;border-collapse:collapse;font-size:.88rem}
+.atbl th{background:var(--sage-dk,#3B4832);color:var(--cream,#F7F2E4);text-align:left;padding:9px 12px;font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;font-weight:700}
+.atbl td{padding:8px 12px;border-bottom:1px solid #EFE7CC}
+.atbl tr:hover td{background:rgba(201,162,75,.08)}
+.atbl .an{font-family:var(--display);font-weight:700;color:var(--sage-dk,#3B4832);font-size:1rem}
+.atbl .am{color:var(--ink-soft,#5D6656)}
+.attsearch{width:100%;padding:10px 12px;border:1px solid var(--tile-edge);border-radius:9px;margin-bottom:12px;font-family:'Karla',sans-serif;font-size:.9rem}
+  .addwrap{margin-top:10px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .addhint{font-size:.76rem;color:var(--sage-soft)}
+  .rmguest{margin-left:8px;font-size:.74rem;padding:3px 9px;color:var(--red);border-color:var(--tile-edge)}
+  .editpanel{margin-top:12px;padding:16px;background:var(--tile);border:1px solid var(--tile-edge);
+    border-radius:11px}
+  .edgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .edgrid label{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--sage-soft);margin-bottom:4px;font-weight:600}
+  .edgrid input,.edgrid select{width:100%;padding:8px 10px;border:1px solid var(--tile-edge);
+    border-radius:8px;font:inherit;font-size:.88rem;background:var(--cream);color:var(--sage-dk)}
+  .edfull{grid-column:1/-1}
+  .notifybox{grid-column:1/-1;display:flex;gap:9px;align-items:flex-start;padding:11px 13px;margin-top:2px;
+    background:#FBF6E4;border:1px solid var(--gold-soft);border-radius:9px;font-size:.85rem;line-height:1.45}
+  .notifybox input{width:auto;margin-top:3px;flex:none}
+  .edrow{display:flex;gap:9px;align-items:center;margin-top:13px;flex-wrap:wrap}
+  .edmsg{font-size:.85rem}
+  .priceset{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;color:var(--sage-dk)}
+  .priceinp{width:62px;padding:4px 6px;border:1px solid var(--tile-edge);border-radius:7px;
+    font:inherit;font-size:.8rem;background:var(--tile);color:var(--sage-dk)}
+  .paidflag{background:var(--gold-soft);color:var(--gold-dk);border-color:var(--gold)}
+</style>
+<script src="/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<style>
+.tbmnav{background:#3B4832;color:#F7F2E4;display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap;font-family:'Karla',system-ui,-apple-system,sans-serif}
+.tbmnav .brand{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.15rem;margin-right:auto}
+.tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.88;cursor:pointer}
+.tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}
+</style>
+<div class="tbmnav"><span class="brand">Tampa Bay Mahj</span><a href="/dashboard">Dashboard</a><a href="/schedule" class="active">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<script>document.getElementById("tbmLogout").addEventListener("click",function(){fetch("/api/auth/logout",{method:"POST"}).then(function(){location.href="/login";});});</script>
+<div class="wrap">
+  <div class="sched-main">
+
+
+  <div class="card">
+    <h2>Open a date</h2>
+    <div class="grid">
+      <div class="field"><label for="title">Event name</label><input id="title" placeholder="e.g. Beginner Bootcamp"></div>
+      <div class="field"><label for="type">Session</label>
+        <select id="type">
+          <option value="private_lesson">Private lesson</option>
+          <option value="group_class">Group class</option>
+          <option value="private_party">Private party</option>
+        </select></div>
+      <div class="field"><label for="date">Date</label><input id="date" type="date"></div>
+      <div class="field"><label for="time">Start time</label><input id="time" type="time" value="13:00"></div>
+      <div class="field"><label for="dur">Length (minutes)</label><input id="dur" type="number" value="120" step="15" min="15"></div>
+      <div class="field" id="seatfield" hidden><label for="seats">Seats</label><input id="seats" type="number" min="1" max="40" value="8" step="1"><div style="font-size:.72rem;color:var(--ink-soft);margin-top:3px">Total spots — e.g. 8 at one table, 16 at two.</div></div>
+      <div class="field"><label for="loc">Where</label><input id="loc" placeholder="e.g. Carrollwood Country Club"></div>
+      <div class="field"><label for="rep">Repeat weekly</label>
+        <select id="rep"><option value="1">Just this date</option><option value="2">2 weeks</option>
+        <option value="4">4 weeks</option><option value="6">6 weeks</option><option value="8">8 weeks</option>
+        <option value="12">12 weeks</option></select></div>
+      <div class="field"><label for="amt">Price per seat ($)</label><input id="amt" type="number" min="0" step="1" placeholder="0"><div class="hint">Leave blank or 0 for a free event. Any amount here means guests must pay before their seat is confirmed.</div></div>
+      <div class="field"><label for="price">Extra details</label><input id="price" placeholder="e.g. includes cards &amp; tiles"></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label for="notes">Note shown to clients</label>
+      <textarea id="notes" rows="2" placeholder="e.g. Beginners welcome — cards and tiles provided."></textarea></div>
+    <button class="cta" id="add">Open this date</button>
+    <p class="err" id="err" role="alert"></p>
+  </div>
+
+  <div class="card">
+    <h2>Your calendar</h2>
+    <div id="list"><p class="empty">Loading…</p></div>
+  </div>
+  <div class="card">
+    <h2>Everyone signed up <span id="attCount" style="font-size:.9rem;color:#5D6656;font-weight:400"></span></h2>
+    <input class="attsearch" id="attSearch" placeholder="Search attendees…">
+    <div id="attList"><p class="empty">Loading…</p></div>
+  </div>
+  </div>
+  <aside class="sched-preview">
+    <div class="pv-label">✦ Booking page preview ✦</div>
+    <button type="button" class="pv-copy" id="pvCopy"><span>🔗</span> Copy your booking page link</button>
+    <div class="pv-copymsg" id="pvCopyMsg"></div>
+    <iframe id="bookPv" src="/book" title="Booking preview"></iframe>
+    <button type="button" class="pv-refresh" id="pvRefresh">↻ Refresh preview</button>
+  </aside>
+</div>
+
+<script>
+const TZ='America/New_York';
+function refreshPreview(){var p=document.getElementById('bookPv');if(p)p.src='/book?t='+Date.now();}
+const LABEL={private_lesson:'Private lesson',group_class:'Group class',private_party:'Private party'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'short',month:'short',day:'numeric',
+  hour:'numeric',minute:'2-digit'}).format(new Date(d));
+
+var __att=[];
+function drawAttendees(){
+  var el=document.getElementById('attList'); if(!el) return;
+  var q=(document.getElementById('attSearch').value||'').toLowerCase();
+  var rows=__att.filter(function(r){return !q||((r.name+' '+r.email+' '+r.event).toLowerCase().indexOf(q)>-1);});
+  document.getElementById('attCount').textContent=rows.length?('· '+rows.length+' sign-up'+(rows.length===1?'':'s')):'';
+  if(!rows.length){el.innerHTML='<p class="empty">No one signed up yet.</p>';return;}
+  el.innerHTML='<table class="atbl"><thead><tr><th>Name</th><th>Event</th><th>Date</th><th>Seats</th><th>Contact</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td class="an">'+esc(r.name||'—')+'</td><td>'+esc(r.event)+'</td><td>'+fmt(r.when)+'</td><td>'+r.seats+'</td><td class="am">'+esc(r.email||r.phone||'')+'</td></tr>';}).join('')+'</tbody></table>';
+}
+function renderAttendees(slots){
+  __att=[];
+  (slots||[]).forEach(function(s){(s.bookings||[]).filter(function(b){return b.status==='confirmed';}).forEach(function(b){
+    __att.push({name:((b.first_name||'')+' '+(b.last_name||'')).trim(),event:s.title||LABEL[s.slot_type]||s.slot_type,when:s.starts_at,seats:b.seats||1,email:b.email||'',phone:b.phone||''});
+  });});
+  __att.sort(function(a,b){return new Date(a.when)-new Date(b.when);});
+  drawAttendees();
+}
+var _as=document.getElementById('attSearch'); if(_as) _as.addEventListener('input',drawAttendees);
+
+const typeSel=document.getElementById('type');
+typeSel.onchange=()=>document.getElementById('seatfield').hidden=typeSel.value!=='group_class';
+
+document.getElementById('date').valueAsDate=new Date();
+var SLOTS=[];
+
+
+function two(n){return String(n).padStart(2,'0');}
+function localParts(iso){
+  const d=new Date(iso);
+  return {date:d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()),
+          time:two(d.getHours())+':'+two(d.getMinutes())};
+}
+function openEditor(id){
+  const s=SLOTS.filter(x=>x.id===id)[0]; if(!s) return;
+  const host=document.getElementById('ed_'+id); if(!host) return;
+  if(!host.hidden){ host.hidden=true; host.innerHTML=''; return; }
+  const p=localParts(s.starts_at);
+  const booked=(s.bookings||[]).filter(b=>b.status==='confirmed').length;
+  host.hidden=false;
+  host.innerHTML=`
+    <div class="edgrid">
+      <div class="edfull"><label>Event name</label><input id="e_title_${id}" value="${(s.title||'').replace(/"/g,'&quot;')}" placeholder="e.g. Beginner Bootcamp"></div>
+      <div><label>Session</label><select id="e_type_${id}">
+        <option value="private_lesson">Private lesson</option>
+        <option value="group_class">Group class</option>
+        <option value="private_party">Private party</option></select></div>
+      <div><label>Date</label><input id="e_date_${id}" type="date" value="${p.date}"></div>
+      <div><label>Start time</label><input id="e_time_${id}" type="time" value="${p.time}"></div>
+      <div><label>Length (minutes)</label><input id="e_dur_${id}" type="number" min="15" max="600" step="15" value="${s.duration_minutes}"></div>
+      <div><label>Seats</label><input id="e_seats_${id}" type="number" min="1" max="40" value="${s.seats_total}"></div>
+      <div><label>Price per seat ($)</label><input id="e_price_${id}" type="number" min="0" step="1" value="${s.price_cents?(s.price_cents/100):''}" placeholder="0"></div>
+      <div class="edfull"><label>Where</label><input id="e_loc_${id}" value="${(s.location||'').replace(/"/g,'&quot;')}" placeholder="e.g. Carrollwood Country Club"></div>
+      <div class="edfull"><label>Extra details</label><input id="e_note_${id}" value="${(s.price_note||'').replace(/"/g,'&quot;')}" placeholder="e.g. includes cards &amp; tiles"></div>
+      ${booked?`<label class="notifybox"><input type="checkbox" id="e_notify_${id}" checked>
+        <span><b>Email the ${booked} ${booked===1?'person':'people'} booked</b> if you change the date, time, length or place.
+        They will get the new details and a link to their booking.</span></label>`:''}
+    </div>
+    <div class="edrow">
+      <button class="mini primary" id="e_save_${id}">Save changes</button>
+      <button class="mini" id="e_cancel_${id}">Cancel</button>
+      <span class="edmsg" id="e_msg_${id}"></span>
+    </div>`;
+  document.getElementById('e_type_'+id).value=s.slot_type;
+  document.getElementById('e_cancel_'+id).onclick=()=>{host.hidden=true;host.innerHTML='';};
+  document.getElementById('e_save_'+id).onclick=()=>saveEditor(id);
+}
+
+async function saveEditor(id){
+  const v=x=>document.getElementById(x+'_'+id);
+  const msg=v('e_msg'), btn=v('e_save');
+  const d=v('e_date').value, t=v('e_time').value;
+  if(!d||!t){ msg.style.color='#B3542E'; msg.textContent='Pick a date and a start time.'; return; }
+  const starts=new Date(d+'T'+t);
+  if(isNaN(starts)){ msg.style.color='#B3542E'; msg.textContent='That date and time did not make sense.'; return; }
+  const nEl=v('e_notify');
+  btn.disabled=true; msg.style.color=''; msg.textContent='Saving…';
+  const body={title:v('e_title').value.trim(),slot_type:v('e_type').value,
+    starts_at:starts.toISOString(),duration_minutes:parseInt(v('e_dur').value,10)||60,
+    seats_total:parseInt(v('e_seats').value,10)||1,location:v('e_loc').value.trim(),
+    price_note:v('e_note').value.trim(),
+    price_cents:Math.round((parseFloat(v('e_price').value)||0)*100),
+    notify_guests:nEl?nEl.checked:false};
+  const r=await fetch('/api/admin/slots/'+id,{method:'PATCH',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const out=await r.json().catch(()=>({}));
+  if(!r.ok){ btn.disabled=false; msg.style.color='#B3542E'; msg.textContent=out.error||'Could not save that.'; return; }
+  const n=out.notified||0, f=out.failed||0;
+  msg.style.color='var(--sage)';
+  msg.textContent='Saved ✓'+(n?` — ${n} ${n===1?'person':'people'} emailed`:'');
+  if(f){
+    msg.style.color='#B3542E';
+    msg.textContent='Saved, but '+f+' '+(f===1?'person was':'people were')+' NOT told — '+
+      (out.warning||'email could not send')+'. Set up email in Settings, or contact them yourself.';
+  }
+  setTimeout(()=>{load();refreshPreview();},900);
+}
+
+
+function openAdder(id){
+  const host=document.getElementById('ad_'+id); if(!host) return;
+  if(!host.hidden){ host.hidden=true; host.innerHTML=''; return; }
+  const s=SLOTS.filter(x=>x.id===id)[0];
+  const left=s?(s.seats_total-s.seats_taken-(s.seats_held||0)):1;
+  host.hidden=false;
+  host.innerHTML=`
+    <div class="edgrid">
+      <div><label>First name</label><input id="a_fn_${id}"></div>
+      <div><label>Last name</label><input id="a_ln_${id}"></div>
+      <div><label>Email</label><input id="a_em_${id}" type="email" placeholder="optional"></div>
+      <div><label>Phone</label><input id="a_ph_${id}" type="tel" placeholder="optional"></div>
+      <div><label>Seats</label><input id="a_seats_${id}" type="number" min="1" max="${Math.max(1,left)}" value="1"></div>
+      <div><label>How did they pay?</label><select id="a_paid_${id}">
+        <option value="cash">Cash</option><option value="Venmo">Venmo</option>
+        <option value="already paid">Already paid</option><option value="comped">Comped</option>
+        <option value="not recorded">Not recorded</option></select></div>
+      <label class="notifybox"><input type="checkbox" id="a_send_${id}">
+        <span><b>Email them a confirmation</b> with the date, the address and a link to cancel.
+        Needs an email address above.</span></label>
+    </div>
+    <div class="edrow">
+      <button class="mini primary" id="a_save_${id}">Add to this event</button>
+      <button class="mini" id="a_cancel_${id}">Cancel</button>
+      <span class="edmsg" id="a_msg_${id}"></span>
+    </div>`;
+  document.getElementById('a_cancel_'+id).onclick=()=>{host.hidden=true;host.innerHTML='';};
+  document.getElementById('a_save_'+id).onclick=()=>saveAdder(id);
+}
+
+async function saveAdder(id){
+  const v=x=>document.getElementById(x+'_'+id);
+  const msg=v('a_msg'), btn=v('a_save');
+  if(!v('a_fn').value.trim()||!v('a_ln').value.trim()){
+    msg.style.color='#B3542E'; msg.textContent='Add a first and last name.'; return;
+  }
+  if(v('a_send').checked&&!v('a_em').value.trim()){
+    msg.style.color='#B3542E'; msg.textContent='Add an email address, or untick the confirmation box.'; return;
+  }
+  btn.disabled=true; msg.style.color=''; msg.textContent='Adding…';
+  const r=await fetch('/api/admin/slots/'+id+'/attendee',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({first_name:v('a_fn').value.trim(),last_name:v('a_ln').value.trim(),
+      email:v('a_em').value.trim(),phone:v('a_ph').value.trim(),
+      seats:parseInt(v('a_seats').value,10)||1,paid_how:v('a_paid').value,
+      send_confirmation:v('a_send').checked})});
+  const out=await r.json().catch(()=>({}));
+  if(!r.ok){ btn.disabled=false; msg.style.color='#B3542E'; msg.textContent=out.error||'Could not add them.'; return; }
+  msg.style.color='var(--sage)';
+  msg.textContent='Added ✓'+(out.emailed?' — confirmation sent':'');
+  setTimeout(()=>{load();refreshPreview();},900);
+}
+
+async function cancelSeat(bookingId,name){
+  undoable('Cancelling '+name+"'s seat and emailing them.",async function(){
+    const r=await fetch('/api/admin/bookings/'+bookingId+'/cancel',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({tell_them:true})});
+    const out=await r.json().catch(function(){return {};});
+    if(!r.ok){ toast(out.error||'Could not cancel that seat.','bad'); return; }
+    toast(name+"'s seat is free again"+(out.emailed?' — they were emailed.':". They were NOT emailed, so let them know."));
+    load();refreshPreview();
+  });
+}
+
+async function load(){
+  const el=document.getElementById('list');
+  try{
+    const r=await fetch('/api/admin/slots');
+    if(r.status===401){ location.href='/login'; return; }
+    if(!r.ok) throw new Error('Could not load your calendar.');
+    const slots=await r.json();
+    SLOTS=slots;
+    renderAttendees(slots);
+    if(!slots.length){ el.innerHTML='<p class="empty">Nothing on the calendar yet. Open a date above.</p>'; return; }
+    const now=Date.now();
+    el.innerHTML=slots.map(s=>{
+      const live=(s.bookings||[]).filter(b=>b.status==='confirmed');
+      const line=(s.waitlist||[]).filter(w=>w.status==='waiting'||w.status==='offered')
+        .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+      const past=new Date(s.starts_at)<now;
+      const free=s.seats_free??(s.seats_total-s.seats_taken-(s.seats_held||0));
+      const full=free<=0;
+      return `<div class="slot ${past?'past':''} ${s.published?'':'unpub'}">
+        <div class="row">
+          <div>
+            <div class="when">${fmt(s.starts_at)}</div>
+            <div class="meta">${s.title?esc(s.title)+' · ':''}${LABEL[s.slot_type]} · ${s.duration_minutes} min${
+              s.location?' · '+esc(s.location):''}${s.price_cents?' · $'+(s.price_cents/100).toFixed(2)+' per seat':''}${s.price_note?' · '+esc(s.price_note):''}</div>
+            <div class="meta" style="margin-top:6px">
+              <span class="pill ${full?'full':''}">${
+                s.slot_type==='group_class'
+                  ? `${s.seats_taken}/${s.seats_total} seats`
+                  : (full?'Booked':'Open')}</span>
+              ${s.seats_held?`<span class="pill hold">${s.seats_held} held</span>`:''}
+              ${line.length?`<span class="pill wait">${line.length} waiting</span>`:''}
+              ${s.price_cents?`<span class="pill paidflag">Payment required · $${(s.price_cents/100).toFixed(2)}</span>`
+                             :'<span class="pill">Free · books instantly</span>'}
+              ${s.published?'':'<span class="pill">Hidden</span>'}
+            </div>
+          </div>
+          <div class="btns">
+            <button class="mini" data-edit="${s.id}">Edit</button>
+            <button class="mini" data-dup="${s.id}">Duplicate</button>
+            <button class="mini" data-pub="${s.id}" data-val="${!s.published}">${s.published?'Hide':'Show'}</button>
+            <button class="mini danger" data-del="${s.id}">Remove</button>
+          </div>
+        </div>
+        <div class="editpanel" id="ed_${s.id}" hidden></div>
+        <div class="addwrap">
+          <button class="mini" data-add="${s.id}">+ Add someone</button>
+          <span class="addhint">for cash, Venmo or a text message</span>
+        </div>
+        <div class="editpanel" id="ad_${s.id}" hidden></div>
+        ${live.length?`<div class="guests">${live.map(b=>`
+          <div class="guest">
+            <strong>${esc(b.first_name)} ${esc(b.last_name)}</strong>${b.seats>1?` · ${b.seats} seats`:''}
+            · <a href="mailto:${esc(b.email)}">${esc(b.email)}</a>${b.phone?' · <a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':''}
+            ${[b.street_address,b.city,b.state,b.zip].filter(Boolean).length
+              ? `<span class="note">${esc([b.street_address,b.city,b.state,b.zip].filter(Boolean).join(', '))}${
+                  b.headcount?` · expecting ${b.headcount}`:''}</span>`:''}
+            ${b.notes?`<span class="note">“${esc(b.notes)}”</span>`:''}
+            <button class="mini rmguest" data-cancelb="${b.id}" data-nm="${esc(b.first_name)} ${esc(b.last_name)}">Cancel seat</button>
+          </div>`).join('')}</div>`:''}
+        ${line.length?`<div class="guests waitline">
+          <div class="linehead">Waiting</div>
+          ${line.map((w,i)=>`
+          <div class="guest">
+            <span class="ord">${i+1}</span>
+            <strong>${esc(w.first_name)} ${esc(w.last_name)}</strong>${w.seats>1?` · ${w.seats} seats`:''}
+            · <a href="mailto:${esc(w.email)}">${esc(w.email)}</a>${w.phone?' · <a href="tel:'+esc(w.phone)+'">'+esc(w.phone)+'</a>':''}
+            ${w.status==='offered'?`<span class="offered">Seat held — expires ${fmt(w.offer_expires_at)}</span>`:''}
+            ${w.notes?`<span class="note">“${esc(w.notes)}”</span>`:''}
+          </div>`).join('')}</div>`:''}
+      </div>`;
+    }).join('');
+
+    el.querySelectorAll('[data-pub]').forEach(b=>b.onclick=async()=>{
+      await fetch('/api/admin/slots/'+b.dataset.pub,{method:'PATCH',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({published:b.dataset.val==='true'})});
+      load();refreshPreview();
+    });
+    el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
+    el.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>openAdder(b.dataset.add));
+    el.querySelectorAll('[data-dup]').forEach(b=>b.onclick=async()=>{
+      b.disabled=true;b.textContent='Copying…';
+      const r=await fetch('/api/admin/slots/'+b.dataset.dup+'/duplicate',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok){ b.disabled=false;b.textContent='Duplicate'; toast(d.error||'Could not copy that event.','bad'); return; }
+      toast('Copied to '+new Date(d.starts_at).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' — edit it to change the date.');
+      load();refreshPreview();
+    });
+    el.querySelectorAll('[data-cancelb]').forEach(b=>b.onclick=()=>cancelSeat(b.dataset.cancelb,b.dataset.nm));
+    el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
+      const id=b.dataset.del;
+      undoable('Removing this date from your booking page.',async function(){
+        const r=await fetch('/api/admin/slots/'+id,{method:'DELETE'});
+        const d=await r.json().catch(function(){return {};});
+        if(!r.ok){ toast(d.error||'Could not remove that date.','bad'); load(); return; }
+        toast('Date removed.');
+        load();refreshPreview();
+      });
+    });
+  }catch(e){ el.innerHTML=`<p class="empty">${esc(e.message)}</p>`; }
+}
+
+document.getElementById('add').onclick=async()=>{
+  const err=document.getElementById('err'),btn=document.getElementById('add');
+  const v=id=>document.getElementById(id).value.trim();
+  err.textContent='';
+  if(!v('date')||!v('time')) return err.textContent='Pick a date and a start time.';
+  btn.disabled=true;btn.textContent='Opening…';
+  try{
+    // interpret the picker as Eastern time
+    const local=new Date(`${v('date')}T${v('time')}:00`);
+    const offset=new Intl.DateTimeFormat('en-US',{timeZone:TZ,timeZoneName:'longOffset'})
+      .formatToParts(local).find(p=>p.type==='timeZoneName').value.replace('GMT','')||'-04:00';
+    const r=await fetch('/api/admin/slots',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slot_type:v('type'),title:v('title'),starts_at:`${v('date')}T${v('time')}:00${offset}`,
+        duration_minutes:v('dur'),seats_total:v('seats'),location:v('loc'),price_note:v('price'),price_cents:Math.round((parseFloat(v('amt'))||0)*100),notes:v('notes'),repeat_weeks:parseInt(v('rep'),10)||1,confirm_free:window.__confirmFree||false})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Could not open that date.');
+    ['loc','price','amt','notes'].forEach(id=>document.getElementById(id).value='');
+    load();refreshPreview();
+  }catch(e){ err.textContent=e.message; }
+  btn.disabled=false;btn.textContent='Open this date';
+};
+load();
+var pvr=document.getElementById('pvRefresh');if(pvr)pvr.addEventListener('click',refreshPreview);
+var pvc=document.getElementById('pvCopy');if(pvc)pvc.addEventListener('click',function(){var url=location.origin+'/book';if(navigator.clipboard){navigator.clipboard.writeText(url);}else{var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}var m=document.getElementById('pvCopyMsg');m.textContent='Copied '+url;setTimeout(function(){m.textContent='';},2500);});
+</script>
+<script src="/toast.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+</body>
+</html>

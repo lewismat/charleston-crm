@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reserve a table — Tampa Bay Mahj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== PALETTE — copy the exact hex values from your index.html ===== */
+:root{
+  --cream:#F7F2E4;
+  --cream-2:#EFE7CC;
+  --sage:#4C5B40;
+  --sage-dk:#3B4832;
+  --gold:#C9A24B;
+  --ink:#2C3327;
+  --ink-soft:#5D6656;
+  --tile-face:#FBF8EF;
+  --tile-edge:#DED3B4;
+  --radius:14px;
+  --display:'Cormorant Garamond',Georgia,serif;
+  --body:'Karla',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--body);color:var(--ink);
+  background:
+    repeating-linear-gradient(90deg,var(--cream) 0 28px,var(--cream-2) 28px 56px);
+  min-height:100vh;
+}
+.wrap{max-width:940px;margin:0 auto;padding:28px 18px 80px}
+
+/* header */
+header{text-align:center;padding:14px 0 26px}
+header img{max-height:110px;width:auto}
+header .fallback{font-family:var(--display);font-size:2rem;color:var(--sage-dk);letter-spacing:.02em}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(2rem,5vw,3rem);margin:.5rem 0 .25rem;letter-spacing:.01em}
+.sub{color:var(--ink-soft);margin:0;font-size:1rem}
+
+/* filter chips */
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:26px 0 18px}
+.chip{
+  border:1.5px solid var(--tile-edge);background:var(--tile-face);color:var(--ink-soft);
+  font-family:var(--body);font-size:.85rem;font-weight:500;padding:8px 14px;border-radius:999px;
+  cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s;
+}
+.chip:hover{border-color:var(--sage)}
+.chip[aria-pressed="true"]{background:var(--sage);border-color:var(--sage);color:var(--cream)}
+.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* suit marks — mahjong dot vernacular */
+.mark{display:inline-grid;gap:2px;width:14px;flex:0 0 14px}
+.mark i{width:5px;height:5px;border-radius:50%;background:currentColor;display:block;justify-self:center}
+.mark.one{grid-template-columns:1fr}
+.mark.four{grid-template-columns:1fr 1fr;justify-items:center}
+.mark.bam{display:flex;gap:2px;justify-content:center}
+.mark.bam i{width:2.5px;height:12px;border-radius:2px}
+
+/* month nav */
+.monthbar{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}
+.monthbar h2{font-family:var(--display);font-size:1.5rem;font-weight:600;margin:0}
+.navbtn{
+  background:var(--tile-face);border:1.5px solid var(--tile-edge);border-radius:10px;
+  width:38px;height:38px;font-size:1.1rem;color:var(--sage-dk);cursor:pointer;
+}
+.navbtn:hover:not(:disabled){border-color:var(--sage)}
+.navbtn:disabled{opacity:.35;cursor:default}
+.navbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* the wall */
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.dow span{text-align:center;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.wall{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{aspect-ratio:3/4;min-height:56px}
+
+/* face-down = felt */
+.cell.closed{
+  border-radius:8px;background:rgba(123,140,106,.10);
+  display:flex;align-items:flex-start;justify-content:flex-end;padding:5px 6px;
+}
+.cell.closed span{font-size:.72rem;color:var(--ink-soft);opacity:.55}
+.cell.blank{background:none}
+
+/* face-up = tile */
+.tile{
+  width:100%;height:100%;border:none;padding:0;cursor:pointer;background:none;
+  perspective:600px;font-family:var(--body);
+}
+.tileface{
+  height:100%;border-radius:8px;background:var(--tile-face);
+  border:1px solid var(--tile-edge);border-bottom:4px solid var(--tile-edge);
+  box-shadow:0 2px 5px rgba(44,51,39,.13);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  transition:transform .18s cubic-bezier(.34,1.4,.64,1),box-shadow .18s;
+}
+.tile:hover .tileface{transform:translateY(-4px) rotate(-1.2deg);box-shadow:0 8px 16px rgba(44,51,39,.2)}
+.tile:focus-visible .tileface{outline:2px solid var(--gold);outline-offset:2px}
+.tile[aria-pressed="true"] .tileface{
+  background:var(--sage);border-color:var(--sage-dk);border-bottom-color:var(--sage-dk);
+  color:var(--cream);transform:translateY(-4px);
+}
+.tile .num{font-family:var(--display);font-size:1.5rem;font-weight:700;line-height:1}
+.tile .marks{display:flex;gap:4px;color:var(--gold)}
+.tile[aria-pressed="true"] .marks{color:var(--cream)}
+.tile .left{font-size:.6rem;color:var(--ink-soft);letter-spacing:.03em}
+.tile[aria-pressed="true"] .left{color:var(--cream-2)}
+/* full day — still face-up, because the list is still open */
+.tile.waitonly .tileface{background:var(--cream-2);border-bottom-color:var(--gold)}
+.tile.waitonly .num{color:var(--ink-soft)}
+.tile.waitonly .left{color:#8A6D14;font-weight:700}
+.slot.full{opacity:.9}
+.slot.full .when{color:var(--ink-soft)}
+.tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:999px;background:rgba(198,162,72,.2);color:#8A6D14;margin-left:6px}
+.waitnote{background:rgba(198,162,72,.12);border:1px solid rgba(198,162,72,.35);border-radius:9px;
+  padding:11px 13px;margin-bottom:14px;font-size:.86rem;color:var(--ink-soft)}
+.waitnote strong{color:#8A6D14}
+
+/* day panel */
+.panel{
+  margin-top:20px;background:var(--tile-face);border:1px solid var(--tile-edge);
+  border-radius:var(--radius);padding:20px;box-shadow:0 4px 14px rgba(44,51,39,.08);
+}
+.panel h3{font-family:var(--display);font-size:1.4rem;margin:0 0 14px;font-weight:600}
+.slot{
+  width:100%;text-align:left;background:var(--cream);border:1.5px solid var(--tile-edge);
+  border-radius:10px;padding:13px 15px;margin-bottom:9px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-family:var(--body);color:var(--ink);transition:.15s;
+}
+.slot:hover{border-color:var(--sage);transform:translateX(3px)}
+.slot:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.slot[aria-pressed="true"]{border-color:var(--gold);background:#FBF6E6;border-width:2px}
+.slot .when{font-weight:700;font-size:1rem}
+.slot .what{font-size:.82rem;color:var(--ink-soft);margin-top:3px}
+.slot .right{text-align:right;flex:0 0 auto}
+.price{font-family:var(--display);font-size:1.05rem;font-weight:600;color:var(--sage-dk)}
+.price .pp{font-family:var(--body);font-size:.72rem;font-weight:400;color:var(--sage-soft)}
+.pricenote{font-size:.72rem;color:var(--sage-soft);margin-top:2px}
+.paynote{background:linear-gradient(180deg,#FFFBF0,#F7EFD9);border:1px solid var(--gold-soft);
+  border-left:3px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:14px;
+  font-size:.86rem;color:var(--sage-dk);line-height:1.5}
+.paynote .amt{font-family:var(--display);font-size:1.15rem;font-weight:600;display:block;margin-bottom:2px}
+.paynote .sec{display:block;margin-top:6px;font-size:.74rem;color:var(--sage-soft)}
+.flash{max-width:980px;margin:0 auto 18px;padding:12px 16px;border-radius:12px;font-size:.88rem;
+  background:#FBEEE6;border:1px solid #E2BFA9;color:#8C3F1E}
+
+/* table seat map */
+.tablemap{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:5px}
+.tbl{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border:1px solid var(--tile-edge);border-radius:4px}
+.tbl b{width:6px;height:6px;border-radius:50%;background:var(--sage);display:block}
+.tbl b.taken{background:var(--tile-edge)}
+.seatsleft{font-size:.72rem;color:var(--ink-soft)}
+
+/* form */
+.form{margin-top:18px;border-top:1px dashed var(--tile-edge);padding-top:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+label{font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+input,textarea,select{
+  font-family:var(--body);font-size:.95rem;padding:10px 12px;border-radius:8px;
+  border:1.5px solid var(--tile-edge);background:var(--cream);color:var(--ink);width:100%;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(198,162,72,.18)}
+textarea{resize:vertical;min-height:78px}
+.cta{
+  margin-top:16px;width:100%;background:var(--sage);color:var(--cream);border:none;
+  border-radius:10px;padding:15px;font-family:var(--body);font-size:1rem;font-weight:700;
+  letter-spacing:.04em;cursor:pointer;transition:.18s;
+}
+.cta:hover:not(:disabled){background:var(--sage-dk)}
+.cta:disabled{opacity:.55;cursor:default}
+.cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.err{color:#9B3B2E;font-size:.86rem;margin-top:10px;min-height:1em}
+.empty{color:var(--ink-soft);text-align:center;padding:34px 12px;font-size:.95rem}
+.empty a{color:var(--sage-dk)}
+
+/* confirmation */
+.done{text-align:center;padding:14px 4px}
+.done h3{font-family:var(--display);font-size:2rem;margin:0 0 8px}
+.done p{color:var(--ink-soft);margin:6px 0}
+.donebtns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.ghost{
+  background:none;border:1.5px solid var(--sage);color:var(--sage-dk);border-radius:10px;
+  padding:11px 18px;font-family:var(--body);font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none;
+}
+.ghost:hover{background:rgba(123,140,106,.1)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.confetti i{
+  position:absolute;width:16px;height:22px;border-radius:3px;background:var(--tile-face);
+  border:1px solid var(--tile-edge);border-bottom:3px solid var(--gold);
+  animation:fall 1.5s cubic-bezier(.3,.7,.5,1) forwards;
+}
+@keyframes fall{
+  0%{transform:translateY(-40px) rotate(0);opacity:1}
+  100%{transform:translateY(105vh) rotate(540deg);opacity:0}
+}
+@media (max-width:620px){
+  .grid{grid-template-columns:1fr}
+  .cell{min-height:44px}
+  .tile .num{font-size:1.15rem}
+  .tile .left{display:none}
+  .slot{flex-direction:column;align-items:flex-start}
+  .slot .right{text-align:left}
+  .tablemap{justify-content:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+
+<div id="tbmLoader">
+  <div class="tbmLoad-in">
+    <img src="/logo.png" alt="Tampa Bay Mahj"
+      onerror="this.style.display='none'">
+    <div class="tbmDots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<style>
+#tbmLoader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(90deg,#FBF7EC 0 26px,#F6EEBA 26px 52px);
+  transition:opacity .5s ease}
+#tbmLoader.tbm-gone{opacity:0;pointer-events:none}
+#tbmLoader .tbmLoad-in{text-align:center;transform:translateY(-4%)}
+#tbmLoader img{width:140px;height:auto;filter:drop-shadow(0 8px 22px rgba(59,92,65,.18));
+  animation:tbmBreathe 2.6s ease-in-out infinite}
+#tbmLoader .tbmDots{margin-top:22px;display:flex;gap:9px;justify-content:center}
+#tbmLoader .tbmDots span{width:10px;height:10px;border-radius:50%;background:#3B5C41;
+  animation:tbmDot 1.2s ease-in-out infinite}
+#tbmLoader .tbmDots span:nth-child(2){animation-delay:.18s}
+#tbmLoader .tbmDots span:nth-child(3){animation-delay:.36s}
+@keyframes tbmDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-7px)}}
+@keyframes tbmBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@media(prefers-reduced-motion:reduce){
+  #tbmLoader img,#tbmLoader .tbmDots span{animation:none}
+}
+</style>
+<script>
+(function(){
+  function hide(){
+    var l=document.getElementById('tbmLoader');
+    if(!l||l.classList.contains('tbm-gone'))return;
+    l.classList.add('tbm-gone');
+    setTimeout(function(){ if(l&&l.parentNode) l.parentNode.removeChild(l); },600);
+  }
+  // hide once everything is in, with a graceful minimum so it never just flashes
+  if(document.readyState==='complete'){ setTimeout(hide,400); }
+  else { window.addEventListener('load',function(){ setTimeout(hide,400); }); }
+  // failsafe: never trap the visitor behind the loader
+  setTimeout(hide,9000);
+  window.tbmHideLoader=hide;
+})();
+</script>
+
+<div class="wrap">
+  <header>
+    <img src="/logo.png" alt="Tampa Bay Mahj"
+         onerror="this.outerHTML='<div class=&quot;fallback&quot;>Tampa Bay Mahj</div>'">
+    <h1>Reserve a table</h1>
+    <p class="sub">Pick a face-up tile — those are the days Holly is free.</p>
+  </header>
+  <div class="flash" id="flash" style="display:none"></div>
+
+
+  <div class="monthbar">
+    <button class="navbtn" id="prev" aria-label="Previous month">‹</button>
+    <h2 id="monthlabel"></h2>
+    <button class="navbtn" id="next" aria-label="Next month">›</button>
+  </div>
+
+  <div class="dow" aria-hidden="true">
+    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+  </div>
+  <div class="wall" id="wall"></div>
+
+  <div id="panel"></div>
+</div>
+
+<script>
+const TZ='America/New_York';
+const LABEL={private_lesson:'Private lesson',group_class:'Group class',private_party:'Private party'};
+const MARK={
+  private_lesson:'<span class="mark one"><i></i></span>',
+  group_class:'<span class="mark four"><i></i><i></i><i></i><i></i></span>',
+  private_party:'<span class="mark bam"><i></i><i></i><i></i></span>'
+};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// ET calendar key, e.g. "2026-08-02"
+const key=d=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(d));
+const time=d=>new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'}).format(new Date(d));
+const longDate=d=>new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'long',month:'long',day:'numeric'}).format(new Date(d+'T12:00:00Z'));
+
+let SLOTS=[],filter='all',cursor=new Date(),selDay=null,selSlot=null;
+
+const PAYMSG={
+  cancelled:'Payment cancelled — no charge was made and your seat was released. You can pick a time again below.',
+  unpaid:'That payment did not complete, so no seat was reserved. Nothing was charged.',
+  missing:'We could not match that checkout to a reservation. If you were charged, email Holly and she will sort it out right away.',
+  oversold:'Your payment went through but that seat was taken in the meantime. Holly has been alerted and will contact you today to rebook or refund you.',
+  unconfigured:'Online payment is not switched on for this event yet. Please text Holly to reserve.',
+  error:'Something went wrong finishing that reservation. If you were charged, email Holly — she has been alerted.',
+  done:'That reservation is already confirmed.'
+};
+function showFlash(){
+  const code=new URLSearchParams(location.search).get('payment');
+  if(!code) return;
+  const el=document.getElementById('flash');
+  el.textContent=PAYMSG[code]||PAYMSG.error;
+  el.style.display='block';
+  history.replaceState(null,'',location.pathname);
+}
+
+async function load(){
+  showFlash();
+  const wall=document.getElementById('wall');
+  try{
+    const r=await fetch('/api/slots');
+    if(!r.ok) throw new Error();
+    SLOTS=await r.json();
+  }catch{
+    wall.innerHTML='<p class="empty" style="grid-column:1/-1">The calendar did not load. Refresh the page to try again.</p>';
+    return;
+  }
+  if(SLOTS.length){ cursor=new Date(SLOTS[0].starts_at); }
+  render();
+}
+
+function visible(){ return filter==='all'?SLOTS:SLOTS.filter(s=>s.slot_type===filter); }
+
+function byDay(){
+  const m={};
+  for(const s of visible()){ (m[key(s.starts_at)] ||= []).push(s); }
+  return m;
+}
+
+function render(){
+  const map=byDay();
+  const y=cursor.getFullYear(),mo=cursor.getMonth();
+  document.getElementById('monthlabel').textContent=
+    new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(new Date(y,mo,1));
+
+  const first=new Date(y,mo,1).getDay();
+  const days=new Date(y,mo+1,0).getDate();
+  const todayKey=key(new Date());
+  let html='';
+  for(let i=0;i<first;i++) html+='<div class="cell blank"></div>';
+
+  for(let d=1;d<=days;d++){
+    const k=`${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const list=map[k];
+    if(!list){
+      html+=`<div class="cell closed"><span>${d}</span></div>`;
+      continue;
+    }
+    const types=[...new Set(list.map(s=>s.slot_type))];
+    const seats=list.reduce((a,s)=>a+s.seats_left,0);
+    const waitOnly=seats===0;
+    html+=`<button class="cell tile ${waitOnly?'waitonly':''}" data-day="${k}" aria-pressed="${selDay===k}"
+        aria-label="${longDate(k)} — ${waitOnly?'fully booked, waitlist open':`${list.length} time${list.length>1?'s':''} open`}">
+        <div class="tileface">
+          <span class="num">${d}</span>
+          <span class="marks">${types.map(t=>MARK[t]).join('')}</span>
+          <span class="left">${waitOnly?'Waitlist':`${seats} seat${seats>1?'s':''}`}</span>
+        </div></button>`;
+  }
+  document.getElementById('wall').innerHTML=html;
+
+  // month nav bounds
+  const months=[...new Set(visible().map(s=>key(s.starts_at).slice(0,7)))].sort();
+  const cur=`${y}-${String(mo+1).padStart(2,'0')}`;
+  document.getElementById('prev').disabled=!months.some(m=>m<cur);
+  document.getElementById('next').disabled=!months.some(m=>m>cur);
+
+  document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>{
+    selDay=b.dataset.day===selDay?null:b.dataset.day;selSlot=null;render();
+    if(selDay) document.getElementById('panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+
+  if(!visible().length){
+    document.getElementById('panel').innerHTML=
+      `<div class="panel"><p class="empty">No open times listed right now.<br>
+       Tell Holly what you have in mind on the <a href="/">inquiry form</a> and she will open a date for you.</p></div>`;
+    return;
+  }
+  renderPanel(map);
+}
+
+function seatMap(s){
+  if(s.slot_type!=='group_class') return '';
+  // Seats held for someone on the waitlist read as unavailable — they are not ours to sell.
+  const filled=s.seats_total-s.seats_left;
+  const tables=Math.ceil(s.seats_total/4);
+  let h='<div class="tablemap">';
+  let seen=0;
+  for(let t=0;t<tables;t++){
+    h+='<span class="tbl">';
+    for(let i=0;i<4;i++){
+      const exists=seen<s.seats_total;
+      if(exists) h+=`<b class="${seen<filled?'taken':''}"></b>`;
+      else h+='<b style="opacity:.15"></b>';
+      seen++;
+    }
+    h+='</span>';
+  }
+  return h+`<span class="seatsleft">${s.seats_left} of ${s.seats_total} left</span></div>`;
+}
+
+function renderPanel(map){
+  const p=document.getElementById('panel');
+  if(!selDay){ p.innerHTML=''; return; }
+  const list=(map[selDay]||[]).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  p.innerHTML=`<div class="panel">
+    <h3>${longDate(selDay)}</h3>
+    <div id="slots">${list.map(s=>`
+      <button class="slot ${s.seats_left?'':'full'}" data-id="${s.id}" aria-pressed="${selSlot===s.id}">
+        <span>
+          <span class="when">${time(s.starts_at)}${s.seats_left?'':'<span class="tag">Full</span>'}</span>
+          <span class="what">${MARK[s.slot_type]} ${esc(s.title||LABEL[s.slot_type])} · ${s.duration_minutes} min${
+            s.location?' · '+esc(s.location):''}</span>
+        </span>
+        <span class="right">
+          ${s.price_cents?`<div class="price">$${(s.price_cents/100).toFixed(2)}<span class="pp"> / seat</span></div>`:''}${s.price_note?`<div class="pricenote">${esc(s.price_note)}</div>`:''}
+          ${s.seats_left?seatMap(s):`<div class="seatsleft">${
+            s.waiting?`${s.waiting} waiting · seats open often`:'Full — join the list'}</div>`}
+        </span>
+      </button>`).join('')}</div>
+    <div id="formhost"></div>
+  </div>`;
+  p.querySelectorAll('.slot').forEach(b=>b.onclick=()=>{
+    selSlot=b.dataset.id===selSlot?null:b.dataset.id;renderPanel(map);
+    if(selSlot) document.getElementById('formhost').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+  if(selSlot) renderForm(SLOTS.find(s=>s.id===selSlot));
+}
+
+function renderForm(s){
+  const waiting=s.seats_left===0;
+  const isClass=s.slot_type==='group_class';
+  const isParty=s.slot_type==='private_party';
+  const maxSeats=waiting?Math.min(s.seats_total,8):Math.min(s.seats_left,8);
+  const seatOpts=Array.from({length:maxSeats},(_,i)=>
+    `<option value="${i+1}">${i+1} seat${i?'s':''}</option>`).join('');
+  const day=longDate(selDay).replace(/^\w+, /,'');
+
+  document.getElementById('formhost').innerHTML=`<div class="form">
+    ${waiting?`<div class="waitnote"><strong>This one filled up — but seats open often.</strong>
+      Join the list and the moment someone cancels we email you and <b>hold the seat for 24 hours</b>,
+      so you are not racing anyone.${s.waiting?` ${s.waiting} ${s.waiting===1?'person is':'people are'} ahead of you right now.`:''}
+      It costs nothing to be on it.</div>`:''}
+    ${(!waiting&&s.price_cents)?`<div class="paynote">
+      <span class="amt">$${(s.price_cents/100).toFixed(2)} per seat</span>
+      Payment holds your seat. When you press the button below you will go to <b>Stripe</b>,
+      the same secure checkout used by millions of small businesses — Holly never sees your card
+      number. You come straight back here afterwards and your seat is confirmed on the spot.
+      Need to cancel? Use the link in your confirmation email and text Holly about a refund.
+      <span class="sec" id="totline"></span></div>`:''}
+    <div class="grid">
+      <div class="field"><label for="fn">First name <span style="color:#B3542E">*</span></label><input id="fn" autocomplete="given-name"></div>
+      <div class="field"><label for="ln">Last name <span style="color:#B3542E">*</span></label><input id="ln" autocomplete="family-name"></div>
+      <div class="field"><label for="em">Email <span style="color:#B3542E">*</span></label><input id="em" type="email" autocomplete="email"></div>
+      <div class="field"><label for="ph">Phone <span style="color:#B3542E">*</span></label><input id="ph" type="tel" autocomplete="tel"></div>
+      ${isClass?`<div class="field full"><label for="seats">How many of you${waiting?' would be coming':' are coming'}?</label>
+        <select id="seats">${seatOpts}</select></div>`:''}
+      ${isParty&&!waiting?`
+      <div class="field full"><p style="font-size:.8rem;color:var(--sage-soft);margin:2px 0 0">
+        Where the party is — if you are still deciding, leave these blank and tell Holly later.</p></div>
+      <div class="field full"><label for="addr">Street address</label><input id="addr" autocomplete="street-address"></div>
+      <div class="field"><label for="city">City</label><input id="city" autocomplete="address-level2"></div>
+      <div class="field"><label for="state">State</label><input id="state" value="FL" autocomplete="address-level1"></div>
+      <div class="field"><label for="zip">ZIP</label><input id="zip" inputmode="numeric" autocomplete="postal-code"></div>
+      <div class="field"><label for="head">How many people are you expecting?</label><input id="head" type="number" min="1" inputmode="numeric"></div>`:''}
+      <div class="field full"><label for="notes">Anything else Holly should know?</label>
+        <textarea id="notes" placeholder="${isParty&&!waiting?'Occasion, ages, whether anyone has played before…':'Have you played before? Anything you want to work on?'}"></textarea></div>
+    </div>
+    <button class="cta" id="go">${waiting
+      ? `Add me to the list for ${time(s.starts_at)}`
+      : (s.price_cents ? `Pay &amp; reserve ${time(s.starts_at)} on ${day}`
+                       : `Reserve ${time(s.starts_at)} on ${day}`)}</button>
+    <p class="err" id="err" role="alert"></p>
+  </div>`;
+  if(!waiting&&s.price_cents){
+    const seatSel=document.getElementById('seats'),tot=document.getElementById('totline');
+    const showTotal=()=>{const n=parseInt(seatSel?.value,10)||1;
+      tot.textContent=`Total today: $${((s.price_cents*n)/100).toFixed(2)}${n>1?` (${n} seats)`:''}`;};
+    showTotal(); if(seatSel) seatSel.addEventListener('change',showTotal);
+  }
+  document.getElementById('go').onclick=()=>submit(s);
+}
+
+async function submit(s){
+  const waiting=s.seats_left===0;
+  const v=id=>document.getElementById(id)?.value.trim()||'';
+  const btn=document.getElementById('go'),err=document.getElementById('err');
+  err.textContent='';
+  if(!v('fn')||!v('ln')) return err.textContent='Add your first and last name.';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('em'))) return err.textContent='That email address does not look right.';
+  if(v('ph').replace(/[^0-9]/g,'').length<10) return err.textContent='Add a phone number so Holly can reach you.';
+  const paid=!waiting&&s.price_cents>0;
+  btn.disabled=true;btn.textContent=waiting?'Adding you…':(paid?'Taking you to checkout…':'Reserving…');
+  try{
+    const r=await fetch(waiting?'/api/waitlist':'/api/book',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slot_id:s.id,first_name:v('fn'),last_name:v('ln'),email:v('em'),phone:v('ph'),
+        seats:parseInt(v('seats'),10)||1,street_address:v('addr'),city:v('city'),state:v('state'),
+        zip:v('zip'),headcount:v('head'),notes:v('notes')})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'That did not go through.');
+    if(d.checkout_url){ window.location.href=d.checkout_url; return; }
+    waiting?onList(s,d):confirmed(s,d);
+  }catch(e){
+    err.textContent=e.message;
+    btn.disabled=false;btn.textContent='Try that again';
+    SLOTS=await (await fetch('/api/slots')).json();
+  }
+}
+
+function onList(s,d){
+  document.getElementById('panel').innerHTML=`<div class="panel"><div class="done">
+    <h3>You’re #${d.position} in line.</h3>
+    <p><strong>${esc(s.title||LABEL[s.slot_type])}</strong> — ${longDate(selDay)} at ${time(s.starts_at)}</p>
+    ${s.location?`<p>${esc(s.location)}</p>`:''}
+    <p>${d.already?'You were already on this list.':'Check your email — we sent your place in line.'}
+       If a seat opens, we’ll hold it for you for 24 hours.</p>
+    <div class="donebtns">
+      <a class="ghost" href="${d.status_url}">Check my place in line</a>
+      <a class="ghost" href="/book">See other times</a>
+    </div>
+  </div></div>`;
+  window.scrollTo({top:document.getElementById('panel').offsetTop-80,behavior:'smooth'});
+}
+
+function confirmed(s,d){
+  document.getElementById('panel').innerHTML=`<div class="panel"><div class="done">
+    <h3>Mahjong.</h3>
+    <p><strong>${LABEL[s.slot_type]}</strong> — ${longDate(selDay)} at ${time(s.starts_at)}</p>
+    ${s.location?`<p>${esc(s.location)}</p>`:''}
+    <p>Holly has your details. Check your email for the confirmation.</p>
+    <div class="donebtns">
+      <a class="ghost" href="${d.manage_url}/google" target="_blank" rel="noopener">Add to Google Calendar</a>
+      <a class="ghost" href="${d.manage_url}/calendar.ics">Apple / Outlook (.ics)</a>
+      <a class="ghost" href="${d.manage_url}">View or cancel</a>
+    </div>
+  </div></div>`;
+  burst();
+  window.scrollTo({top:document.getElementById('panel').offsetTop-80,behavior:'smooth'});
+}
+
+function burst(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=document.createElement('div');c.className='confetti';document.body.appendChild(c);
+  for(let i=0;i<26;i++){
+    const t=document.createElement('i');
+    t.style.left=Math.random()*100+'vw';
+    t.style.animationDelay=Math.random()*.5+'s';
+    t.style.animationDuration=(1.1+Math.random()*.8)+'s';
+    c.appendChild(t);
+  }
+  setTimeout(()=>c.remove(),2600);
+}
+
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  filter=c.dataset.filter;selDay=null;selSlot=null;
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+  render();
+});
+document.getElementById('prev').onclick=()=>{cursor.setMonth(cursor.getMonth()-1);selDay=null;selSlot=null;render()};
+document.getElementById('next').onclick=()=>{cursor.setMonth(cursor.getMonth()+1);selDay=null;selSlot=null;render()};
+load();
+</script>
+<script src="/theme.js"></script>
+<script src="/toast.js"></script>
+<script src="/branding.js"></script>
+</body>
+</html>

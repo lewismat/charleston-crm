@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Charleston — Booking &amp; business software for mah jongg teachers</title>
+<meta name="description" content="Charleston runs the business of your mah jongg studio — bookings, payments, students, reminders. $9.99 a month, cancel anytime.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* sampled straight from Holly's logo */
+  --logo:#3B5C41; --logo-2:#4A6E50; --logo-dk:#2C4630;
+  --charleston:#3B5C41; --charleston-2:#4A6E50; --charleston-dk:#2C4630;
+  --velvet:#3B5C41; --velvet-2:#4A6E50; --emerald:#3B5C41;
+  --gold:#C9A227; --gold-lt:#E8D08A; --gold-dp:#9A7A22;
+  --ruby:#C41E3A; --sapphire:#1560BD; --amethyst:#7D3C98; --tangerine:#E2761B;
+  --stripe-a:#FDF6D8; --stripe-b:#F7DC63;
+  --ivory:#FFFDF4; --parchment:#FBF6E4; --ink:#22301F; --stone:#6A7566;
+  --display:'Playfair Display',Georgia,serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --foil:linear-gradient(100deg,transparent,#C9A227 22%,#E8D08A 50%,#C9A227 78%,transparent);
+  --card:0 2px 0 rgba(255,255,255,.85) inset,0 22px 52px rgba(59,92,65,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);font-size:17px;font-weight:300;line-height:1.72;
+  color:var(--ink);background:var(--stripe-a);overflow-x:hidden}
+h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.14}
+p{max-width:62ch}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px;position:relative;z-index:2}
+
+/* ---------------- the room ---------------- */
+.scene{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.scene .stripes{position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,var(--stripe-a) 0 30px,var(--stripe-b) 30px 60px);opacity:.95}
+.scene .wash{position:absolute;inset:0;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,0) 22%),
+    linear-gradient(180deg,rgba(255,253,244,.58),rgba(255,253,244,.46) 40%,rgba(255,253,244,.62))}
+header,main,.site-foot{position:relative;z-index:2}
+
+/* ---------------- type furniture ---------------- */
+.eyebrow{font-family:var(--body);font-size:.64rem;font-weight:400;
+  letter-spacing:.36em;text-transform:uppercase;color:var(--gold-dp)}
+/* A tile rack instead of a rule: a green ledge with a lip, a groove where the
+   tiles would stand, and a shadow underneath. Built from background layers only. */
+.rack-rule{
+  height:15px;border:none;margin:30px 0;border-radius:3px;
+  background:
+    repeating-linear-gradient(90deg,rgba(20,30,25,.22) 0 1px,transparent 1px 24px) 0 3px/100% 4px no-repeat,
+    linear-gradient(180deg,#5B8262 0%,var(--logo-2) 26%,var(--logo) 56%,var(--logo-dk) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -2px 3px rgba(0,0,0,.28),
+    0 7px 14px rgba(59,92,65,.3);
+}
+.foilrule{height:1px;border:none;background:var(--foil);border-radius:1px;opacity:.85}
+
+/* ---------------- masthead ---------------- */
+header{padding:26px 0}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.mark{display:flex;align-items:center;gap:12px;text-decoration:none}
+.mark .name{font-family:var(--display);font-size:1.5rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--velvet);font-weight:600}
+.navlinks{display:flex;gap:32px;font-size:.9rem}
+.navlinks a{text-decoration:none;color:var(--stone);transition:color .25s var(--ease)}
+.navlinks a:hover{color:var(--gold-dp)}
+
+/* ---------------- buttons ---------------- */
+.btn{display:inline-block;font-size:.88rem;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none;padding:16px 36px;border-radius:3px;
+  cursor:pointer;border:none;
+  background-repeat:no-repeat;
+  transition:background-position .75s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease)}
+.btn-gold{color:#FFFDF4;border:1px solid var(--logo-dk);
+  background-image:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.26) 47%,transparent 60%),linear-gradient(180deg,var(--logo-2) 0%,var(--logo) 46%,var(--logo-dk) 100%);
+  background-size:250% 100%,100% 100%;background-position:-70% 0,0 0;
+  box-shadow:0 1px 0 rgba(255,255,255,.26) inset,0 12px 26px rgba(59,92,65,.34)}
+.btn-gold:hover{color:#FFFDF4;border-color:var(--gold);transform:translateY(-2px);
+  background-position:170% 0,0 0;
+  box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 16px 32px rgba(59,92,65,.4)}
+.btn-ghost{background:transparent;color:var(--velvet);border:1px solid var(--gold-dp);padding:15px 35px}
+.btn-ghost:hover{background:var(--logo);color:#FFFDF4;border-color:var(--logo)}
+.btn-onvelvet{color:#FFFDF4;border:1px solid var(--gold);
+  background-image:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.26) 47%,transparent 60%),linear-gradient(180deg,var(--logo-2) 0%,var(--logo) 46%,var(--logo-dk) 100%);
+  background-size:250% 100%,100% 100%;background-position:-70% 0,0 0;
+  box-shadow:0 1px 0 rgba(255,255,255,.24) inset,0 10px 24px rgba(0,0,0,.3)}
+.btn-onvelvet:hover{color:#FFFDF4;border-color:var(--gold-lt);transform:translateY(-2px);
+  background-position:170% 0,0 0}
+:focus-visible{outline:2px solid var(--gold-dp);outline-offset:3px}
+
+/* ---------------- hero ---------------- */
+.hero{padding:64px 0 40px;text-align:center}
+/* Three tiles — the Charleston pass is three: right, across, left. */
+.hand{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:0 0 26px}
+.hand svg{
+  filter:drop-shadow(0 10px 16px rgba(59,92,65,.28));
+  transition:transform .5s var(--ease);
+}
+.hand svg:nth-child(1){transform:rotate(-7deg) translateY(3px)}
+.hand svg:nth-child(3){transform:rotate(7deg) translateY(3px)}
+.hero:hover .hand svg:nth-child(1){transform:rotate(-11deg) translateY(0)}
+.hero:hover .hand svg:nth-child(2){transform:translateY(-4px)}
+.hero:hover .hand svg:nth-child(3){transform:rotate(11deg) translateY(0)}
+@media(prefers-reduced-motion:reduce){.hand svg{transition:none}}
+@media(max-width:760px){.hand{gap:7px;margin-bottom:20px}.hand svg{width:52px;height:70px}}
+.hero h1{font-size:clamp(2.8rem,7vw,5.4rem);color:var(--velvet);margin:22px 0 0;letter-spacing:-.01em;
+  text-shadow:0 1px 0 rgba(255,255,255,.6)}
+.hero h1 em{font-style:italic;color:var(--charleston);position:relative;white-space:nowrap}
+.hero h1 em::after{content:'';position:absolute;left:4%;right:4%;bottom:.06em;height:3px;
+  background:var(--foil);opacity:.9;border-radius:2px}
+.hero .lede{margin:24px auto 0;font-size:1.14rem;color:var(--stone);max-width:52ch}
+.hero .cta{margin-top:40px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ---------------- sections ---------------- */
+section{padding:56px 0 88px}
+.section-head{text-align:center;margin-bottom:56px}
+.section-head h2{font-size:clamp(2rem,4vw,3rem);color:var(--velvet);margin-top:12px;font-style:italic}
+.section-head p{margin:14px auto 0;color:var(--stone)}
+
+/* ---------------- features: shaped like mah jongg tiles ---------------- */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;max-width:960px;margin:0 auto}
+.feature{
+  position:relative;text-align:center;padding:46px 28px 44px;
+  background:
+    /* the scalloped brow — a row of little arcs, like the logo badge */
+    radial-gradient(circle 11px at 11px 11px,#E3D6B4 0 11px,transparent 11px) 0 0/22px 22px repeat-x,
+    radial-gradient(circle 10px at 11px 10px,var(--ivory) 0 10px,transparent 10px) 0 1px/22px 22px repeat-x,
+    linear-gradient(168deg,#FFFFFF 0%,var(--ivory) 24%,#F7F1DF 100%);
+  border:1px solid #E3D6B4;border-top:none;
+  border-radius:0 0 10px 10px;
+  /* the base of the tile, and the light sitting on its face */
+  box-shadow:
+    0 2px 0 rgba(255,255,255,.95) inset,
+    0 -14px 0 0 var(--logo) inset,
+    0 -18px 0 0 var(--logo-dk) inset,
+    0 18px 34px rgba(59,92,65,.2);
+  transition:transform .4s var(--ease),box-shadow .4s var(--ease);
+  overflow:hidden;
+}
+/* the carved frame on a tile face */
+.feature::before{
+  content:'';position:absolute;top:26px;left:11px;right:11px;bottom:24px;
+  border:1px solid rgba(59,92,65,.18);border-radius:9px;pointer-events:none;z-index:0;
+}
+.feature > *{position:relative;z-index:1}
+.feature::after{display:none}
+.feature:hover{
+  transform:translateY(-5px);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,.95) inset,
+    0 -14px 0 0 var(--logo) inset,
+    0 -18px 0 0 var(--logo-dk) inset,
+    0 28px 52px rgba(59,92,65,.26);
+}
+.feature .ic{
+  width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin:2px auto 18px;
+  border:1px solid rgba(59,92,65,.26);
+  background:linear-gradient(160deg,#fff,rgba(59,92,65,.1));
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 3px 8px rgba(59,92,65,.14);
+}
+.feature h3{font-size:1.36rem;color:var(--velvet);margin-bottom:10px;font-style:italic;letter-spacing:.004em}
+.feature p{font-size:.93rem;color:var(--stone);line-height:1.68;margin:0 auto;max-width:30ch}
+@media(max-width:860px){.features{grid-template-columns:1fr;max-width:420px}}
+
+/* ---------------- pricing ----------------
+   A gold frame is just a padded box behind an ivory box. No pseudo-elements,
+   no z-index, nothing that can be clipped. It renders or the page is broken. */
+.pricing{position:relative;color:var(--parchment);
+  border-top:2px solid var(--gold);border-bottom:2px solid var(--gold);
+  background:
+    radial-gradient(70% 60% at 50% -8%,rgba(255,255,255,.16),transparent 60%),
+    radial-gradient(90% 120% at 50% 0%,var(--velvet-2),var(--velvet) 62%)}
+.pricing .section-head h2{color:#F3EFE0}
+.pricing .section-head p{color:rgba(251,246,228,.74)}
+.pricing .eyebrow{color:var(--gold-lt)}
+
+.plan-frame{
+  max-width:470px;margin:0 auto;padding:4px 4px 4px;border-radius:16px 16px 19px 19px;
+  background:linear-gradient(150deg,#8A6A14 0%,#F0D98C 20%,#C9A227 40%,#FBEFC0 54%,#C9A227 70%,#8A6A14 100%);
+  box-shadow:0 0 36px rgba(201,162,39,.4),0 34px 74px rgba(0,0,0,.48);
+}
+.plan{
+  border-radius:0 0 15px 15px;padding:54px 40px 46px;text-align:center;
+  background:
+    /* the scalloped brow — gold shows through the gaps */
+    radial-gradient(circle 12px at 12px 12px,#F3EBD3 0 12px,transparent 12px) 0 0/24px 24px repeat-x,
+    radial-gradient(circle 11px at 12px 11px,#FFFFFF 0 11px,transparent 11px) 0 1px/24px 24px repeat-x,
+    linear-gradient(180deg,#FFFFFF 0%,#FFFDF4 22%,var(--parchment) 100%);
+}
+.tier{font-size:.66rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-dp)}
+.price{font-family:var(--display);color:var(--velvet);margin:18px 0 2px;line-height:1;font-style:italic}
+.price .cur{font-size:1.8rem;vertical-align:super;color:var(--gold-dp)}
+.price .amt{font-size:4.6rem;font-weight:600;letter-spacing:-.02em;color:var(--logo)}
+.price .per{font-family:var(--body);font-size:.9rem;font-weight:300;color:var(--stone);letter-spacing:.05em}
+.cancel{font-size:.86rem;color:var(--stone);margin-bottom:26px}
+.includes{list-style:none;text-align:left;margin:26px 0 30px}
+.includes li{display:flex;gap:12px;align-items:flex-start;padding:8px 0;font-size:.94rem;color:var(--ink)}
+.includes svg{flex:none;margin-top:5px;color:var(--gold-dp)}
+.plan .btn{width:100%}
+.plan .note{margin-top:16px;font-size:.78rem;color:var(--stone);line-height:1.6}
+
+/* ---------------- closing ---------------- */
+.closing{text-align:center}
+.closing h2{font-size:clamp(2rem,3.8vw,2.9rem);color:var(--velvet);font-style:italic}
+.closing p{margin:16px auto 32px;color:var(--stone)}
+
+/* ---------------- footer ---------------- */
+.site-foot{background:var(--velvet);color:rgba(251,246,228,.8);padding:40px 0 48px;font-size:.85rem}
+.foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+.site-foot a{text-decoration:none}
+.site-foot a:hover{color:var(--gold)}
+
+/* ---------------- motion ---------------- */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .95s var(--ease),transform .95s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+    html{scroll-behavior:auto}
+}
+
+/* ---------------- mobile ---------------- */
+@media(max-width:760px){
+  body{font-size:16px}
+  .wrap{padding:0 20px}
+  section{padding:40px 0 60px}
+  .hero{padding:56px 0 28px}
+  .navlinks{display:none}
+  .btn{display:block;text-align:center}
+  .hero .cta{flex-direction:column;align-items:stretch}
+  .plan{padding:38px 24px}
+  .price .amt{font-size:3.6rem}
+  .scene .stripes{background:repeating-linear-gradient(90deg,var(--stripe-a) 0 20px,var(--stripe-b) 20px 40px)}
+  .section-head{margin-bottom:40px}
+}
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <div class="stripes"></div>
+  <div class="wash"></div>
+</div>
+
+<header>
+  <div class="wrap nav">
+    <a class="mark" href="#top" aria-label="Charleston, home">
+      <svg width="24" height="31" viewBox="0 0 24 31" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="22" height="29" rx="4" fill="#FFFDF4" stroke="#C9A227" stroke-width="1.2"/>
+        <path d="M12 8v15M8.5 11.5h7M8.5 15.5h7M8.5 19.5h7" stroke="#3B5C41" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span class="name">Charleston</span>
+    </a>
+    <nav class="navlinks">
+      <a href="#what">What it does</a><a href="#pricing">Pricing</a><a href="/login">Sign in</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap">
+    <div class="hand" aria-hidden="true">
+      <svg width="64" height="85" viewBox="0 0 30 40" fill="none" aria-hidden="true">
+        <rect x="1.2" y="1.2" width="27.6" height="37.6" rx="4.6" fill="#FFFEF8" stroke="#C9A227" stroke-width="1.2"/>
+        <rect x="3.8" y="3.8" width="22.4" height="32.4" rx="3" fill="none" stroke="#E5D4A8" stroke-width=".8"/>
+        <path d="M2.6 36.2h24.8" stroke="#E5D4A8" stroke-width=".8"/>
+        <path d="M15 10.5v18M10.8 14.2h8.4M10.8 19.5h8.4M10.8 24.8h8.4" stroke="#3B5C41" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
+      <svg width="64" height="85" viewBox="0 0 30 40" fill="none" aria-hidden="true">
+        <rect x="1.2" y="1.2" width="27.6" height="37.6" rx="4.6" fill="#FFFEF8" stroke="#C9A227" stroke-width="1.2"/>
+        <rect x="3.8" y="3.8" width="22.4" height="32.4" rx="3" fill="none" stroke="#E5D4A8" stroke-width=".8"/>
+        <path d="M2.6 36.2h24.8" stroke="#E5D4A8" stroke-width=".8"/>
+        <circle cx="15" cy="19.5" r="6.8" fill="none" stroke="#3B5C41" stroke-width="1.9"/><circle cx="15" cy="19.5" r="2.4" fill="#C9A227"/>
+      </svg>
+      <svg width="64" height="85" viewBox="0 0 30 40" fill="none" aria-hidden="true">
+        <rect x="1.2" y="1.2" width="27.6" height="37.6" rx="4.6" fill="#FFFEF8" stroke="#C9A227" stroke-width="1.2"/>
+        <rect x="3.8" y="3.8" width="22.4" height="32.4" rx="3" fill="none" stroke="#E5D4A8" stroke-width=".8"/>
+        <path d="M2.6 36.2h24.8" stroke="#E5D4A8" stroke-width=".8"/>
+        <path d="M9.4 19.5h11.2M15 10.5v18M11 14.4h8v10.2h-8z" stroke="#3B5C41" stroke-width="1.9" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+      <p class="eyebrow">Booking &amp; business software for mah jongg teachers</p>
+      <h1>You teach the game.<br><em>We&rsquo;ll run the business.</em></h1>
+      <p class="lede">Charleston is the software that runs your mah jongg studio &mdash; classes,
+        bookings, payments and students in one place. <b>Your students pay you.</b> We only ever
+        charge you the $9.99.</p>
+      <div class="cta">
+        <a class="btn btn-gold" href="#pricing">Begin your studio</a>
+        <a class="btn btn-ghost" href="#what">See what it does</a>
+      </div>
+    </div>
+  </div>
+
+  <section id="what">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">What it does</p>
+        <h2>Everything the house needs.<br>Nothing it doesn&rsquo;t.</h2>
+        <p>For teachers who would rather be at the table than in a spreadsheet.</p>
+      </div>
+      <div class="features">
+
+        <article class="feature reveal">
+          <div class="ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#3B5C41" stroke-width="1.4"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+          <h3>The table fills itself</h3>
+          <p>Open a date and share one link. They book and pay themselves, the seat is held when
+            the money clears, and a full table opens its own waitlist.</p>
+        </article>
+
+        <article class="feature reveal">
+          <div class="ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#3B5C41" stroke-width="1.4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+          <h3>Never a stranger twice</h3>
+          <p>Every enquiry becomes a name that keeps its story. Confirmations and day-before
+            reminders go by email and text &mdash; and you are told if one fails.</p>
+        </article>
+
+        <article class="feature reveal">
+          <div class="ic"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#3B5C41" stroke-width="1.4"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
+          <h3>Your name out front</h3>
+          <p>One handsome page for your story, your rates and your links &mdash; and room to invite
+            an assistant onto the same calendar when you need one.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Membership</p>
+        <h2>One plan. No fine print.</h2>
+        <p>No tiers, no seat counts, nobody to haggle with.</p>
+      </div>
+      <div class="plan-frame reveal">
+        <div class="plan">
+        <p class="tier">The Studio</p>
+        <p class="price"><span class="cur">$</span><span class="amt">9.99</span><span class="per"> / month</span></p>
+        <p class="cancel">Stay as long as it suits you. Leave in two clicks &mdash; no phone call, no guilt.</p>
+        <hr class="rack-rule">
+        <ul class="includes">
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Unlimited events, students and bookings</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Online payment, waitlists and refunds</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Email and text confirmations</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your own public page and booking link</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Assistants and co-teachers included</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your records, exportable, always yours</li>
+        </ul>
+        <a class="btn btn-onvelvet" href="/signup">Begin your studio</a>
+        <p class="note"><b>Your students&rsquo; payments go straight to your own Stripe account.</b><br>Charleston never holds or takes a cut of your money &mdash; we charge $9.99 for the software, nothing more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <div class="reveal">
+        <h2>Take your seat.</h2>
+        <p>Set up your studio this afternoon. Open your first class before supper.</p>
+        <a class="btn btn-gold" href="/signup">Begin — $9.99 a month</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-in">
+    <span>Charleston &nbsp;·&nbsp; Booking &amp; business software for mah jongg teachers</span>
+    <span><a href="#pricing">Pricing</a> &nbsp;&nbsp; <a href="#what">What it does</a> &nbsp;&nbsp; <a href="mailto:hello@charleston.studio">Correspondence</a></span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in');});return;}
+  var io=new IntersectionObserver(function(en){en.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},
+    {threshold:.12,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(e){io.observe(e);});
+})();
+</script>
+</body></html>

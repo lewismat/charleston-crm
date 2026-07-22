@@ -1,0 +1,380 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-dk:#8A6D14;--red:#B3542E;--green-ok:#3f7d4e;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh;background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.18) 0 3px,transparent 3px 30px)}
+.tbmnav{background:var(--sage-dk);color:var(--cream);display:flex;align-items:center;gap:16px;padding:11px 22px;flex-wrap:wrap}
+.tbmnav .brand{font-family:var(--display);font-weight:700;font-size:1.15rem;margin-right:auto}
+.tbmnav a{color:var(--cream);text-decoration:none;font-size:.85rem;font-weight:500;opacity:.85;cursor:pointer}
+.tbmnav a:hover{opacity:1}.tbmnav a.active{color:var(--gold);opacity:1;font-weight:700}
+.wrap{max-width:920px;margin:0 auto;padding:28px 22px}
+h1{font-family:var(--display);font-weight:700;font-size:2.1rem;color:var(--sage-dk)}
+.sub{color:var(--ink-soft);font-weight:300;margin-bottom:20px}
+.panel{background:var(--tile);border:1px solid var(--tile-edge);border-radius:18px;padding:24px;margin-bottom:18px;box-shadow:0 10px 26px rgba(59,72,50,.07)}
+.panel h2{font-family:var(--display);font-size:1.5rem;color:var(--sage-dk);font-weight:700;display:flex;align-items:center;gap:9px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;padding:4px 11px;border-radius:20px;margin-top:8px}
+.status.on{background:rgba(63,125,78,.14);color:var(--green-ok)}
+.status.off{background:rgba(93,102,86,.12);color:var(--ink-soft)}
+label{display:block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);font-weight:700;margin:16px 0 5px}
+input{width:100%;padding:12px;border:1px solid var(--tile-edge);border-radius:11px;background:#fff;font-family:var(--body);font-size:1rem;color:var(--sage-dk)}
+input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+.btnrow{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);font-weight:700;font-size:.95rem;cursor:pointer}
+.save{background:linear-gradient(160deg,var(--sage),var(--sage-dk));color:var(--cream);box-shadow:0 8px 18px rgba(59,72,50,.2)}
+.save:hover{filter:brightness(1.06)}
+.test{background:#fff;border:1.5px solid var(--gold);color:var(--gold-dk)}
+.test:hover{background:rgba(201,162,75,.08)}
+.msg{font-size:.9rem}.msg.ok{color:var(--green-ok)}.msg.err{color:var(--red)}
+.note{background:rgba(201,162,75,.09);border:1px solid var(--gold-soft,#E3CD96);border-radius:12px;padding:13px 15px;font-size:.86rem;color:var(--ink-soft);margin-top:16px;line-height:1.55}
+.note b{color:var(--sage-dk)}
+.note a{color:var(--gold-dk);font-weight:700}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:6px}
+.swatch{border:1.5px solid var(--tile-edge);border-radius:14px;padding:12px;background:#fff;cursor:pointer;text-align:left;font-family:'Karla',sans-serif}
+.swatch.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,75,.3)}
+.swatch .chips{display:flex;gap:5px;margin-bottom:8px}
+.swatch .chips i{width:20px;height:20px;border-radius:50%;display:block}
+.swatch .nm{font-weight:700;font-size:.86rem;color:var(--sage-dk)}
+.invrow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border:1px solid var(--tile-edge);border-radius:10px;margin-bottom:7px;flex-wrap:wrap}
+.invcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:1rem;color:var(--sage-dk);letter-spacing:.08em}
+.invchip{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:12px}
+.invchip.open{background:rgba(63,125,78,.14);color:var(--green-ok)}
+.invchip.used{background:var(--cream-2);color:var(--ink-soft)}
+.invcopy{margin-left:auto;padding:7px 13px;border:1px solid var(--gold);border-radius:9px;background:#fff;color:var(--gold-dk);font-family:var(--body);font-weight:700;font-size:.78rem;cursor:pointer}
+  .steps{margin:4px 0 12px 18px;font-size:.86rem;line-height:1.65;color:var(--ink-soft)}
+  .steps li{margin-bottom:7px}
+  .steps b{color:var(--sage-dk)}
+  .perms{margin:5px 0 0 16px;list-style:disc}
+  .warn{display:block;color:#8C3F1E;font-size:.8rem;margin-top:3px}
+  .opt{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;background:var(--tile);
+    border:1px solid var(--tile-edge);color:var(--ink-soft);border-radius:999px;padding:3px 9px;
+    vertical-align:middle;font-weight:400}
+
+  .set-layout{display:flex;gap:26px;align-items:flex-start}
+  .set-nav{flex:none;width:200px;position:sticky;top:20px;display:flex;flex-direction:column;gap:3px}
+  .set-nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:11px 14px;border:none;background:none;border-radius:11px;cursor:pointer;
+    font-family:var(--body);font-size:.92rem;color:var(--ink);transition:background .16s,color .16s}
+  .set-nav button:hover{background:var(--tile)}
+  .set-nav button.active{background:var(--sage);color:#F6F1E2;font-weight:600}
+  .set-body{flex:1;min-width:0}
+  .set-body .panel{display:none}
+  .set-body .panel.show{display:block;animation:setFade .25s ease}
+  @keyframes setFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media(max-width:760px){
+    .set-layout{flex-direction:column;gap:14px}
+    .set-nav{width:100%;position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+    .set-nav button{width:auto;white-space:nowrap;padding:9px 14px;font-size:.86rem}
+  }
+</style><script src="/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="tbmnav"><span class="brand">Tampa Bay Mahj</span><a href="/dashboard">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings" class="active">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<div class="wrap">
+  <h1>Settings</h1>
+  <p class="sub">Everything about your studio, in one place.</p>
+  <div class="set-layout">
+    <nav class="set-nav" id="setNav"></nav>
+    <div class="set-body">
+
+  <div class="panel" data-cat="business">
+    <h2>Business profile</h2>
+    <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Your logo and name show up on your booking page, inquiry form, dashboard and confirmations.</p>
+    <label>Business name</label>
+    <input id="biz_name" placeholder="Tampa Bay Mahj" autocomplete="off">
+    <label style="margin-top:14px">Your logo</label>
+    <div class="photorow">
+      <div class="photoprev" id="logoprev"><span>No logo</span></div>
+      <div class="photobtns">
+        <button type="button" class="photobtn" id="logopick">Upload logo</button>
+        <button type="button" class="photodel" id="logodel">Remove</button>
+        <span class="photohint">A square PNG or JPG works best. Resized automatically.</span>
+      </div>
+      <input type="file" id="logofile" accept="image/*" style="display:none">
+      <input type="hidden" id="biz_logo">
+    </div>
+    <div class="btnrow" style="margin-top:12px"><button class="save" id="biz_save">Save business profile</button><span class="msg" id="biz_msg"></span></div>
+  </div>
+
+  <div class="panel" data-cat="appearance">
+    <h2>Appearance</h2>
+    <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 6px">Pick a color theme for your workspace.</p>
+    <div class="swatches" id="swatches"></div>
+  </div>
+
+  <div class="panel" data-cat="account">
+    <h2>Account · Password</h2>
+    <label>Current password</label><input id="pw_cur" type="password" autocomplete="current-password">
+    <label>New password</label><input id="pw_new" type="password" autocomplete="new-password">
+    <label>Confirm new password</label><input id="pw_conf" type="password" autocomplete="new-password">
+    <div class="btnrow"><button class="save" id="pw_save">Update password</button><span class="msg" id="pw_msg"></span></div>
+  </div>
+
+  <div class="panel" data-cat="team">
+    <h2>Team &amp; invites</h2>
+    <p style="color:var(--ink-soft);font-size:.86rem;font-weight:300;margin:2px 0 8px">Sign-up is invite-only. Share a code and that person can create their own account — each code works once.</p>
+    <div class="btnrow"><button class="save" id="inv_new">Generate invite code</button><span class="msg" id="inv_msg"></span></div>
+    <div id="inv_list" style="margin-top:14px"></div>
+  </div>
+
+  <div class="panel" data-cat="email">
+    <h2>Email my guests</h2>
+    <div id="mailStatus"></div>
+    <p style="color:var(--ink-soft);font-size:.86rem;font-weight:300;margin:2px 0 10px">
+      Sends confirmations to whoever books, and alerts to you. <b>Until this is on, nobody is emailed anything.</b></p>
+    <ol class="steps">
+      <li>Make a free account at <a href="https://resend.com" target="_blank" rel="noopener">resend.com</a>.</li>
+      <li>Open <b>Domains</b> and add the web address you own (like tampabaymahj.com), then follow their instructions to verify it.
+        <span class="warn">You need a domain you own. Without one, Resend will only deliver to your own address — not to your students.</span></li>
+      <li>Open <b>API Keys</b> → <b>Create API Key</b>, and paste it below.</li>
+      <li>Set the <b>from</b> address to something at your verified domain, then press <b>Send test email</b>.</li>
+    </ol>
+    <label>Send my alerts to</label>
+    <input id="notify_email" type="email" placeholder="hollymahj@outlook.com" autocomplete="email">
+    <label>Resend API key</label>
+    <input id="resend_key" type="password" placeholder="re_…" autocomplete="off">
+    <label>Send guests&rsquo; email from</label>
+    <input id="from_email" placeholder="Holly at Tampa Bay Mahj &lt;holly@yourdomain.com&gt;">
+    <div class="btnrow"><button class="save" id="ne_save">Save</button><button class="test" id="ne_test">Send test email</button><span class="msg" id="ne_msg"></span></div>
+    <div class="note"><b>Setup:</b> make a free account at <a href="https://resend.com" target="_blank" rel="noopener">resend.com</a>, verify your domain under <b>Domains</b>, then create an API key. The <b>from</b> address must use that verified domain — otherwise Resend will only deliver to your own account address. Until this is filled in, no confirmations go out to anyone.</div>
+  </div>
+
+  <div class="panel" data-cat="payments">
+    <h2>Take payments</h2>
+    <div id="stripeStatus"></div>
+    <label>Stripe secret or restricted key</label>
+    <input id="stripe_key" type="password" placeholder="sk_live_…  or  rk_live_…" autocomplete="off">
+    <div class="btnrow"><button class="save" id="save">Save key</button><button class="test" id="test">Test connection</button><span class="msg" id="msg"></span></div>
+    <ol class="steps">
+      <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener">Stripe → Developers → API keys</a> and create a <b>restricted key</b>.</li>
+      <li>Set these three permissions exactly:
+        <ul class="perms">
+          <li><b>Charges</b> — Read</li>
+          <li><b>Balance</b> — Read</li>
+          <li><b>Checkout Sessions</b> — <b>Write</b> <span class="warn">Miss this one and paid events cannot take money.</span></li>
+        </ul>
+      </li>
+      <li>Paste the key above and press <b>Test connection</b>.</li>
+    </ol>
+    <div class="note">A restricted key cannot move your money even if it leaked. Your key is stored on the server and never shown on this page again.</div>
+  </div>
+
+  <div class="panel" data-cat="texts">
+    <h2>Text my guests <span class="opt">optional</span></h2>
+    <div id="twStatus"></div>
+    <p style="color:var(--ink-soft);font-size:.86rem;font-weight:300;margin:2px 0 6px">
+      Texts confirmations alongside the email. <b>Email works perfectly well without this</b> — add it when you want reminders too.
+      Expect roughly $3&ndash;4 a month plus about a penny per text, and a few days for carrier approval.</p>
+    <label>Account SID</label><input id="tw_sid" placeholder="AC…" autocomplete="off">
+    <label>Auth Token</label><input id="tw_token" type="password" placeholder="your auth token" autocomplete="off">
+    <label>From number</label><input id="tw_from" placeholder="+18135551234">
+    <div class="btnrow"><button class="save" id="tw_save">Save</button><button class="test" id="tw_test">Test connection</button><span class="msg" id="tw_msg"></span></div>
+  </div>
+
+  <div class="panel" data-cat="calendar">
+    <h2>Calendar</h2>
+    <p style="color:var(--ink-soft);font-size:.86rem;font-weight:300;margin:2px 0 8px">Subscribe to this feed in Google, Apple, or Outlook Calendar — every open date appears automatically.</p>
+    <label>Your private calendar feed</label>
+    <div class="btnrow"><input id="cal_url" readonly style="flex:1;min-width:220px"><button class="test" id="cal_copy">Copy</button><span class="msg" id="cal_msg"></span></div>
+    <details style="margin-top:16px"><summary style="cursor:pointer;font-size:.86rem;color:var(--ink-soft)">Advanced — two-way calendar sync</summary>
+    <div class="note" style="margin-top:10px"><b>Two-way connect (later):</b> paste your Google / Microsoft OAuth app credentials to push events into those calendars. Safe to leave blank for now.
+      <label>Google client ID</label><input id="g_id" placeholder="…apps.googleusercontent.com" autocomplete="off">
+      <label>Google client secret</label><input id="g_secret" type="password" placeholder="GOCSPX-…" autocomplete="off">
+      <div class="btnrow"><button class="save" id="g_save">Save Google</button><span class="msg" id="g_msg"></span></div>
+      <label style="margin-top:14px">Microsoft client ID</label><input id="m_id" autocomplete="off">
+      <label>Microsoft client secret</label><input id="m_secret" type="password" autocomplete="off">
+      <label>Microsoft tenant (optional)</label><input id="m_tenant" placeholder="common">
+      <div class="btnrow"><button class="save" id="m_save">Save Microsoft</button><span class="msg" id="m_msg"></span></div></details>
+    </div>
+  </div>
+
+    </div><!-- set-body -->
+  </div><!-- set-layout -->
+</div>
+<script>
+function $(id){return document.getElementById(id);}
+async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if(!s.authed){location.href='/login';return false;}return true;}
+async function loadStatus(){
+  var s=await fetch('/api/settings').then(r=>r.json());
+  var el=$('stripeStatus');
+  if(s.stripeConnected){el.innerHTML='<span class="status on">✓ Connected · '+(s.mode==='restricted'?'restricted key':'secret key')+' '+s.stripeHint+'</span>';}
+  else{el.innerHTML='<span class="status off">Not connected yet</span>';}
+  var tw=$('twStatus');
+  if(s.twilioConnected){tw.innerHTML='<span class="status on">✓ Connected · texts from '+s.twilioFrom+'</span>';}
+  else{tw.innerHTML='<span class="status off">Not connected yet</span>';}
+  var me=$('mailStatus');
+  if(me){
+    if(s.emailConfigured){me.innerHTML='<span class="status on">\u2713 Sending is live'+(s.emailFrom?' \u00b7 from '+s.emailFrom:'')+'</span>';}
+    else{me.innerHTML='<span class="status off">Email sending is not switched on \u2014 no confirmations are going out</span>';}
+  }
+  if($('notify_email')&&document.activeElement!==$('notify_email')){
+    $('notify_email').value=s.notifyEmail||'';
+    $('notify_email').placeholder=s.notifyDefault||'you@example.com';
+  }
+  if($('from_email')&&document.activeElement!==$('from_email'))$('from_email').value=s.emailFrom||'';
+  if($('resend_key'))$('resend_key').placeholder=s.resendHint?('saved \u00b7 '+s.resendHint):'re_\u2026';
+  if($('biz_name')&&document.activeElement!==$('biz_name'))$('biz_name').value=s.businessName||'';
+  if($('biz_logo')&&!$('biz_logo').value){
+    $('biz_logo').value=s.businessLogo||'';
+    var lp=$('logoprev');
+    if(lp) lp.innerHTML = s.businessLogo ? '<img src="'+s.businessLogo+'" alt="logo">' : '<span>No logo</span>';
+  }
+  if($('cal_url'))$('cal_url').value=s.calendarUrl||'';
+  if(s.googleClientId&&$('g_id'))$('g_id').value=s.googleClientId;
+  if(s.msClientId&&$('m_id'))$('m_id').value=s.msClientId;
+  if(s.msTenant&&$('m_tenant'))$('m_tenant').value=s.msTenant;
+}
+async function saveSettings(obj,msgId,okText){var m=$(msgId);m.className='msg';m.textContent='Saving…';var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}).then(r=>r.json());if(d.ok){m.className='msg ok';m.textContent=okText||'Saved ✓';loadStatus();}else{m.className='msg err';m.textContent=d.error||'Error';}}
+$('save').addEventListener('click',async function(){
+  var msg=$('msg');msg.className='msg';msg.textContent='Saving…';
+  var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({stripe_secret_key:$('stripe_key').value.trim()})}).then(r=>r.json());
+  if(d.ok){msg.className='msg ok';msg.textContent='Saved ✓';$('stripe_key').value='';loadStatus();}
+  else{msg.className='msg err';msg.textContent=d.error||'Error';}
+});
+$('test').addEventListener('click',async function(){
+  var msg=$('msg');msg.className='msg';msg.textContent='Testing…';
+  var d=await fetch('/api/settings/stripe/test',{method:'POST'}).then(r=>r.json());
+  if(d.ok){msg.className='msg ok';msg.textContent='Works! '+(d.livemode?'(live mode)':'(test mode)');}
+  else{msg.className='msg err';msg.textContent=d.error||'Could not connect';}
+});
+if($('ne_save'))$('ne_save').addEventListener('click',function(){
+  var body={notify_email:$('notify_email').value.trim(),from_email:$('from_email').value.trim()};
+  var k=$('resend_key').value.trim(); if(k)body.resend_api_key=k;
+  saveSettings(body,'ne_msg','Saved \u2713');
+  $('resend_key').value='';
+});
+if($('ne_test'))$('ne_test').addEventListener('click',async function(){
+  var m=$('ne_msg');m.className='msg';m.textContent='Sending…';
+  var d=await fetch('/api/settings/email/test',{method:'POST'}).then(r=>r.json());
+  if(d.ok){m.className='msg ok';m.textContent='Sent to '+d.to+' \u2014 check your inbox';}
+  else{m.className='msg err';m.textContent=d.error||'Could not send';}
+});
+$('tbmLogout').addEventListener('click',function(){fetch('/api/auth/logout',{method:'POST'}).then(function(){location.href='/login';});});
+// theme swatches
+(function(){
+  var cur=window.tbmCurrentTheme(), box=$('swatches');
+  box.innerHTML=Object.keys(window.TBM_THEMES).map(function(id){
+    var t=window.TBM_THEMES[id];
+    return '<button class="swatch'+(id===cur?' active':'')+'" data-id="'+id+'"><div class="chips"><i style="background:'+t.vars['--sage']+'"></i><i style="background:'+t.vars['--gold']+'"></i><i style="background:'+t.vars['--cream']+';border:1px solid #ccc"></i></div><div class="nm">'+t.name+'</div></button>';
+  }).join('');
+  Array.prototype.forEach.call(box.querySelectorAll('.swatch'),function(b){b.addEventListener('click',function(){
+    window.tbmSetTheme(b.dataset.id);
+    box.querySelectorAll('.swatch').forEach(function(x){x.classList.remove('active');});b.classList.add('active');
+  });});
+})();
+// change password
+$('pw_save').addEventListener('click',async function(){
+  var msg=$('pw_msg');msg.className='msg';
+  if($('pw_new').value!==$('pw_conf').value){msg.className='msg err';msg.textContent='New passwords do not match.';return;}
+  if($('pw_new').value.length<8){msg.className='msg err';msg.textContent='New password must be at least 8 characters.';return;}
+  msg.textContent='Updating…';
+  var d=await fetch('/api/auth/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current:$('pw_cur').value,new:$('pw_new').value})}).then(r=>r.json());
+  if(d.ok){msg.className='msg ok';msg.textContent='Password updated ✓';$('pw_cur').value='';$('pw_new').value='';$('pw_conf').value='';}
+  else{msg.className='msg err';msg.textContent=d.error||'Error';}
+});
+$('tw_save').addEventListener('click',function(){saveSettings({twilio_account_sid:$('tw_sid').value.trim(),twilio_auth_token:$('tw_token').value.trim(),twilio_from:$('tw_from').value.trim()},'tw_msg');});
+$('tw_test').addEventListener('click',async function(){var m=$('tw_msg');m.className='msg';m.textContent='Testing…';var d=await fetch('/api/settings/twilio/test',{method:'POST'}).then(r=>r.json());if(d.ok){m.className='msg ok';m.textContent='Works! ('+(d.status||'active')+')';}else{m.className='msg err';m.textContent=d.error||'Could not connect';}});
+$('cal_copy').addEventListener('click',function(){var u=$('cal_url').value;if(!u)return;navigator.clipboard&&navigator.clipboard.writeText(u);var m=$('cal_msg');m.className='msg ok';m.textContent='Copied ✓';});
+$('g_save').addEventListener('click',function(){saveSettings({google_client_id:$('g_id').value.trim(),google_client_secret:$('g_secret').value.trim()},'g_msg');});
+$('m_save').addEventListener('click',function(){saveSettings({ms_client_id:$('m_id').value.trim(),ms_client_secret:$('m_secret').value.trim(),ms_tenant:$('m_tenant').value.trim()},'m_msg');});
+async function loadInvites(){
+  var box=$('inv_list'); if(!box)return;
+  try{
+    var d=await fetch('/api/invites').then(function(r){return r.json();});
+    var list=(d.invites||[]);
+    if(!list.length){box.innerHTML='<p style="color:var(--ink-soft);font-size:.86rem;font-weight:300">No invite codes yet.</p>';return;}
+    box.innerHTML=list.map(function(i){
+      var used=!!i.used_at;
+      return '<div class="invrow"><span class="invcode">'+i.code+'</span>'+
+        '<span class="invchip '+(used?'used':'open')+'">'+(used?'Used':'Available')+'</span>'+
+        (used?'':'<button class="invcopy" data-c="'+i.code+'">Copy invite link</button>')+'</div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.invcopy'),function(b){b.addEventListener('click',function(){
+      var url=location.origin+'/login?invite='+b.getAttribute('data-c');
+      if(navigator.clipboard){navigator.clipboard.writeText(url);}
+      var m=$('inv_msg');m.className='msg ok';m.textContent='Copied '+url;setTimeout(function(){m.textContent='';},3000);
+    });});
+  }catch(e){}
+}
+$('inv_new').addEventListener('click',async function(){
+  var m=$('inv_msg');m.className='msg';m.textContent='Generating…';
+  var d=await fetch('/api/invites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}).then(function(r){return r.json();});
+  if(d.ok){m.className='msg ok';m.textContent='New code: '+d.invite.code;loadInvites();}
+  else{m.className='msg err';m.textContent=d.error||'Error';}
+});
+(async function(){if(await guard()){loadStatus();loadInvites();}})();
+</script>
+<script src="/toast.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+
+<script>
+(function(){
+  var CATS=[
+    ['business','Business'],['appearance','Appearance'],['account','Account'],
+    ['payments','Payments'],['email','Email'],['texts','Texts'],
+    ['calendar','Calendar'],['team','Team']
+  ];
+  var nav=document.getElementById('setNav');
+  function show(cat){
+    document.querySelectorAll('.set-body .panel').forEach(function(p){
+      p.classList.toggle('show', p.getAttribute('data-cat')===cat);
+    });
+    nav.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-go')===cat);
+    });
+    try{ localStorage.setItem('tbm_settings_cat', cat); }catch(e){}
+  }
+  CATS.forEach(function(c){
+    var b=document.createElement('button');
+    b.setAttribute('data-go',c[0]); b.textContent=c[1];
+    b.onclick=function(){ show(c[0]); };
+    nav.appendChild(b);
+  });
+  var start='business';
+  try{ var saved=localStorage.getItem('tbm_settings_cat'); if(saved&&document.querySelector('.panel[data-cat="'+saved+'"]')) start=saved; }catch(e){}
+  var hash=(location.hash||'').replace('#','');
+  if(hash&&document.querySelector('.panel[data-cat="'+hash+'"]')) start=hash;
+  show(start);
+
+  // ---- business logo upload ----
+  function $(id){return document.getElementById(id);}
+  function showLogo(data){
+    var p=$('logoprev');
+    p.innerHTML = data ? '<img src="'+data+'" alt="logo">' : '<span>No logo</span>';
+  }
+  if($('logopick')) $('logopick').onclick=function(){ $('logofile').click(); };
+  if($('logodel')) $('logodel').onclick=function(){ $('biz_logo').value=''; showLogo(''); };
+  if($('logofile')) $('logofile').addEventListener('change',function(){
+    var file=this.files&&this.files[0]; if(!file)return;
+    var r=new FileReader();
+    r.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var max=512, w=img.width, h=img.height;
+        if(w>h){ if(w>max){h=Math.round(h*max/w);w=max;} } else { if(h>max){w=Math.round(w*max/h);h=max;} }
+        var c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        // PNG keeps transparency for logos; fall back small
+        var data=c.toDataURL('image/png');
+        if(data.length>3500000) data=c.toDataURL('image/jpeg',0.85);
+        $('biz_logo').value=data; showLogo(data);
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+  if($('biz_save')) $('biz_save').addEventListener('click',async function(){
+    var m=$('biz_msg'); m.className='msg'; m.textContent='Saving…';
+    var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({business_name:$('biz_name').value.trim(),business_logo:$('biz_logo').value})}).then(function(r){return r.json();});
+    if(d.ok){ m.className='msg ok'; m.textContent='Saved ✓'; }
+    else{ m.className='msg err'; m.textContent=d.error||'Error'; }
+  });
+})();
+</script>
+</body></html>

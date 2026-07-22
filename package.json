@@ -1,0 +1,12 @@
+{
+  "name": "charleston-crm",
+  "version": "1.0.0",
+  "description": "Charleston \u2014 studio management SaaS for mah jongg teachers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

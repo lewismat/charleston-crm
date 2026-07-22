@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inquiry form — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="/theme.js"></script>
+<style>
+:root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh;background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.16) 0 3px,transparent 3px 30px)}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 22px;display:grid;grid-template-columns:1fr 440px;gap:24px;align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:16px 12px}.prev{position:static;margin-top:18px}#formPv{height:520px}}
+h1{font-family:var(--display);font-weight:700;font-size:1.95rem;color:var(--sage-dk)}
+.sub{color:var(--ink-soft);font-weight:300;margin:2px 0 16px}
+.panel{background:var(--tile);border:1px solid var(--tile-edge);border-radius:16px;padding:22px;box-shadow:0 10px 26px rgba(59,72,50,.07)}
+label{display:block;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--sage);font-weight:700;margin:14px 0 5px}
+label:first-of-type{margin-top:0}
+input,textarea{width:100%;padding:11px 12px;border:1px solid var(--tile-edge);border-radius:10px;background:#fff;font-family:var(--body);font-size:.95rem;color:var(--sage-dk)}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+.hint{font-size:.75rem;color:var(--ink-soft);font-weight:300;margin-top:4px}
+.save{margin-top:18px;padding:13px 26px;border:none;border-radius:11px;background:linear-gradient(160deg,var(--sage),var(--sage-dk));color:var(--cream);font-weight:700;font-size:1rem;cursor:pointer;font-family:var(--body)}
+.save:hover{filter:brightness(1.05)}
+.msg{margin-left:12px;font-size:.9rem}
+.prev{position:sticky;top:20px}
+.pvlbl{text-align:center;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sage-soft);font-weight:700;margin-bottom:8px}
+.copybtn{width:100%;margin-bottom:8px;padding:13px;border:none;border-radius:14px;background:linear-gradient(160deg,var(--gold),#B18A2C);color:#2b2408;font-family:var(--body);font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 8px 20px rgba(201,162,75,.3)}
+.copybtn:hover{filter:brightness(1.05)}
+.copymsg{text-align:center;font-size:.82rem;color:var(--sage);font-weight:700;min-height:1em;margin-bottom:6px}
+#formPv{width:100%;height:660px;border:1px solid var(--tile-edge);border-radius:16px;background:#fff;box-shadow:0 12px 30px rgba(59,72,50,.12)}
+  .namerow{display:flex;gap:8px;flex-wrap:wrap}
+  .namerow input{flex:1;min-width:160px}
+  .preset{display:flex;align-items:center;gap:8px;padding:9px 10px;margin-top:7px;
+    background:var(--tile);border:1px solid var(--tile-edge);border-radius:9px;font-size:.86rem}
+  .preset.on{border-color:var(--gold);background:#FBF6E4}
+  .preset .nm{flex:1;font-weight:500;color:var(--sage-dk)}
+  .preset .tag{font-size:.7rem;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.08em}
+  .preset button{border:1px solid var(--tile-edge);background:var(--cream);border-radius:7px;
+    padding:5px 10px;font:inherit;font-size:.78rem;cursor:pointer;color:var(--sage-dk)}
+  .preset button:hover{border-color:var(--sage-soft)}
+  .preset button.rm{color:#B3542E}
+  .empty-p{font-size:.82rem;color:var(--ink-soft);margin-top:8px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+  .glook{border:1px solid var(--tile-edge);border-radius:9px;padding:0;cursor:pointer;
+    background:var(--tile);overflow:hidden;text-align:center;font:inherit;font-size:.74rem;color:var(--sage-dk)}
+  .glook:hover{border-color:var(--gold)}
+  .gswatch{height:38px;display:block}
+  .glook span{display:block;padding:5px 3px}
+  .edrow2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .ghostbtn{background:transparent;color:var(--sage-dk);border:1px solid var(--tile-edge)}
+  .devrow{display:flex;gap:6px;align-items:center;margin:0 0 8px;flex-wrap:wrap}
+  .devbtn{border:1px solid var(--tile-edge);background:var(--tile);border-radius:999px;
+    padding:4px 12px;font:inherit;font-size:.76rem;cursor:pointer;color:var(--sage-dk)}
+  .devbtn.on{background:var(--sage);color:var(--cream);border-color:var(--sage)}
+  .devhint{font-size:.72rem;color:var(--ink-soft)}
+  #formPv.phone{width:390px;max-width:100%;margin:0 auto;display:block}
+</style>  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Inquiry form</h1>
+    <p class="sub">Customize the public inquiry form. Everyone who fills it out lands in <b>Students → Leads</b>.</p>
+    <div class="panel">
+      <label>Heading</label><input id="c_heading" placeholder="Tampa Bay Mahj">
+      <label>Script line</label><input id="c_script" placeholder="with Holly Lewis">
+      <label>Tagline</label><input id="c_tagline" placeholder="Elevated Mahjong Experiences · Tampa | St. Pete">
+      <label>Event types</label><textarea id="c_types" placeholder="One per line"></textarea>
+      <div class="hint">One event type per line — these become the dropdown choices.</div>
+      <label>Submit button label</label><input id="c_submit" placeholder="Declare Mahjong 🀄">
+      <label>Note under the button</label><input id="c_note" placeholder="Holly replies personally, usually within one business day.">
+      <div><button class="save" id="c_save">Save form</button><span class="msg" id="c_msg"></span></div>
+    </div>
+
+    <div class="panel">
+      <h2 style="font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0 0 4px">&#10024; Background &amp; styling</h2>
+      <p class="sub" style="margin:0 0 10px">Ask Claude for CSS, paste it here, and it restyles the whole form &mdash; background, colors, fonts, spacing.</p>
+      <label>Start from one of these</label>
+      <div class="gallery" id="gallery"></div>
+      <label style="margin-top:14px">Or paste your own CSS</label>
+      <textarea id="c_css" rows="12" placeholder="body{background:#FBF7E6;}"></textarea>
+      <div class="hint">CSS only &mdash; no &lt;style&gt; tags needed. Scripts and remote imports are stripped automatically. Empty the box to go back to the standard look.</div>
+      <div class="edrow2">
+        <button class="save" id="c_preview">Preview it</button>
+        <button class="save" id="c_save2">Publish this look</button>
+        <button class="save ghostbtn" id="c_reset">Reset to standard</button>
+        <span class="msg" id="c_msg2"></span>
+      </div>
+      <div class="hint" id="previewNote" style="display:none;color:var(--gold-dk)">
+        Previewing — this is only on your screen. Nobody sees it until you press Publish.</div>
+
+      <div class="savedwrap">
+        <label style="margin-top:16px">Saved looks</label>
+        <div class="hint" style="margin-bottom:8px">Keep the ones you like and switch whenever you want.</div>
+        <div class="namerow">
+          <input id="c_preset_name" placeholder="Name this look, e.g. Spring garden">
+          <button class="save" id="c_preset_save">Save</button>
+        </div>
+        <div id="presetList"></div>
+      </div>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;font-size:.85rem;color:var(--ink-soft)">What do I ask Claude for?</summary>
+        <p class="hint" style="margin-top:8px">Copy this and paste it to Claude:</p>
+        <pre id="promptTxt" style="white-space:pre-wrap;background:var(--tile);border:1px solid var(--tile-edge);border-radius:8px;padding:10px;font-size:.78rem;line-height:1.5;margin:6px 0">Write me CSS to restyle my mahjong inquiry form. Elegant Charleston/Savannah feel, cream and sage green with soft gold. Give me only CSS, no explanation and no &lt;style&gt; tags.
+
+Selectors I have: body, .wrap, .card, h1, .script, .tagline, .grid, .field, label, input, select, textarea, button, .submit-zone, .submit-note</pre>
+        <button class="save" id="copyPrompt" style="font-size:.8rem">Copy this prompt</button>
+      </details>
+    </div>
+  </div>
+  <aside class="prev">
+    <div class="pvlbl">✦ Live preview ✦</div>
+    <div class="devrow">
+      <button class="devbtn on" data-dev="phone">Phone</button>
+      <button class="devbtn" data-dev="desk">Desktop</button>
+      <span class="devhint">Most guests arrive from Instagram on a phone.</span>
+    </div>
+    <button type="button" class="copybtn" id="copyForm"><span>🔗</span> Copy your inquiry form link</button>
+    <div class="copymsg" id="copyMsg"></div>
+    <iframe id="formPv" src="/" title="Form preview"></iframe>
+  </aside>
+</div>
+<script src="/toast.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+<script>
+function $(id){return document.getElementById(id);}
+var PRESETS=[];
+var LOOKS=[
+ {name:'Logo stripes',swatch:'repeating-linear-gradient(90deg,#FBF7E6 0 8px,#F6EEBA 8px 16px)',
+  css:'body{background:repeating-linear-gradient(90deg,#FBF7E6 0 26px,#F6EEBA 26px 52px)!important}'},
+ {name:'Soft sage',swatch:'linear-gradient(135deg,#EFF3EA,#DDE5D6)',
+  css:'body{background:#EFF3EA!important}\n.card{border-color:#CBD6C2!important}'},
+ {name:'Warm linen',swatch:'linear-gradient(135deg,#FBF6EC,#EFE3D0)',
+  css:'body{background:#FBF6EC!important}\n.card{background:#FFFDF8!important;border-color:#E6D9C3!important}'},
+ {name:'Evening',swatch:'linear-gradient(135deg,#3B4832,#2C3626)',
+  css:'body{background:#3B4832!important;color:#F7F2E4!important}\n.card{background:#46543B!important;border-color:#5C6B4F!important}\nh1,.script,.tagline,label{color:#F7F2E4!important}'}
+];
+function renderGallery(){
+  var g=document.getElementById('gallery'); if(!g)return;
+  g.innerHTML=LOOKS.map(function(l,i){
+    return '<button type="button" class="glook" data-look="'+i+'">'+
+      '<span class="gswatch" style="background:'+l.swatch+'"></span><span>'+l.name+'</span></button>';
+  }).join('');
+  g.querySelectorAll('[data-look]').forEach(function(b){b.onclick=function(){
+    var l=LOOKS[parseInt(b.dataset.look,10)];
+    document.getElementById('c_css').value=l.css;
+    if(!document.getElementById('c_preset_name').value.trim())
+      document.getElementById('c_preset_name').value=l.name;
+    previewCss(); renderPresets();
+  };});
+}
+// Preview paints the iframe only — nothing is saved, so a bad paste cannot go live.
+function previewCss(){
+  var f=document.getElementById('formPv'); if(!f)return;
+  var css=document.getElementById('c_css').value;
+  try{
+    var doc=f.contentDocument; if(!doc)return;
+    var st=doc.getElementById('previewCss')||doc.createElement('style');
+    st.id='previewCss'; st.textContent=css; doc.head.appendChild(st);
+    var n=document.getElementById('previewNote'); if(n)n.style.display=css.trim()?'block':'none';
+  }catch(e){}
+}
+
+function escp(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function renderPresets(){
+  var el=$('presetList'); if(!el) return;
+  var cur=$('c_css')?$('c_css').value.trim():'';
+  if(!PRESETS.length){el.innerHTML='<p class="empty-p">Nothing saved yet — paste some CSS above, then name it and hit Save.</p>';return;}
+  el.innerHTML=PRESETS.map(function(p){
+    var on=p.css.trim()===cur&&cur!=='';
+    return '<div class="preset'+(on?' on':'')+'">'+
+      '<span class="nm">'+escp(p.name)+'</span>'+
+      (on?'<span class="tag">In use</span>':'<button data-use="'+escp(p.id)+'">Use</button>')+
+      '<button class="rm" data-rm="'+escp(p.id)+'">Delete</button></div>';
+  }).join('');
+  el.querySelectorAll('[data-use]').forEach(function(b){b.onclick=function(){
+    var p=PRESETS.filter(function(x){return x.id===b.dataset.use;})[0];
+    if(!p)return; $('c_css').value=p.css; renderPresets(); saveConfig('c_msg2');
+  };});
+  el.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){
+    var p=PRESETS.filter(function(x){return x.id===b.dataset.rm;})[0];
+    if(!p)return;
+    var keep=PRESETS.slice();
+    PRESETS=PRESETS.filter(function(x){return x.id!==b.dataset.rm;});
+    renderPresets();
+    undoable('Deleting “'+p.name+'”. Your form still looks the same.',function(){
+      saveConfig('c_msg2');
+    },{onUndo:function(){PRESETS=keep;renderPresets();}});
+  };});
+}
+async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if(!s.authed){location.href='/login';return false;}return true;}
+async function loadConfig(){
+  var c=(await fetch('/api/inquiry-config').then(function(r){return r.json();})).config||{};
+  $('c_heading').value=c.heading||'';$('c_script').value=c.script||'';$('c_tagline').value=c.tagline||'';
+  $('c_submit').value=c.submit_label||'';$('c_note').value=c.submit_note||'';
+  $('c_types').value=(c.event_types||[]).join('\n');
+  if($('c_css'))$('c_css').value=c.custom_css||'';
+  PRESETS=Array.isArray(c.presets)?c.presets:[];
+  renderPresets();
+}
+async function saveConfig(msgId){
+  var m=$(msgId);m.style.color='';m.textContent='Saving…';
+  var body={heading:$('c_heading').value.trim(),script:$('c_script').value.trim(),tagline:$('c_tagline').value.trim(),submit_label:$('c_submit').value.trim(),submit_note:$('c_note').value.trim(),event_types:$('c_types').value.split('\n').map(function(x){return x.trim();}).filter(Boolean),
+    custom_css:$('c_css')?$('c_css').value:'',presets:PRESETS};
+  var d=await fetch('/api/inquiry-config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();});
+  if(d.ok){m.style.color='var(--sage)';m.textContent='Saved ✓';$('formPv').src='/?t='+Date.now();loadConfig();}
+  else{m.style.color='#B3542E';m.textContent=d.error||'Error';}
+}
+$('c_save').addEventListener('click',function(){saveConfig('c_msg');});
+if($('c_save2'))$('c_save2').addEventListener('click',function(){saveConfig('c_msg2');});
+if($('c_preview'))$('c_preview').addEventListener('click',function(){
+  previewCss();
+  if(window.toast)toast('Previewing on your screen only — press Publish when you like it.');
+});
+if($('c_reset'))$('c_reset').addEventListener('click',function(){
+  var had=$('c_css').value;
+  $('c_css').value='';
+  undoable('Resetting your form to the standard look.',function(){ saveConfig('c_msg2'); },
+    {onUndo:function(){ $('c_css').value=had; renderPresets(); }});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.devbtn'),function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.devbtn').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    var f=$('formPv'); if(f) f.className=(b.dataset.dev==='phone'?'phone':'');
+  });
+});
+renderGallery();
+if($('formPv'))$('formPv').className='phone';
+if($('c_preset_save'))$('c_preset_save').addEventListener('click',function(){
+  var css=$('c_css').value.trim(), nm=$('c_preset_name').value.trim();
+  var m=$('c_msg2');
+  if(!css){m.style.color='#B3542E';m.textContent='Paste some CSS first';return;}
+  if(!nm){m.style.color='#B3542E';m.textContent='Give it a name';return;}
+  PRESETS.push({id:String(Date.now())+Math.random().toString(36).slice(2,6),name:nm,css:css});
+  $('c_preset_name').value='';
+  renderPresets(); saveConfig('c_msg2');
+});
+if($('c_css'))$('c_css').addEventListener('input',function(){renderPresets();});
+if($('copyPrompt'))$('copyPrompt').addEventListener('click',function(){
+  var t=$('promptTxt').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(t);}
+  else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}
+  this.textContent='Copied ✓';var b=this;setTimeout(function(){b.textContent='Copy this prompt';},1600);
+});
+$('copyForm').addEventListener('click',function(){
+  var url=location.origin+'/';
+  if(navigator.clipboard){navigator.clipboard.writeText(url);}else{var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  var m=$('copyMsg');m.textContent='Copied '+url;setTimeout(function(){m.textContent='';},2500);
+});
+(async function(){if(await guard())loadConfig();})();
+</script>
+</body></html>

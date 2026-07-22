@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meet Holly — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:34px 20px;position:relative;overflow-x:hidden;
+background:var(--cream);background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.22) 0 3px,transparent 3px 30px)}
+/* floating decorative tiles */
+.deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.dtile{position:absolute;width:46px;height:60px;border-radius:9px;background:var(--tile);border:1px solid var(--tile-edge);border-bottom:4px solid var(--gold-soft);
+box-shadow:0 8px 20px rgba(59,72,50,.10);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:1.4rem;color:var(--sage-soft);opacity:.5}
+.dtile.r{color:var(--red,#B3542E)}
+.card{position:relative;z-index:1;background:var(--tile);border:1px solid var(--tile-edge);border-radius:26px;
+box-shadow:0 26px 60px rgba(59,72,50,.18);max-width:480px;width:100%;padding:42px 36px 34px;text-align:center;
+border-top:1px solid #fff}
+.mono{width:112px;height:112px;border-radius:50%;margin:0 auto 16px;background:radial-gradient(circle at 50% 40%,#fff,var(--cream-2));border:2px solid var(--gold);
+display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(201,162,75,.25);overflow:hidden}
+.mono img{width:100%;height:100%;object-fit:cover}
+.mono .letter{font-family:var(--script);color:var(--gold);font-size:3rem;line-height:1}
+h1{font-family:var(--display);font-weight:700;font-size:2.35rem;color:var(--sage-dk);letter-spacing:.01em;line-height:1.05}
+.tagline{font-family:var(--script);color:var(--gold);font-size:1.85rem;line-height:1;margin-top:2px}
+.rule{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0}
+.rule:before,.rule:after{content:"";height:1px;width:66px;background:linear-gradient(90deg,transparent,var(--gold-soft),var(--gold))}
+.rule:after{background:linear-gradient(90deg,var(--gold),var(--gold-soft),transparent)}
+.rule .dot{width:9px;height:9px;background:var(--gold);transform:rotate(45deg)}
+.bio{color:var(--ink-soft);font-weight:300;line-height:1.7;font-size:1.02rem;margin-bottom:6px}
+.details{margin:18px 0 4px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.drow{display:flex;align-items:flex-start;gap:11px;padding:9px 4px;border-bottom:1px dashed var(--tile-edge)}
+.drow:last-child{border-bottom:none}
+.drow .ic{color:var(--gold-dk);flex:none;margin-top:1px}
+.drow .txt .lb{font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--sage-soft);font-weight:700}
+.drow .txt .vl{font-size:.98rem;color:var(--ink);white-space:pre-line}
+.links{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.lbtn{display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;font-weight:700;font-size:.92rem;
+padding:12px 16px;border-radius:12px;border:1.5px solid var(--sage);color:var(--sage);background:transparent;transition:.15s}
+.lbtn:hover{background:rgba(76,91,64,.06)}
+.lbtn .ic{color:currentColor}
+.cta{display:flex;flex-direction:column;gap:10px;margin-top:16px;padding-top:18px;border-top:1px solid var(--tile-edge)}
+.cta a{display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;font-weight:700;font-size:1rem;padding:13px 18px;border-radius:12px}
+.cta .primary{background:linear-gradient(160deg,var(--sage),var(--sage-dk));color:var(--cream);box-shadow:0 8px 18px rgba(59,72,50,.2)}
+.cta .primary:hover{filter:brightness(1.06)}
+.cta .ghost{border:1.5px solid var(--gold);color:var(--gold-dk)}
+.cta .ghost:hover{background:rgba(201,162,75,.08)}
+.foot{margin-top:22px;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:500}
+.tbmic{display:inline-block;vertical-align:middle}
+</style>  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="deco" id="deco"></div>
+<div class="card" id="card"><p class="bio">Loading…</p></div>
+<script src="/icons.js"></script>
+<script>
+function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function safeUrl(u){u=(u||'').trim();if(/^https?:\/\//i.test(u)||/^mailto:|^tel:|^\//.test(u))return u;return 'https://'+u;}
+// scatter a few decorative tiles
+(function(){
+  var glyphs=['中','發','東','南','西','北','八','🀄'];
+  var spots=[[3,12],[8,74],[16,40,'r'],[26,88],[70,8],[80,66],[88,30],[60,92]];
+  var d=document.getElementById('deco');
+  spots.forEach(function(p,i){var t=document.createElement('div');t.className='dtile'+(p[2]?' r':'');
+    t.style.top=p[0]+'%';t.style.left=p[1]+'%';t.style.transform='rotate('+((i%2?1:-1)*(4+i))+'deg)';
+    t.textContent=glyphs[i%glyphs.length];d.appendChild(t);});
+})();
+(async function(){
+  var p={}; try{ p=(await fetch('/api/profile').then(r=>r.json())).profile||{}; }catch(e){}
+  var name=p.display_name||'Holly';
+  var mono=p.photo_url?('<div class="mono"><img src="'+esc(p.photo_url)+'" alt="'+esc(name)+'"></div>')
+                      :('<div class="mono"><span class="letter">'+esc(name.charAt(0))+'</span></div>');
+  var details=Array.isArray(p.details)?p.details:[];
+  var links=Array.isArray(p.links)?p.links:[];
+  var detHtml=details.filter(function(d){return d&&(d.label||d.value);}).map(function(d){
+    return '<div class="drow"><span class="ic">'+(window.tbmIcon(d.icon)||window.tbmIcon('flower'))+'</span><div class="txt">'+
+      (d.label?'<div class="lb">'+esc(d.label)+'</div>':'')+'<div class="vl">'+esc(d.value||'')+'</div></div></div>';
+  }).join('');
+  var linkHtml=links.filter(function(l){return l&&l.url;}).map(function(l){
+    return '<a class="lbtn" href="'+esc(safeUrl(l.url))+'" target="_blank" rel="noopener"><span class="ic">'+(window.tbmIcon(l.icon)||window.tbmIcon('sparkle'))+'</span>'+esc(l.label||l.url)+'</a>';
+  }).join('');
+  document.getElementById('card').innerHTML =
+    mono +
+    '<h1>'+esc(name)+'</h1>' +
+    (p.tagline?'<div class="tagline">'+esc(p.tagline)+'</div>':'') +
+    '<div class="rule"><span class="dot"></span></div>' +
+    (p.bio?'<p class="bio">'+esc(p.bio)+'</p>':'') +
+    (detHtml?'<div class="details">'+detHtml+'</div>':'') +
+    (linkHtml?'<div class="links">'+linkHtml+'</div>':'') +
+    '<div class="cta">' +
+      '<a class="primary" href="/"><span class="ic">'+window.tbmIcon('sparkle')+'</span>Request a lesson</a>' +
+      '<a class="ghost" href="/book"><span class="ic">'+window.tbmIcon('calendar')+'</span>Event Calendar</a>' +
+    '</div>' +
+    '<div class="foot">Tampa Bay Mahj · Tampa &amp; St. Pete, Florida</div>';
+  document.title=name+' — Tampa Bay Mahj';
+})();
+</script>
+<script src="/theme.js"></script>
+<script src="/toast.js"></script>
+<script src="/branding.js"></script>
+</body></html>

@@ -1,0 +1,304 @@
+/* ============================================================
+   heritage.css — Tampa Bay Mahj
+   Savannah / Charleston / Sea Island. Deep forest green, antique
+   brass, parchment. Holly's logo and her yellow stripe stay.
+   Loaded last so it refines the per-page styles without replacing them.
+   ============================================================ */
+
+/* ---------- typography ---------- */
+:root{
+  --display:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --script:'Great Vibes',cursive;
+  --brass-line:linear-gradient(90deg,transparent,#B08D57 18%,#D8C08E 50%,#B08D57 82%,transparent);
+  --paper:0 1px 0 rgba(255,255,255,.7) inset, 0 10px 30px rgba(24,58,42,.09);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+body{
+  font-family:var(--body);
+  font-size:15.5px;
+  line-height:1.65;
+  letter-spacing:.005em;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3,h4,.n,.num,.big{
+  font-family:var(--display);
+  font-weight:600;
+  letter-spacing:.005em;
+  line-height:1.22;
+}
+h1{letter-spacing:.02em}
+
+/* Small caps labels — the letterpress detail that makes it feel printed. */
+.l,.lbl,label,th,.pvlbl,.hsub .cap{
+  font-family:var(--body);
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  font-size:.68rem;
+  font-weight:600;
+}
+label{color:var(--ink-soft)}
+
+/* ---------- surfaces ---------- */
+.card,.panel,.slot,.hpanel,.editpanel,.preset,.notelog,.form,.guests,.addform{
+  border-radius:10px;
+  border-color:var(--tile-edge);
+  box-shadow:var(--paper);
+}
+.card,.panel,.hpanel{
+  background:linear-gradient(180deg,#FEFCF6 0%,var(--tile) 100%);
+  padding:24px 26px;
+}
+
+/* A hairline of brass across the top of a panel — the brass inlay on a desk. */
+.panel::before,.hpanel::before{
+  content:'';display:block;height:1px;margin:-24px -26px 20px;
+  background:var(--brass-line);opacity:.55;
+}
+
+/* ---------- buttons ---------- */
+button,.btn,.save,.addbtn,.mini,.cta,.fbtn,.copybtn,.hfix{
+  font-family:var(--body);
+  letter-spacing:.04em;
+  border-radius:8px;
+  transition:background .22s var(--ease),border-color .22s var(--ease),
+             color .22s var(--ease),box-shadow .22s var(--ease);
+}
+.save,.addbtn,.cta,.btn.solid,button.primary,#submitBtn,.copybtn{
+  background:var(--sage);
+  color:#F6F1E2;
+  border:1px solid var(--sage);
+  box-shadow:0 2px 0 rgba(15,42,29,.18);
+}
+.save:hover,.addbtn:hover,.cta:hover,.btn.solid:hover,button.primary:hover,
+#submitBtn:hover,.copybtn:hover{
+  background:var(--gold-dk);
+  border-color:var(--gold-dk);
+  color:#FCF8ED;
+}
+.mini,.fbtn,.ghostbtn,.btn{
+  background:#FBF7EA;
+  border:1px solid var(--tile-edge);
+  color:var(--sage-dk);
+}
+.mini:hover,.fbtn:hover,.btn:hover{border-color:var(--gold);background:#FDFAF0}
+.fbtn.active,.fbtn.on,.devbtn.on{
+  background:var(--sage);color:#F6F1E2;border-color:var(--sage);
+}
+.danger,.archive,.rm,.rmguest,.mini.danger,.btn.danger{
+  color:var(--red);border-color:#DCC6BE;background:#FCF6F3;
+}
+.danger:hover,.archive:hover,.rm:hover,.rmguest:hover,.mini.danger:hover{
+  background:var(--red);color:#FBF4EF;border-color:var(--red);
+}
+
+/* ---------- tables: luxury financial statement ---------- */
+table{border-radius:10px;box-shadow:var(--paper);border-color:var(--tile-edge)}
+th{
+  background:var(--sage)!important;
+  color:#EFE7D2!important;
+  font-size:.66rem;
+  padding:13px 16px!important;
+}
+td{padding:14px 16px!important;border-top:1px solid #EFE6D2}
+tbody tr:nth-child(4n+1) td{background:rgba(253,251,244,.55)}
+tr.row{transition:background .18s var(--ease),box-shadow .18s var(--ease)}
+tr.row:hover td{background:#FBF6E6}
+
+/* ---------- inputs ---------- */
+input,select,textarea{
+  font-family:var(--body);
+  border-radius:8px;
+  border:1px solid var(--tile-edge);
+  background:#FEFCF6;
+  color:var(--ink);
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+input:hover,select:hover,textarea:hover{border-color:#D6C9A8}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(176,141,87,.16);
+  outline:none;
+}
+
+/* ---------- chips ---------- */
+.chip,.pill,.badge,.status{
+  border-radius:999px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  font-size:.63rem;
+  font-weight:600;
+  padding:4px 11px;
+}
+.chip.lead,.badge.new{background:#F3EBD8;color:var(--gold-dk)}
+.chip.student,.badge.booked{background:#E6EDE5;color:var(--sage)}
+
+/* ---------- letterpress divider ---------- */
+.rule,.divider,hr{
+  border:none;height:1px;background:var(--brass-line);opacity:.6;margin:26px 0;
+}
+
+/* ---------- motion: opening a leather-bound book ---------- */
+@keyframes tbmRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card,.panel,.slot,.hpanel{animation:tbmRise .34s var(--ease) both}
+.card:nth-child(2){animation-delay:.04s}
+.card:nth-child(3){animation-delay:.08s}
+.card:nth-child(4){animation-delay:.12s}
+@media(prefers-reduced-motion:reduce){
+  .card,.panel,.slot,.hpanel{animation:none}
+}
+
+/* ---------- sidebar: mahogany-and-brass rail ---------- */
+.sb,#tbmSidebar,.sidebar{
+  background:linear-gradient(180deg,#1B4030 0%,var(--sage-dk) 100%)!important;
+  border-right:1px solid rgba(176,141,87,.32);
+}
+.sb a,.sb .item,#tbmSidebar a{letter-spacing:.04em}
+.sb a.active,#tbmSidebar a.active,.sb .item.active{
+  background:rgba(176,141,87,.16)!important;
+  box-shadow:inset 3px 0 0 var(--gold);
+}
+
+/* ---------- numbers deserve the serif ---------- */
+.card .n,.n{font-variant-numeric:oldstyle-nums;letter-spacing:.01em}
+
+
+/* ---------- public calendar: mount it on paper ----------
+   The yellow stripe is Holly's, so rather than fight it, the calendar
+   sits on a parchment mat the way a print sits inside a mount. */
+.wall{
+  background:linear-gradient(180deg,#FEFCF6,var(--tile));
+  border:1px solid var(--tile-edge);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:var(--paper);
+}
+.cell.closed{ background:rgba(227,218,196,.34)!important; }
+.cell.closed span{ opacity:.7 }
+.tileface{
+  background:linear-gradient(180deg,#FFFDF7,var(--tile))!important;
+  border-color:var(--tile-edge)!important;
+  border-bottom-color:var(--gold-soft)!important;
+  box-shadow:0 2px 6px rgba(24,58,42,.14)!important;
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease);
+}
+.tile:hover .tileface{
+  transform:translateY(-2px);
+  border-bottom-color:var(--gold)!important;
+  box-shadow:0 8px 18px rgba(24,58,42,.18)!important;
+}
+.dow,.wall .dow{letter-spacing:.14em;font-size:.64rem;color:var(--ink-soft)}
+
+/* ---------- guest-facing forms sit on paper too ---------- */
+.panel,.form,.success,.waitnote,.paynote{background-color:var(--tile)}
+.waitnote{border-left:3px solid var(--gold)}
+
+/* ---------- header rule under the wordmark ---------- */
+header .sub,.sub{color:var(--ink-soft)}
+
+/* ============================================================
+   Mobile — the shared view layer handles this once for every page,
+   so no page carries its own copy of these rules.
+   ============================================================ */
+
+/* Any scroll container must be allowed to be narrower than its content.
+   Without this, a table with min-width drags the whole page wide. */
+.sched-main,.wrap,.card,.panel,main{max-width:100%;min-width:0}
+#attList,.tablewrap,.scrollx{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+@media(max-width:760px){
+  /* ---- breathing room shrinks, but stays generous ---- */
+  .wrap{padding:16px 13px 64px}
+  .card,.panel,.hpanel{padding:18px 16px}
+  .panel::before,.hpanel::before{margin:-18px -16px 15px}
+
+  h1{font-size:1.75rem}
+  h2,h2.page{font-size:1.32rem}
+  body{font-size:16px}
+
+  /* ---- every multi-column grid becomes one column ---- */
+  .grid,.edgrid,.cards,.gallery{grid-template-columns:1fr!important}
+  .edgrid .edfull{grid-column:1/-1}
+
+  /* ---- toolbars and button rows wrap instead of overflowing ---- */
+  .toolbar,.filters,.btns,.edrow,.edrow2,.btnrow,.namerow,.devrow,.dactions,.addwrap{
+    flex-wrap:wrap;gap:8px;
+  }
+  .toolbar>*,.btnrow>*{flex:1 1 auto;min-width:0}
+  .search,.toolbar input,.toolbar select{width:100%}
+  .filters{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ---- comfortable touch targets (Apple's 44px) ---- */
+  button,.btn,.mini,.fbtn,.save,.addbtn,.hfix,a.btn{
+    min-height:42px;padding-top:9px;padding-bottom:9px;
+  }
+  .mini,.fbtn{font-size:.84rem}
+
+  /* iOS zooms the page if an input is under 16px. Never let it. */
+  input,select,textarea{font-size:16px}
+
+  /* ---- tables: scroll sideways, keep the name column anchored ---- */
+  table{font-size:.88rem}
+  th,td{padding:11px 12px!important}
+  .tablewrap table,#attList table{min-width:600px}
+  .tablewrap td:first-child,.tablewrap th:first-child{
+    position:sticky;left:0;z-index:2;
+    background:linear-gradient(90deg,#FDFBF4 88%,rgba(253,251,244,0));
+  }
+  .tablewrap th:first-child{background:var(--sage)}
+  /* a hint that there is more to the right */
+  .tablewrap{
+    background-image:linear-gradient(90deg,transparent,rgba(24,58,42,.07));
+    background-position:right;background-size:22px 100%;background-repeat:no-repeat;
+  }
+
+  /* ---- previews stack under the thing they preview ---- */
+  .sched-preview,.prev,aside.prev{width:100%!important;position:static!important;margin-top:20px}
+  #bookPv{height:520px}
+  #formPv{height:520px;width:100%!important}
+  #formPv.phone{width:100%!important}
+
+  /* ---- the public calendar ---- */
+  .wall{padding:9px;gap:4px}
+  .cell{min-height:46px}
+  .tileface .num{font-size:.95rem}
+  .wall .dow{font-size:.56rem;letter-spacing:.06em}
+
+  /* ---- toasts sit above the thumb, full width ---- */
+  #tbmToasts{bottom:14px;width:calc(100vw - 20px)}
+  .tbmT{font-size:.88rem;padding:12px 13px}
+
+  /* ---- the event editor ---- */
+  .editpanel{padding:14px 13px}
+  .guest{font-size:.88rem}
+  .rmguest{margin-left:0;margin-top:6px;display:inline-block}
+}
+
+/* very small phones */
+@media(max-width:380px){
+  .wrap{padding:14px 10px 56px}
+  h1{font-size:1.55rem}
+  .chip,.pill,.badge{font-size:.58rem;padding:3px 8px}
+}
+
+/* landscape phones: reclaim vertical space */
+@media(max-height:520px) and (orientation:landscape){
+  #bookPv,#formPv{height:340px}
+}
+
+
+/* The tile rack is 14 tiles wide — fine on a desktop, 517px on a phone.
+   Let it wrap into two rows rather than dragging the page sideways. */
+@media(max-width:760px){
+  .rack-zone{max-width:100%;overflow:hidden}
+  .rack{
+    display:flex;flex-wrap:wrap;justify-content:center;
+    max-width:100%;gap:4px;padding:10px 11px 8px;
+  }
+  .rack .slot{width:26px;height:36px}
+}
+@media(max-width:420px){
+  .rack{gap:3px;padding:9px 9px 7px}
+  .rack .slot{width:22px;height:31px}
+}

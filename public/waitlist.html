@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your place in line — Tampa Bay Mahj</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-dk:#3B4832;--gold:#C9A24B;
+  --ink:#2C3327;--ink-soft:#5D6656;--tile-face:#FBF8EF;--tile-edge:#DED3B4;
+  --display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);color:var(--ink);min-height:100vh;
+  background:repeating-linear-gradient(90deg,var(--cream) 0 28px,var(--cream-2) 28px 56px);
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--tile-face);border:1px solid var(--tile-edge);border-bottom:6px solid var(--tile-edge);
+  border-radius:16px;padding:34px;max-width:440px;width:100%;box-shadow:0 8px 26px rgba(44,51,39,.12);text-align:center}
+.card.hot{border-bottom-color:var(--gold)}
+img{max-height:76px;margin-bottom:6px}
+h1{font-family:var(--display);font-size:2rem;margin:.2rem 0 .4rem;font-weight:600}
+.when{font-family:var(--display);font-size:1.3rem;font-weight:700;color:var(--sage-dk);margin:14px 0 4px}
+p{color:var(--ink-soft);margin:6px 0;font-size:.94rem}
+.hold{background:rgba(198,162,72,.14);border:1px solid rgba(198,162,72,.4);border-radius:10px;
+  padding:13px;margin:16px 0 4px}
+.hold strong{color:#8A6D14;font-size:.95rem}
+.clock{font-family:var(--display);font-size:1.5rem;font-weight:700;color:#8A6D14;display:block;margin-top:4px}
+/* place in line, drawn as a stack of tiles */
+.line{display:flex;gap:5px;justify-content:center;margin:18px 0 6px}
+.pip{width:15px;height:21px;border-radius:3px;background:var(--tile-edge);opacity:.5}
+.pip.you{background:var(--tile-face);border:1px solid var(--tile-edge);border-bottom:3px solid var(--gold);opacity:1;
+  transform:translateY(-3px)}
+.pos{font-family:var(--display);font-size:2.6rem;font-weight:700;color:var(--sage-dk);line-height:1;margin:6px 0 0}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.btn{border-radius:9px;padding:12px 20px;font-weight:700;font-size:.9rem;cursor:pointer;
+  text-decoration:none;font-family:var(--body);border:1.5px solid var(--sage);color:var(--sage-dk);background:none}
+.btn:hover{background:rgba(123,140,106,.1)}
+.btn.solid{background:var(--sage);color:var(--cream);border-color:var(--sage)}
+.btn.solid:hover{background:var(--sage-dk)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#3B2E06}
+.btn.gold:hover{background:#B18F35}
+.btn.quiet{border-color:var(--tile-edge);color:var(--ink-soft)}
+.btn.quiet:hover{border-color:var(--ink-soft);background:none}
+.btn:disabled{opacity:.5;cursor:default}
+.err{color:#9B3B2E;font-size:.86rem;min-height:1em;margin-top:10px}
+.done{opacity:.6}
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<div class="card" id="card"><p>Loading…</p></div>
+<script>
+const TZ='America/New_York';
+const LABEL={private_lesson:'Private lesson',group_class:'Group class',private_party:'Private party'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const token=location.pathname.split('/').filter(Boolean).pop();
+const card=document.getElementById('card');
+const when=d=>new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'long',month:'long',day:'numeric',
+  hour:'numeric',minute:'2-digit'}).format(new Date(d));
+
+let tick=null;
+
+(async()=>{ try{ draw(await get()); }catch(e){
+  card.innerHTML=`<h1>Not found</h1><p>${esc(e.message)}</p><div class="btns"><a class="btn solid" href="/book">See open times</a></div>`;
+}})();
+
+async function get(){
+  const r=await fetch('/api/waitlist/'+token);
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error||'We could not find that.');
+  return d;
+}
+
+function countdown(el,until){
+  clearInterval(tick);
+  const paint=()=>{
+    const ms=new Date(until)-Date.now();
+    if(ms<=0){ clearInterval(tick); location.reload(); return; }
+    const h=Math.floor(ms/3600e3), m=Math.floor(ms%3600e3/60e3), s=Math.floor(ms%60e3/1000);
+    el.textContent=h>0?`${h}h ${m}m left`:`${m}m ${s}s left`;
+  };
+  paint(); tick=setInterval(paint,1000);
+}
+
+function draw(w){
+  const s=w.slots;
+  card.className='card';
+
+  if(w.status==='offered'){
+    card.classList.add('hot');
+    card.innerHTML=`
+      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <h1>A seat opened up.</h1>
+      <p>Someone cancelled — ${w.seats>1?`${w.seats} seats are`:'it is'} yours if you want ${w.seats>1?'them':'it'}.</p>
+      <div class="when">${when(s.starts_at)}</div>
+      <p>${LABEL[s.slot_type]} · ${s.duration_minutes} minutes</p>
+      ${s.location?`<p>${esc(s.location)}</p>`:''}
+      <div class="hold">
+        <strong>Held for you</strong>
+        <span class="clock" id="clock">—</span>
+      </div>
+      <div class="btns">
+        <button class="btn gold" id="claim">Claim my seat</button>
+        <button class="btn quiet" id="leave">Pass — give it to the next person</button>
+      </div>
+      <p class="err" id="err" role="alert"></p>`;
+    countdown(document.getElementById('clock'),w.offer_expires_at);
+    document.getElementById('claim').onclick=claim;
+    document.getElementById('leave').onclick=leave;
+    return;
+  }
+
+  if(w.status==='waiting'){
+    const p=w.position||1;
+    const pips=Array.from({length:Math.min(p,7)},(_,i)=>
+      `<span class="pip ${i===Math.min(p,7)-1?'you':''}"></span>`).join('');
+    card.innerHTML=`
+      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <h1>You’re in line.</h1>
+      <div class="line">${pips}</div>
+      <div class="pos">#${p}</div>
+      <p>for ${LABEL[s.slot_type].toLowerCase()} on</p>
+      <div class="when">${when(s.starts_at)}</div>
+      ${s.location?`<p>${esc(s.location)}</p>`:''}
+      <p>If a seat opens, we’ll email you and hold it for 24 hours.</p>
+      <div class="btns">
+        <button class="btn quiet" id="leave">Leave the list</button>
+        <a class="btn" href="/book">See other times</a>
+      </div>
+      <p class="err" id="err" role="alert"></p>`;
+    document.getElementById('leave').onclick=leave;
+    return;
+  }
+
+  if(w.status==='claimed'){
+    card.innerHTML=`
+      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <h1>The seat is yours.</h1>
+      <div class="when">${when(s.starts_at)}</div>
+      ${s.location?`<p>${esc(s.location)}</p>`:''}
+      <div class="btns">
+        ${w.manage_url?`<a class="btn solid" href="${w.manage_url}/google" target="_blank" rel="noopener">Add to Google Calendar</a>
+        <a class="btn" href="${w.manage_url}/calendar.ics">Apple / Outlook (.ics)</a>
+        <a class="btn" href="${w.manage_url}">View or cancel</a>`:''}
+      </div>`;
+    return;
+  }
+
+  // expired or left
+  card.classList.add('done');
+  card.innerHTML=`
+    <h1>${w.status==='expired'?'That one got away.':'You’re off the list.'}</h1>
+    <div class="when">${when(s.starts_at)}</div>
+    <p>${w.status==='expired'
+      ? 'The hold ran out and the seat went to the next person in line.'
+      : 'You are no longer waiting on this session.'}</p>
+    <div class="btns"><a class="btn solid" href="/book">Find another time</a></div>`;
+}
+
+async function claim(){
+  const b=document.getElementById('claim'),err=document.getElementById('err');
+  b.disabled=true;b.textContent='Claiming…';err.textContent='';
+  try{
+    const r=await fetch(`/api/waitlist/${token}/claim`,{method:'POST'});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Could not claim that seat.');
+    clearInterval(tick);
+    location.href=d.manage_url;
+  }catch(e){
+    err.textContent=e.message;
+    b.disabled=false;b.textContent='Claim my seat';
+  }
+}
+
+async function leave(){
+  if(!confirm('Take yourself off this list?')) return;
+  const b=document.getElementById('leave');
+  b.disabled=true;b.textContent='One moment…';
+  const r=await fetch(`/api/waitlist/${token}/leave`,{method:'POST'});
+  if(r.ok){ clearInterval(tick); draw(await get()); }
+  else { b.disabled=false;b.textContent='Leave the list'; }
+}
+</script>
+<script src="/theme.js"></script>
+<script src="/toast.js"></script>
+<script src="/branding.js"></script>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tampa Bay Mahj — Holly&#39;s Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF7E6; --cream-stripe:#F6EEBA;
+    --green:#4C5B40; --green-dark:#3B4832; --green-soft:#6B7A5C;
+    --gold:#C9A24B; --gold-soft:#E3CD96; --red:#B3542E; --white:#FFFDF8;
+    --shadow:0 14px 36px rgba(59,72,50,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Jost',sans-serif;color:var(--green-dark);
+    background:repeating-linear-gradient(90deg,var(--cream) 0 26px,var(--cream-stripe) 26px 52px);min-height:100vh}
+  .wrap{max-width:1100px;margin:0 auto;padding:38px 20px 80px}
+  header{display:flex;align-items:center;gap:18px;margin-bottom:30px;flex-wrap:wrap}
+  header svg,header img{width:74px;height:74px;flex:none}
+  header .t h1{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:.25em;text-transform:uppercase;font-size:1.25rem;color:var(--green)}
+  header .t .s{font-family:'Great Vibes',cursive;font-size:1.7rem;color:var(--green);line-height:1.1}
+  header .right{margin-left:auto;font-size:.8rem;color:var(--green-soft)}
+  header .right a{color:var(--green);border-bottom:1px solid var(--gold);text-decoration:none}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:34px}
+  .card{background:var(--white);border:1px solid var(--gold-soft);border-radius:16px;padding:22px;box-shadow:var(--shadow);text-align:center}
+  .card .n{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:700;color:var(--green)}
+  .card .l{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green-soft);margin-top:4px}
+
+  h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--green);margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h2::after{content:"";flex:1;height:1px;background:var(--gold-soft)}
+  .panel{background:var(--white);border:1px solid var(--gold-soft);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cream);background:var(--green);padding:12px 14px;text-align:left;font-weight:500}
+  td{padding:12px 14px;border-top:1px solid #F0EAD6;vertical-align:top}
+  tr.row{cursor:pointer;transition:background .15s}
+  tr.row:hover{background:#FBF8EE}
+  .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  .badge.new{background:#EAF0E2;color:var(--green)}
+  .badge.contacted{background:#F5E9CE;color:#8A6B22}
+  .badge.booked{background:var(--green);color:var(--cream)}
+  .badge.archived{background:#EEE;color:#888}
+  tr.detail td{background:#FBF8EE;border-top:none;padding:20px 24px}
+  .dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .dg .item .k{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green-soft)}
+  .dg .item .v{margin-top:2px;font-size:.95rem;white-space:pre-wrap}
+  .dg .wide{grid-column:1/-1}
+  select.status{font-family:'Jost',sans-serif;padding:6px 10px;border:1px solid var(--gold-soft);border-radius:8px;background:var(--white);color:var(--green-dark)}
+  .empty{padding:44px;text-align:center;color:var(--green-soft);font-weight:300}
+  .empty .big{font-size:2.4rem;margin-bottom:8px}
+  .muted{color:#9AA089;font-size:.8rem}
+  .visits td{font-size:.82rem}
+  .refresh{font-size:.78rem;color:var(--green-soft);margin-top:8px;text-align:right}
+  .lock{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(90deg,var(--cream) 0 26px,var(--cream-stripe) 26px 52px)}
+  .lock .box{background:var(--white);border:1px solid var(--gold-soft);border-radius:20px;box-shadow:var(--shadow);
+    padding:44px 40px;text-align:center;max-width:360px;width:90%}
+  .lock .box .t1{font-family:'Cormorant Garamond',serif;letter-spacing:.22em;text-transform:uppercase;font-size:1.05rem;color:var(--green)}
+  .lock .box .t2{font-family:'Great Vibes',cursive;font-size:2rem;color:var(--green);margin-bottom:18px}
+  .lock input{width:100%;padding:13px 15px;font-family:'Jost',sans-serif;font-size:1rem;text-align:center;
+    background:var(--cream);border:1px solid #E2D9BE;border-radius:10px;outline:none;margin-bottom:12px}
+  .lock input:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(201,162,75,.16)}
+  .lock button{width:100%;font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:.9rem;
+    color:var(--cream);background:linear-gradient(160deg,var(--green),var(--green-dark));border:none;border-radius:50px;
+    padding:13px;cursor:pointer}
+  .lock .err{color:var(--red);font-size:.85rem;margin-top:10px;min-height:1.2em}
+  @media(max-width:700px){ .hide-sm{display:none} }
+
+/* ---- mobile: keep the dashboard readable on a phone ---- */
+@media(max-width:700px){
+  .wrap{padding:22px 14px 70px}
+  header{gap:12px;margin-bottom:22px}
+  header svg,header img{width:56px;height:56px}
+  header .t h1{font-size:1.05rem;letter-spacing:.18em}
+  header .t .s{font-size:1.4rem}
+  header .right{margin-left:0;width:100%;order:3}
+
+  /* stat cards two-up, revenue cards full width */
+  .wrap .cards{grid-template-columns:1fr 1fr !important;gap:12px;margin-bottom:24px}
+  .card{padding:16px}
+  .card .n{font-size:1.7rem}
+  .wrap #revcards{grid-template-columns:1fr !important}
+
+  /* tables scroll sideways instead of clipping the Status column */
+  .panel{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+  table{font-size:.84rem}
+  th,td{padding:9px 10px}
+
+  /* filters stack and go full width */
+  .inqfilter{gap:8px}
+  .inqfilter input,.inqfilter select{flex:1 1 100%;min-width:0;font-size:16px}
+  .inqfilter .datelab{flex:1 1 46%}
+  .inqfilter .datelab input{flex:1;min-width:0;font-size:16px}
+  .inqfilter button{flex:1 1 100%}
+
+  /* upcoming events: let the row breathe instead of forcing a wide date column */
+  .ev-when{min-width:0;font-size:.98rem;flex:1 1 100%}
+  .ev-row{flex-wrap:wrap;gap:6px 12px;padding:12px 14px}
+  .ev-detail{padding-left:18px}
+
+  /* expanded detail grid: one column */
+  .dg{grid-template-columns:1fr}
+}
+
+.card.gold{border-bottom:4px solid #C9A24B}
+.card.gold .n{color:#8A6D14}
+.evhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 10px}
+.evhead h2{margin:0}
+.evhead select,.evhead input{padding:8px 10px;border:1px solid #DED3B4;border-radius:9px;background:#fff;font-family:'Karla',sans-serif;font-size:.86rem;color:#3B4832}
+#evCustom{display:flex;gap:6px}
+.ev-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid #EFE7CC}
+.ev-row:last-child{border-bottom:none}
+.ev-when{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.05rem;color:#3B4832;min-width:190px}
+.ev-meta{flex:1;color:#5D6656;font-size:.92rem}
+.ev-meta b{color:#4C5B40;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700}
+.ev-seats{font-size:.82rem;font-weight:700;color:#6B7A5C}
+.ev-seats.full{color:#B3542E}
+.ev-empty{padding:20px 16px;color:#5D6656;font-weight:300}
+.ev-row{cursor:pointer}
+.ev-caret{color:#8A6D14;font-size:.75rem;flex:none}
+.ev-detail{padding:8px 16px 14px 42px;background:#FBF8EF;border-bottom:1px solid #EFE7CC}
+.ev-att{font-size:.88rem;color:#5D6656;padding:3px 0}
+.ev-att b{color:#3B4832;font-family:'Cormorant Garamond',serif;font-size:1rem}
+.ev-att.muted{font-style:italic}
+.inqfilter{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px;align-items:center}
+  .datelab{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:#5D6656;
+    font-family:'Karla',sans-serif;font-weight:600;letter-spacing:.02em}
+  .datelab input{font-weight:400}
+  #evCustom{display:inline-flex;gap:10px;flex-wrap:wrap;align-items:center}
+.inqfilter input,.inqfilter select{padding:9px 12px;border:1px solid #DED3B4;border-radius:9px;background:#fff;font-family:'Karla',sans-serif;font-size:.9rem;color:#3B4832}
+.inqfilter input{flex:1;min-width:200px}
+.funnel{margin:22px 0 8px}
+.funnel-title{font-family:'Cormorant Garamond',serif;color:#3B4832;font-size:1.6rem;margin-bottom:14px}
+.fstage{display:flex;justify-content:center}
+.fbar{border-radius:14px;padding:16px 22px;color:#F7F2E4;text-align:center;box-shadow:0 8px 20px rgba(59,72,50,.12);transition:width .4s ease;min-width:220px}
+.f1 .fbar{width:100%;background:linear-gradient(160deg,#4C5B40,#3B4832)}
+.f2 .fbar{background:linear-gradient(160deg,#6B7A5C,#4C5B40)}
+.f3 .fbar{background:linear-gradient(160deg,#C9A24B,#B18A2C);color:#2b2408}
+.fbar .fn{display:block;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:2.1rem;line-height:1}
+.fbar .fl{display:block;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;font-weight:700;margin-top:3px;opacity:.92}
+.fconv{text-align:center;color:#8A6D14;font-weight:700;font-size:.9rem;padding:7px 0}
+  #health{margin-bottom:26px}
+  .hpanel{background:var(--white);border:1px solid var(--gold-soft);border-left:4px solid var(--red);
+    border-radius:14px;padding:20px 22px;box-shadow:var(--shadow)}
+  .hpanel.allgood{border-left-color:var(--green)}
+  .hpanel h2{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;margin-bottom:3px}
+  .hpanel .hsub{color:var(--green-soft);font-size:.9rem;font-weight:300;margin-bottom:14px}
+  .hrow{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-top:1px solid #EFE7CC}
+  .hrow:first-of-type{border-top:none}
+  .hdot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:7px}
+  .hdot.on{background:var(--green)} .hdot.off{background:var(--red)} .hdot.idle{background:var(--gold-soft)}
+  .hbody{flex:1;min-width:0}
+  .hlabel{font-weight:500;font-size:.95rem}
+  .hmsg{font-size:.85rem;color:var(--green-soft);font-weight:300;line-height:1.5}
+  .hfix{border:1px solid var(--gold);background:var(--white);color:var(--green-dark);border-radius:8px;
+    padding:6px 13px;font:inherit;font-size:.8rem;cursor:pointer;text-decoration:none;white-space:nowrap;flex:none}
+  .hfix:hover{background:#FBF6E4}
+  .hdismiss{background:none;border:none;color:var(--green-soft);font:inherit;font-size:.8rem;
+    cursor:pointer;text-decoration:underline;margin-top:10px;padding:0}
+</style>
+<script src="/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/heritage.css">
+</head>
+<body>
+<style>
+.tbmnav{background:#3B4832;color:#F7F2E4;display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap;font-family:'Karla',system-ui,-apple-system,sans-serif}
+.tbmnav .brand{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.15rem;margin-right:auto}
+.tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.88;cursor:pointer}
+.tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}
+</style>
+<div class="tbmnav"><span class="brand">Tampa Bay Mahj</span><a href="/dashboard" class="active">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<script>document.getElementById("tbmLogout").addEventListener("click",function(){fetch("/api/auth/logout",{method:"POST"}).then(function(){location.href="/login";});});</script>
+<div class="lock" id="lock" style="display:none">
+  <div class="box">
+    <img src="/logo.png" alt="" style="width:84px;height:84px;margin-bottom:14px">
+    <div class="t1">Holly&#39;s Dashboard</div>
+    <div class="t2">Tampa Bay Mahj</div>
+    <form id="lockForm">
+      <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" autofocus>
+      <button type="submit">Unlock</button>
+      <div class="err" id="lockErr"></div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <img src="/logo.png" alt="Tampa Bay Mahj logo">
+    <div class="t">
+      <h1>Holly&#39;s Dashboard</h1>
+      <div class="s">Tampa Bay Mahj</div>
+    </div>
+    <div class="right">Inquiry form: <a href="/" target="_blank">open ↗</a></div>
+  </header>
+
+  <div id="health"></div>
+
+  <div class="cards">
+    <div class="card"><div class="n" id="stVisits">–</div><div class="l">Form Visits</div></div>
+    <div class="card"><div class="n" id="stUnique">–</div><div class="l">Unique Visitors</div></div>
+    <div class="card"><div class="n" id="stInquiries">–</div><div class="l">Inquiries</div></div>
+    <div class="card"><div class="n" id="stConv">–</div><div class="l">Visitor → Inquiry</div></div>
+  </div>
+  <div class="cards" id="revcards" style="display:none">
+    <div class="card gold"><div class="n" id="revMonth">–</div><div class="l">Revenue · This month</div></div>
+    <div class="card gold"><div class="n" id="revAll">–</div><div class="l">Revenue · All time</div></div>
+  </div>
+  <div id="revconnect" style="display:none;margin:2px 0 14px;font-size:.9rem;color:#5D6656">💳 Connect Stripe in <a href="/settings" style="color:#8A6D14;font-weight:700">Settings</a> to see revenue here.</div>
+
+<div class="evhead">
+    <h2 style="font-family:'Cormorant Garamond',serif;color:#3B4832">Upcoming events</h2>
+    <select id="evRange">
+      <option value="next3">Next 3 events</option>
+      <option value="1m">Next month</option>
+      <option value="3m">Next 3 months</option>
+      <option value="6m">Next 6 months</option>
+      <option value="1y">This year</option>
+      <option value="custom">Custom…</option>
+    </select>
+    <span id="evCustom"><label class="datelab">From <input type="date" id="evFrom"></label><label class="datelab">To <input type="date" id="evTo"></label></span>
+  </div>
+  <div class="panel"><div id="evList">Loading…</div></div>
+
+  <h2>Inquiries</h2>
+  <div class="inqfilter">
+    <input id="inqSearch" placeholder="Search name, email, event…">
+    <select id="inqStatus"><option value="">Active (hides archived)</option><option value="new">New</option><option value="contacted">Contacted</option><option value="booked">Booked</option><option value="archived">Archived</option></select>
+    <label class="datelab">From <input type="date" id="inqFrom"></label><label class="datelab">To <input type="date" id="inqTo"></label>
+    <button id="inqClear" type="button" style="padding:9px 14px;border:1px solid #DED3B4;border-radius:9px;background:#fff;color:#5D6656;font-family:'Karla',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">Clear</button>
+  </div>
+  <div class="panel">
+    <table id="inquiriesTable">
+      <thead><tr>
+        <th>Received</th><th>Name</th><th class="hide-sm">Event</th><th class="hide-sm">Date</th><th class="hide-sm">Guests</th><th>Status</th>
+      </tr></thead>
+      <tbody id="inquiriesBody"></tbody>
+    </table>
+    <div class="empty" id="inqEmpty" style="display:none">
+      <div class="big">🀄</div>No inquiries yet — share the form link and watch this fill up!
+    </div>
+  </div>
+
+  <h2>Recent Visits</h2>
+  <div class="inqfilter">
+    <input id="visSearch" placeholder="Search visitor, source, device…">
+    <label class="datelab">From <input type="date" id="visFrom"></label><label class="datelab">To <input type="date" id="visTo"></label>
+    <button id="visClear" type="button" style="padding:9px 14px;border:1px solid #DED3B4;border-radius:9px;background:#fff;color:#5D6656;font-family:'Karla',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer">Clear</button>
+  </div>
+  <div class="panel">
+    <table class="visits">
+      <thead><tr><th>When</th><th>Visitor</th><th class="hide-sm">Came From</th><th class="hide-sm">Device</th></tr></thead>
+      <tbody id="visitsBody"></tbody>
+    </table>
+    <div class="empty" id="visEmpty" style="display:none">
+      <div class="big">👀</div>No visits recorded yet.
+    </div>
+  </div>
+  <div class="refresh">Auto-refreshes every 30 seconds</div>
+</div>
+
+<script>
+(function(){
+  var openRow = null;
+  function esc(s){ var d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
+  function fmt(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' +
+           d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  }
+  function device(ua){
+    if(!ua) return '';
+    if(/iPhone|Android.+Mobile/i.test(ua)) return '📱 Phone';
+    if(/iPad|Tablet/i.test(ua)) return 'Tablet';
+    return '💻 Desktop';
+  }
+  function shortId(v){ return v ? v.slice(0,8) : '—'; }
+
+  async function load(){
+    try{
+      var r = await fetch('/api/dashboard');
+      if (r.status === 401) { location.href='/login'; return; }
+      document.getElementById('lock').style.display = 'none';
+      var d = await r.json();
+      loadHealth();
+      document.getElementById('stVisits').textContent = d.stats.totalVisits;
+      document.getElementById('stUnique').textContent = d.stats.uniqueVisitors;
+      document.getElementById('stInquiries').textContent = d.stats.totalInquiries;
+      document.getElementById('stConv').textContent = d.stats.conversionRate + '%';
+
+      var tb = document.getElementById('inquiriesBody');
+      tb.innerHTML = '';
+      document.getElementById('inqEmpty').style.display = d.inquiries.length ? 'none':'block';
+      d.inquiries.forEach(function(q){
+        var tr = document.createElement('tr');
+        tr.className = 'row';
+        tr.setAttribute('data-date', q.submittedAt || '');
+        tr.setAttribute('data-status', q.status || '');
+        tr.innerHTML =
+          '<td>'+fmt(q.submittedAt)+'</td>'+
+          '<td><b>'+esc(q.firstName)+' '+esc(q.lastName)+'</b><div class="muted">'+esc(q.email)+'</div></td>'+
+          '<td class="hide-sm">'+esc(q.eventType)+'</td>'+
+          '<td class="hide-sm">'+esc(q.eventDate)+(q.startTime?' · '+esc(q.startTime):'')+'</td>'+
+          '<td class="hide-sm">'+esc(q.guestCount)+'</td>'+
+          '<td><span class="badge '+esc(q.status)+'">'+esc(q.status)+'</span></td>';
+        var dt = document.createElement('tr');
+        dt.className = 'detail'; dt.style.display = 'none';
+        dt.innerHTML = '<td colspan="6">'+
+          '<div class="dg">'+
+          item('Phone', q.phone) + item('Email', q.email) +
+          item('Event Type', q.eventType) + item('Guests Expected', q.guestCount) +
+          item('Date', q.eventDate) + item('Start Time', q.startTime) +
+          item('Location', q.locationName) +
+          item('Address', [q.streetAddress, q.city, q.state, q.zip].filter(Boolean).join(', ')) +
+          '<div class="item wide"><div class="k">About the Event</div><div class="v">'+esc(q.aboutEvent)+'</div></div>'+
+          (q.anythingElse ? '<div class="item wide"><div class="k">Anything Else</div><div class="v">'+esc(q.anythingElse)+'</div></div>' : '')+
+          '<div class="item wide"><div class="k">Status</div><div class="v">'+
+            '<select class="status" data-id="'+q.id+'">'+
+            ['new','contacted','booked','archived'].map(function(s){
+              return '<option'+(s===q.status?' selected':'')+'>'+s+'</option>';
+            }).join('')+'</select></div></div>'+
+          '</div></td>';
+        tr.addEventListener('click', function(){
+          var show = dt.style.display === 'none';
+          if (openRow && openRow !== dt) openRow.style.display = 'none';
+          dt.style.display = show ? '' : 'none';
+          openRow = show ? dt : null;
+        });
+        dt.querySelector('select').addEventListener('change', async function(ev){
+          ev.stopPropagation();
+          await fetch('/api/inquiries/'+q.id, {method:'PATCH', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({status: ev.target.value})});
+          tr.querySelector('.badge').className = 'badge '+ev.target.value;
+          tr.querySelector('.badge').textContent = ev.target.value;
+        });
+        tb.appendChild(tr); tb.appendChild(dt);
+      });
+
+      var vb = document.getElementById('visitsBody');
+      vb.innerHTML = '';
+      document.getElementById('visEmpty').style.display = d.visits.length ? 'none':'block';
+      d.visits.forEach(function(v){
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-date', v.time || '');
+        tr.innerHTML =
+          '<td>'+fmt(v.time)+'</td>'+
+          '<td>Visitor '+esc(shortId(v.visitorId))+'<div class="muted">'+esc(v.ip)+'</div></td>'+
+          '<td class="hide-sm">'+(v.referrer ? esc(v.referrer) : '<span class="muted">direct</span>')+'</td>'+
+          '<td class="hide-sm">'+device(v.userAgent)+'</td>';
+        vb.appendChild(tr);
+      });
+    }catch(e){ console.error(e); }
+  }
+  function item(k,v){
+    return '<div class="item"><div class="k">'+esc(k)+'</div><div class="v">'+(v?esc(v):'<span class="muted">—</span>')+'</div></div>';
+  }
+  document.getElementById('lockForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var pw = document.getElementById('lockPass').value;
+    var r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: pw})});
+    if (r.ok) { document.getElementById('lockErr').textContent=''; load(); }
+    else { document.getElementById('lockErr').textContent = 'Wrong password — try again.'; }
+  });
+  load();
+  setInterval(load, 30000);
+})();
+</script>
+<script>
+(async function(){
+  try{
+    var r=await fetch('/api/revenue').then(x=>x.json());
+    if(!r||!r.ok) return;
+    if(!r.connected){document.getElementById('revconnect').style.display='block';return;}
+    if(r.error){return;}
+    var f=function(n){return '$'+(n||0).toLocaleString('en-US',{maximumFractionDigits:0});};
+    document.getElementById('revMonth').textContent=f(r.month);
+    document.getElementById('revAll').textContent=f(r.all);
+    document.getElementById('revcards').style.display='';
+  }catch(e){}
+})();
+</script>
+<script>
+(function(){
+  var rangeSel=document.getElementById('evRange'),custom=document.getElementById('evCustom'),list=document.getElementById('evList');
+  var TYPE={private_lesson:'Private lesson',group_class:'Group class',private_party:'Private party'};
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fmtWhen(d){return new Date(d).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+  var all=[];
+  var saved=localStorage.getItem('tbm_evrange')||'next3'; rangeSel.value=saved;
+  function render(){
+    var now=Date.now();
+    var up=all.filter(function(s){return new Date(s.starts_at).getTime()>=now;}).sort(function(a,b){return new Date(a.starts_at)-new Date(b.starts_at);});
+    var r=rangeSel.value,out=up;
+    custom.style.display=r==='custom'?'flex':'none';
+    if(r==='next3'){out=up.slice(0,3);}
+    else if(r==='custom'){var f=document.getElementById('evFrom').value,t=document.getElementById('evTo').value;var fromT=f?new Date(f+'T00:00').getTime():now,toT=t?new Date(t+'T23:59').getTime():Infinity;out=up.filter(function(s){var x=new Date(s.starts_at).getTime();return x>=fromT&&x<=toT;});}
+    else{var days={'1m':31,'3m':92,'6m':183,'1y':365}[r];var lim=now+days*864e5;out=up.filter(function(s){return new Date(s.starts_at).getTime()<=lim;});}
+    if(!out.length){list.innerHTML='<div class="ev-empty">No upcoming events'+(r==='next3'?'':' in this range')+'. Open dates in Scheduling.</div>';return;}
+    list.innerHTML=out.map(function(s){var taken=s.seats_taken||0,tot=s.seats_total||0,held=s.seats_held||0,full=(tot-taken-held)<=0;
+      var bk=(s.bookings||[]).filter(function(b){return b.status==='confirmed';});
+      var att=bk.length?bk.map(function(b){return '<div class="ev-att"><b>'+esc(((b.first_name||'')+' '+(b.last_name||'')).trim()||'—')+'</b> · '+(b.seats||1)+' seat'+((b.seats||1)==1?'':'s')+(b.email?' · '+esc(b.email):'')+(b.phone?' · '+esc(b.phone):'')+'</div>';}).join(''):'<div class="ev-att muted">No sign-ups yet.</div>';
+      return '<div class="ev-row" data-ev="'+s.id+'"><span class="ev-caret" id="evc_'+s.id+'">▸</span><div class="ev-when">'+fmtWhen(s.starts_at)+'</div><div class="ev-meta"><b>'+esc(s.title||TYPE[s.slot_type]||s.slot_type)+'</b>'+(s.location?' · '+esc(s.location):'')+'</div><div class="ev-seats'+(full?' full':'')+'">'+(tot?(taken+'/'+tot+' seats'+(full?' · full':'')):'')+'</div></div><div class="ev-detail" id="evd_'+s.id+'" style="display:none">'+att+'</div>';}).join('');
+    Array.prototype.forEach.call(list.querySelectorAll('.ev-row'),function(row){row.addEventListener('click',function(){var id=row.getAttribute('data-ev');var dd=document.getElementById('evd_'+id);var c=document.getElementById('evc_'+id);var show=dd.style.display==='none';dd.style.display=show?'':'none';if(c)c.textContent=show?'▾':'▸';});});
+  }
+  rangeSel.addEventListener('change',function(){localStorage.setItem('tbm_evrange',rangeSel.value);render();});
+  document.getElementById('evFrom').addEventListener('change',render);
+  document.getElementById('evTo').addEventListener('change',render);
+  fetch('/api/admin/slots').then(function(r){return r.ok?r.json():[];}).then(function(s){all=Array.isArray(s)?s:[];render();}).catch(function(){list.innerHTML='<div class="ev-empty">Could not load events.</div>';});
+})();
+</script>
+<script>
+(function(){
+  var se=document.getElementById('inqSearch'),st=document.getElementById('inqStatus'),body=document.getElementById('inquiriesBody');
+  var fromEl=document.getElementById('inqFrom'),toEl=document.getElementById('inqTo'),clearEl=document.getElementById('inqClear');
+  function apply(){
+    var q=(se.value||'').toLowerCase(),status=st.value,from=fromEl.value,to=toEl.value;
+    var active=!!(q||status||from||to),shown=0;
+    Array.prototype.forEach.call(body.querySelectorAll('tr.row'),function(row){
+      var txt=row.textContent.toLowerCase();var s=row.getAttribute('data-status')||'';var dt=(row.getAttribute('data-date')||'').slice(0,10);
+      var ok=(!q||txt.indexOf(q)>-1)&&(!status||s===status);
+      // Archived rows only appear when explicitly asked for.
+      if(ok&&s==='archived'&&status!=='archived')ok=false;
+      if(ok&&from)ok=dt>=from;
+      if(ok&&to)ok=dt<=to;
+      if(ok&&!active)ok=shown<10;   // default: latest 10
+      if(ok)shown++;
+      row.style.display=ok?'':'none';
+      var det=row.nextElementSibling;if(det&&det.classList.contains('detail')&&!ok)det.style.display='none';
+    });
+  }
+  se.addEventListener('input',apply);st.addEventListener('change',apply);
+  fromEl.addEventListener('change',apply);toEl.addEventListener('change',apply);
+  clearEl.addEventListener('click',function(){se.value='';st.value='';fromEl.value='';toEl.value='';apply();});
+  new MutationObserver(apply).observe(body,{childList:true});
+})();
+</script>
+<script>
+(function(){
+  var se=document.getElementById('visSearch'),from=document.getElementById('visFrom'),to=document.getElementById('visTo'),clr=document.getElementById('visClear'),body=document.getElementById('visitsBody');
+  if(!se||!body)return;
+  function apply(){
+    var q=(se.value||'').toLowerCase(),f=from.value,t=to.value,active=!!(q||f||t),shown=0;
+    Array.prototype.forEach.call(body.querySelectorAll('tr'),function(row){
+      var txt=row.textContent.toLowerCase();var dt=(row.getAttribute('data-date')||'').slice(0,10);
+      var ok=(!q||txt.indexOf(q)>-1);
+      if(ok&&f)ok=dt>=f; if(ok&&t)ok=dt<=t;
+      if(ok&&!active)ok=shown<10;
+      if(ok)shown++;
+      row.style.display=ok?'':'none';
+    });
+  }
+  se.addEventListener('input',apply);from.addEventListener('change',apply);to.addEventListener('change',apply);
+  clr.addEventListener('click',function(){se.value='';from.value='';to.value='';apply();});
+  new MutationObserver(apply).observe(body,{childList:true});
+})();
+</script>
+<script src="/toast.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+<script>
+async function loadHealth(){
+  var host=document.getElementById('health'); if(!host) return;
+  try{
+    var d=await fetch('/api/health').then(function(r){return r.json();});
+    if(!d.ok||!d.checks) return;
+    var broken=d.checks.filter(function(c){return c.state==='off';});
+    var esc=function(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+    if(!broken.length){
+      if(sessionStorage.getItem('hideHealth')==='1'){host.innerHTML='';return;}
+      host.innerHTML='<div class="hpanel allgood"><h2>Everything is working</h2>'+
+        '<div class="hsub">Payments, email and your calendar are all set. Nothing needs you right now.</div>'+
+        '<button class="hdismiss" id="hHide">Hide this</button></div>';
+      var hb=document.getElementById('hHide');
+      if(hb)hb.onclick=function(){sessionStorage.setItem('hideHealth','1');host.innerHTML='';};
+      return;
+    }
+    host.innerHTML='<div class="hpanel"><h2>'+broken.length+' thing'+(broken.length===1?'':'s')+' need'+(broken.length===1?'s':'')+' your attention</h2>'+
+      '<div class="hsub">These are switched off right now, so part of your booking flow is not working.</div>'+
+      d.checks.map(function(c){
+        var msg=c.state==='on'?c.good:c.bad;
+        return '<div class="hrow"><span class="hdot '+c.state+'"></span><div class="hbody">'+
+          '<div class="hlabel">'+esc(c.label)+'</div><div class="hmsg">'+esc(msg)+'</div></div>'+
+          (c.state==='on'?'':'<a class="hfix" href="'+esc(c.fix)+'">'+esc(c.fixLabel)+'</a>')+'</div>';
+      }).join('')+'</div>';
+  }catch(e){}
+}
+</script>
+</body>
+</html>

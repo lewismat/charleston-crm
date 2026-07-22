@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create your account — Charleston</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--logo:#3B5C41;--logo-2:#4A6E50;--logo-dk:#2C4630;--gold:#C9A227;--gold-dp:#9A7A22;
+--stripe-a:#FDF6D8;--stripe-b:#F7DC63;--ivory:#FFFDF4;--parchment:#FBF6E4;--ink:#22301F;--stone:#6A7566;
+--display:'Playfair Display',Georgia,serif;--body:'Inter',system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);font-weight:300;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 18px;
+background:repeating-linear-gradient(90deg,var(--stripe-a) 0 30px,var(--stripe-b) 30px 60px)}
+.card{width:100%;max-width:430px;background:linear-gradient(168deg,#fff,var(--ivory) 26%,var(--parchment));
+border-radius:16px;padding:44px 38px;box-shadow:0 2px 0 rgba(255,255,255,.9) inset,0 30px 66px rgba(59,92,65,.2);border:1px solid rgba(201,162,39,.4)}
+.brand{text-align:center;font-family:var(--display);font-size:1.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--logo);font-weight:600}
+h1{font-family:var(--display);font-style:italic;font-weight:500;font-size:1.7rem;color:var(--logo);text-align:center;margin:14px 0 4px}
+.sub{text-align:center;color:var(--stone);font-size:.9rem;margin-bottom:24px}
+label{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-dp);font-weight:500;margin:14px 0 5px}
+input{width:100%;padding:12px 14px;border:1px solid #E3D6B4;border-radius:9px;background:#FEFCF6;font:inherit;font-size:16px;color:var(--ink)}
+input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.16)}
+.btn{width:100%;margin-top:22px;padding:15px;border:none;border-radius:4px;cursor:pointer;
+font-size:.9rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#FFFDF4;
+background:linear-gradient(180deg,var(--logo-2),var(--logo) 46%,var(--logo-dk));box-shadow:0 10px 24px rgba(59,92,65,.3)}
+.btn:hover{filter:brightness(1.05)}.btn:disabled{opacity:.6;cursor:default}
+.foot{text-align:center;margin-top:18px;font-size:.88rem;color:var(--stone)}
+.foot a{color:var(--gold-dp);font-weight:500}
+.msg{margin-top:14px;font-size:.86rem;text-align:center;min-height:1.2em}
+.msg.err{color:#8C3F1E}
+.price{text-align:center;font-size:.82rem;color:var(--stone);margin-top:4px}
+</style></head><body>
+<form class="card" id="f" novalidate>
+  <div class="brand">Charleston</div>
+  <h1>Create your studio</h1>
+  <p class="sub">Two minutes to set up. $9.99/month, cancel anytime.</p>
+  <label for="name">Your name</label><input id="name" autocomplete="name">
+  <label for="email">Email</label><input id="email" type="email" autocomplete="email">
+  <label for="password">Password</label><input id="password" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+  <button class="btn" id="go" type="submit">Create account</button>
+  <p class="msg" id="msg"></p>
+  <p class="foot">Already have an account? <a href="/login">Sign in</a></p>
+</form>
+<script>
+var $=function(id){return document.getElementById(id)};
+$('f').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var m=$('msg');m.className='msg';m.textContent='';
+  var name=$('name').value.trim(),email=$('email').value.trim(),pw=$('password').value;
+  if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||pw.length<8){
+    m.className='msg err';m.textContent='Add your name, a valid email, and an 8+ character password.';return;}
+  $('go').disabled=true;$('go').textContent='Creating…';
+  try{
+    var r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,email:email,password:pw})});
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Could not create account.');
+    location.href=d.next||'/subscribe';
+  }catch(err){m.className='msg err';m.textContent=err.message;$('go').disabled=false;$('go').textContent='Create account';}
+});
+</script></body></html>
