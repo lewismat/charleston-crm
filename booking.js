@@ -193,15 +193,17 @@ async function upsertStudentFromBooking(person, slot) {
   } catch (e) { console.error('[booking] student upsert:', e.message); }
 }
 
-async function tellHolly(subject, fields) {
+async function tellHolly(subject, fields, oid) {
+  const to = await ownerEmail(oid);
+  try { const r = await mail.ownerAlert(to, subject, fields); if (r && r.ok) return; } catch (e) {}
   try {
-    await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(NOTIFY_EMAIL)}`, {
+    await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ _subject: subject, ...fields }),
     });
   } catch (e) {
-    console.error('[booking] Holly notification failed:', e.message);
+    console.error('[booking] owner notification failed:', e.message);
   }
 }
 
@@ -224,11 +226,13 @@ async function doSweep() {
       lastSweep = Date.now();
       const offers = out?.offers || [];
       for (const o of offers) {
+        let oOid = o.owner_id;
+        if (!oOid && o.slot_id) { const sl = await sb(`slots?select=owner_id&id=eq.${encodeURIComponent(o.slot_id)}`).catch(() => []); oOid = sl && sl[0] && sl[0].owner_id; }
         const sent = await mail.waitlistOffer(o);
         // If the client could not be emailed, Holly gets the claim link to pass on
         // by text — the seat stays held either way, so the offer still means something.
         if (!sent?.ok) {
-          await tellHolly(`Seat opened — text ${o.first_name} the link`, {
+          await tellHolly(`Seat opened — text ${ /*oid*/o.first_name} the link`, { /*oid*/
             Who: `${o.first_name} ${o.last_name}`,
             Phone: o.phone || '—',
             Email: o.email,
@@ -237,7 +241,7 @@ async function doSweep() {
             'Claim link': `${SITE_URL}/waitlist/${o.token}`,
             'Held until': fmt(o.expires_at),
             Why: sent?.reason || sent?.error || 'client email not sent',
-          });
+          }, oOid);
         }
       }
       return offers;
@@ -337,7 +341,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
     Expecting: payload.headcount || '—',
     Notes: payload.notes || '—',
     Schedule: `${SITE_URL}/schedule`,
-  });
+  }, slot && slot.owner_id);
   return { ok: true, manage_token: result.manage_token };
 }
 
@@ -479,7 +483,7 @@ router.get('/api/book/complete', async (req, res) => {
         Problem: out.error,
         'Stripe session': sid,
         'What to do': 'Refund in Stripe or fit them in, then reply to them directly.',
-      });
+      }, pend.owner_id);
       return back('oversold');
     }
     return res.redirect(`/booking/${out.manage_token}?paid=1`);
@@ -519,7 +523,7 @@ router.post('/api/waitlist', async (req, res) => {
         Seats: seats,
         Position: `#${result.position}`,
         Notes: p.notes || '—',
-      });
+      }, oid);
     }
 
     res.json({
@@ -587,7 +591,7 @@ router.post('/api/waitlist/:token/claim', async (req, res) => {
         Session: `${TYPE_LABEL[w.slots.slot_type]} — ${fmt(w.slots.starts_at)}`,
         Seats: w.seats,
         Schedule: `${SITE_URL}/schedule`,
-      });
+      }, w.owner_id || (w.slots && w.slots.owner_id));
     }
     res.json({ ok: true, manage_url: `${SITE_URL}/booking/${result.manage_token}` });
   } catch (e) {

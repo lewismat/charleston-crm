@@ -125,7 +125,15 @@ async function createLeadFromInquiry(q) {
 }
 
 // ---------- email notification (fire and forget) ----------
-function notifyEmail(q) {
+async function ownerNotifyEmail(oid) {
+  if (!USE_SB || !oid) return NOTIFY_EMAIL;
+  try {
+    const rows = await sb('GET', 'settings?owner_id=eq.' + encodeURIComponent(oid) + '&select=notify_email&limit=1');
+    return (rows && rows[0] && rows[0].notify_email) || NOTIFY_EMAIL;
+  } catch (e) { return NOTIFY_EMAIL; }
+}
+async function notifyEmail(q) {
+  const to = await ownerNotifyEmail(q.ownerId);
   const payload = {
     _subject: 'New Mahj Inquiry: ' + q.firstName + ' ' + q.lastName + ' - ' + q.eventType + ' on ' + q.eventDate,
     _template: 'table',
@@ -141,7 +149,7 @@ function notifyEmail(q) {
     'About The Event': q.aboutEvent || '-',
     'Anything Else': q.anythingElse || '-',
   };
-  fetch('https://formsubmit.co/ajax/' + NOTIFY_EMAIL, {
+  fetch('https://formsubmit.co/ajax/' + encodeURIComponent(to), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),

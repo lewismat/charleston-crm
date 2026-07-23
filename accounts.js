@@ -48,11 +48,14 @@ const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
 
 // Fire-and-forget note to Holly (same FormSubmit path the booking side uses).
-function tellHolly(subject, fields) {
-  fetch(`https://formsubmit.co/ajax/${encodeURIComponent(NOTIFY_EMAIL)}`, {
+async function tellHolly(subject, fields, oid) {
+  let to = NOTIFY_EMAIL;
+  try { if (oid) { const rows = await sb(`settings?owner_id=eq.${enc(oid)}&select=notify_email&limit=1`); if (rows && rows[0] && rows[0].notify_email) to = rows[0].notify_email; } } catch (e) {}
+  try { const r = await mail.ownerAlert(to, subject, fields); if (r && r.ok) return; } catch (e) {}
+  fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: subject, ...fields }),
-  }).catch((e) => console.error('[accounts] Holly notify failed:', e.message));
+  }).catch((e) => console.error('[accounts] owner notify failed:', e.message));
 }
 
 /* ---------------- password hashing (scrypt) ---------------- */
@@ -632,7 +635,7 @@ router.post('/api/lead', async (req, res) => {
     if (existing && existing[0]) {
       await sb(`students?id=eq.${existing[0].id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ updated_at: new Date().toISOString() }) }).catch(() => {});
-      tellHolly(`Lesson request (returning): ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' });
+      tellHolly(`Lesson request (returning): ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' }, oid);
       return res.json({ ok: true, existing: true });
     }
     await sb('students', { method: 'POST', body: JSON.stringify({
@@ -640,7 +643,7 @@ router.post('/api/lead', async (req, res) => {
       status: 'lead', tags: 'lead', source: 'lesson request',
       notes: message ? ('Lesson request: ' + message) : 'Lesson request',
     }) });
-    tellHolly(`New lesson request: ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' });
+    tellHolly(`New lesson request: ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' }, oid);
     if (email) mail.send({ to: email, subject: 'Thanks for reaching out — Tampa Bay Mahj',
       html: '<div style="font-family:Georgia,serif;color:#2C3327;max-width:460px"><h2 style="color:#3B4832">Thank you, ' + (first || 'friend') + '!</h2><p>Holly has your mahjong lesson request and will be in touch soon to set up your first game.</p><p style="color:#8A6D14">— Tampa Bay Mahj · Tampa &amp; St. Pete</p></div>' }).catch(() => {});
     if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your Tampa Bay Mahj lesson request — Holly will reach out soon. \u2014 Holly').catch(() => {});
