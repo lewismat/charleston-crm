@@ -903,6 +903,26 @@ async function requireSuperadmin(req, res, next) {
 
 router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'hq.html')));
 
+// Public: the testimonial photo (stored in app_config), if imported.
+router.get('/api/testimonial-photo', async (req, res) => {
+  try {
+    const rows = await sb(`app_config?key=eq.testimonial_photo&select=value&limit=1`).catch(() => []);
+    res.json({ photo: (rows && rows[0] && rows[0].value) || '' });
+  } catch (e) { res.json({ photo: '' }); }
+});
+
+// Superadmin: pull Holly's headshot from her Tampa Bay Mahj profile (server-side,
+// so no CORS and no need to move the image bytes by hand) and cache it.
+router.post('/api/hq/import-holly-photo', requireSuperadmin, async (req, res) => {
+  try {
+    const r = await fetch('https://tampa-bay-mahj.onrender.com/api/profile').then((x) => x.json());
+    const photo = (r && (r.profile || r) && (r.profile || r).photo_url) || '';
+    if (!photo || photo.indexOf('data:image') !== 0) return res.status(404).json({ ok: false, error: 'No photo found on the source profile.' });
+    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'testimonial_photo', value: photo, updated_at: new Date().toISOString() }) });
+    res.json({ ok: true, bytes: photo.length });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 router.get('/api/hq/overview', requireSuperadmin, async (req, res) => {
   try {
     const PRICE = 9.99;

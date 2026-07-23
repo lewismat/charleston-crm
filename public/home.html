@@ -492,4 +492,10 @@ body>header,body>main,body>footer{position:relative;z-index:1}
   }
 })();
 </script>
-</body></html>
+<script>
+(function(){
+  fetch('/api/testimonial-photo').then(function(r){return r.json();}).then(function(d){
+    if(d&&d.photo){ var img=document.getElementById('hollyPhoto'); if(img){ img.src=d.photo; img.style.display='block'; var ph=img.parentNode.querySelector('.ph'); if(ph)ph.style.display='none'; } }
+  }).catch(function(){});
+})();
+</script></body></html>
