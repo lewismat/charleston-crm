@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Charleston HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--logo:#3B5C41;--logo2:#2C4630;--gold:#C9A227;--gold2:#9A7A22;--ink:#22301F;--stone:#5f6b58;--paper:#FBF6E4;--card:#FFFDF4}
+*{box-sizing:border-box;margin:0}body{font-family:Inter,system-ui,sans-serif;font-weight:300;color:var(--ink);background:var(--paper)}
+.top{background:linear-gradient(135deg,var(--logo),var(--logo2));color:#F6F1E2;padding:22px 26px}
+.top h1{font-family:"Playfair Display",serif;font-weight:600;font-size:1.55rem;letter-spacing:.01em}
+.top .sub{opacity:.85;font-size:.9rem;margin-top:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:26px 22px 80px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px}
+.card{background:var(--card);border:1px solid rgba(201,162,39,.34);border-radius:13px;padding:16px 18px;box-shadow:0 10px 26px rgba(59,92,65,.08)}
+.card .n{font-family:"Playfair Display",serif;font-size:1.9rem;color:var(--logo);line-height:1.1}
+.card .l{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--gold2);font-weight:600;margin-top:5px}
+.card.g{background:linear-gradient(135deg,#3B5C41,#33513a);border-color:#33513a}
+.card.g .n{color:#F3E7BD}.card.g .l{color:#DCC98A}
+h2{font-family:"Playfair Display",serif;font-weight:600;color:var(--logo);font-size:1.2rem;margin:8px 0 12px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid rgba(201,162,39,.34);border-radius:13px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;font-size:.9rem;border-bottom:1px solid rgba(201,162,39,.18)}
+th{background:#F3ECD6;color:var(--logo);font-weight:600;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+td a{color:var(--logo);text-decoration:none}
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.pill.active{background:#E6EDE5;color:var(--logo)}
+.pill.trialing{background:#FBF0C9;color:var(--gold2)}
+.pill.none{background:#EEE9DA;color:#8a8a7a}
+.pill.past_due,.pill.canceled,.pill.cancelled{background:#F6E2D8;color:#8C3F1E}
+.muted{color:var(--stone)}.err{color:#8C3F1E;padding:20px}
+.foot{margin-top:16px;font-size:.8rem;color:var(--stone)}
+</style></head><body>
+<div class="top"><h1>Charleston HQ</h1><div class="sub">Your studios, revenue, and pipeline at a glance</div></div>
+<div class="wrap">
+  <div class="cards" id="cards"><div class="muted">Loading…</div></div>
+  <h2>Studios</h2>
+  <div id="tableWrap"><div class="muted">Loading…</div></div>
+  <p class="foot" id="foot"></p>
+</div>
+<script>
+var money=function(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+var dt=function(s){ if(!s)return '—'; try{return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return '—';} };
+fetch('/api/hq/overview',{headers:{'Accept':'application/json'}}).then(function(r){
+  if(r.status===403){throw new Error('Not authorized — this console is for the account owner only.');}
+  if(r.status===401){location.href='/login?next=/hq';return null;}
+  return r.json();
+}).then(function(d){
+  if(!d)return;
+  if(!d.ok)throw new Error(d.error||'Could not load.');
+  var m=d.metrics;
+  document.getElementById('cards').innerHTML =
+    '<div class="card g"><div class="n">'+money(m.mrr)+'</div><div class="l">MRR</div></div>'+
+    '<div class="card g"><div class="n">'+money(m.arr)+'</div><div class="l">ARR (run-rate)</div></div>'+
+    '<div class="card"><div class="n">'+m.studios+'</div><div class="l">Studios</div></div>'+
+    '<div class="card"><div class="n">'+m.active+'</div><div class="l">Paying</div></div>'+
+    '<div class="card"><div class="n">'+m.trialing+'</div><div class="l">On trial</div></div>'+
+    '<div class="card"><div class="n">'+m.newLast30+'</div><div class="l">New · 30 days</div></div>'+
+    '<div class="card"><div class="n">'+(m.past_due+m.canceled)+'</div><div class="l">Past due / churned</div></div>';
+  var rows=(d.studios||[]).map(function(s){
+    var st=(s.status||'none');
+    var pubUrl = s.slug ? (location.origin+'/s/'+s.slug) : '';
+    return '<tr>'+
+      '<td><b>'+esc(s.name||'—')+'</b><div class="muted" style="font-size:.8rem">'+esc(s.email||'')+'</div></td>'+
+      '<td><span class="pill '+st+'">'+esc(st)+'</span></td>'+
+      '<td>'+s.students+'</td>'+
+      '<td>'+s.events+'</td>'+
+      '<td>'+(pubUrl?('<a href="'+pubUrl+'" target="_blank">/s/'+esc(s.slug)+'</a>'):'—')+'</td>'+
+      '<td class="muted">'+dt(s.since)+'</td>'+
+      '<td class="muted">'+dt(s.renews)+'</td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('tableWrap').innerHTML =
+    '<table><thead><tr><th>Studio</th><th>Status</th><th>Students</th><th>Events</th><th>Booking page</th><th>Joined</th><th>Renews</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="7" class="muted">No studios yet.</td></tr>')+'</tbody></table>';
+  document.getElementById('foot').textContent = 'MRR counts paying studios at '+money(m.price)+'/mo. Trials ('+m.trialing+') become '+money(m.trialPipeline)+'/mo if they convert.';
+}).catch(function(e){
+  document.getElementById('cards').innerHTML='';
+  document.getElementById('tableWrap').innerHTML='<div class="err">'+esc(e.message)+'</div>';
+});
+</script>
+</body></html>

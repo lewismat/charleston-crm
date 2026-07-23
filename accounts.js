@@ -781,6 +781,56 @@ router.post('/api/auth/reset', async (req, res) => {
   }
 });
 
+/* ================= OWNER / SUPER-ADMIN CONSOLE =================
+   Private to the SaaS operator (is_superadmin). Shows every studio, MRR,
+   trials and churn. Distinct from the per-studio /api/admin/* scheduling
+   routes, which are for individual studio owners. */
+async function isSuperadmin(req) {
+  if (!req.account) return false;
+  try {
+    const rows = await sb(`accounts?id=eq.${enc(req.account.id)}&select=is_superadmin&limit=1`);
+    return !!(rows && rows[0] && rows[0].is_superadmin);
+  } catch (e) { return false; }
+}
+async function requireSuperadmin(req, res, next) {
+  const wantsHtml = (req.headers.accept || '').includes('text/html');
+  const u = currentUser(req);
+  if (!u) return wantsHtml ? res.redirect('/login?next=/hq') : res.status(401).json({ ok: false, error: 'Please sign in.' });
+  req.account = u;
+  if (!(await isSuperadmin(req))) return wantsHtml ? res.status(403).send('Not authorized.') : res.status(403).json({ ok: false, error: 'Not authorized.' });
+  next();
+}
+
+router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'hq.html')));
+
+router.get('/api/hq/overview', requireSuperadmin, async (req, res) => {
+  try {
+    const PRICE = 9.99;
+    const owners = await sb('accounts?role=eq.owner&select=id,name,email,slug,subscription_status,subscription_period_end,created_at&order=created_at.desc');
+    const [students, slots] = await Promise.all([
+      sb('students?select=owner_id').catch(() => []),
+      sb('slots?select=owner_id').catch(() => []),
+    ]);
+    const tally = (arr) => { const m = {}; (arr || []).forEach((x) => { if (x.owner_id) m[x.owner_id] = (m[x.owner_id] || 0) + 1; }); return m; };
+    const stu = tally(students), slt = tally(slots);
+    let active = 0, trialing = 0, past_due = 0, canceled = 0, none = 0, new30 = 0;
+    const d30 = Date.now() - 30 * 864e5;
+    const studios = (owners || []).map((o) => {
+      const st = o.subscription_status || 'none';
+      if (st === 'active') active++; else if (st === 'trialing') trialing++;
+      else if (st === 'past_due') past_due++; else if (st === 'canceled' || st === 'cancelled') canceled++; else none++;
+      if (o.created_at && new Date(o.created_at).getTime() >= d30) new30++;
+      return { name: o.name, email: o.email, slug: o.slug, status: st, since: o.created_at,
+        renews: o.subscription_period_end, students: stu[o.id] || 0, events: slt[o.id] || 0 };
+    });
+    res.json({ ok: true, metrics: {
+      studios: (owners || []).length, active, trialing, past_due, canceled, none,
+      mrr: +(active * PRICE).toFixed(2), arr: +(active * PRICE * 12).toFixed(2),
+      trialPipeline: +(trialing * PRICE).toFixed(2), newLast30: new30, price: PRICE,
+    }, studios });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 router.get('/request',  (req, res) => res.redirect('/'));
 
 module.exports = router;
