@@ -164,10 +164,11 @@ router.get('/api/auth/state', async (req, res) => {
     const u = currentUser(req);
     let sub = 'none', active = false, exists = true;
     if (u) {
-      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,trial_ends_at&limit=1`);
+      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,created_at,stripe_customer_id&limit=1`);
         if (rows && rows[0]) {
           const st = rows[0].subscription_status || 'none';
-          const trial = rows[0].trial_ends_at && Date.now() < new Date(rows[0].trial_ends_at).getTime();
+          const trial = (st === 'none') && !rows[0].stripe_customer_id && rows[0].created_at
+            && Date.now() < new Date(rows[0].created_at).getTime() + 14 * 86400000;
           active = st === 'active' || st === 'trialing' || !!trial;
           sub = (st === 'active' || st === 'trialing') ? st : (trial ? 'trialing' : st);
           u.slug = rows[0].slug || null;
@@ -252,8 +253,7 @@ router.post('/api/auth/register', async (req, res) => {
     const slug = await uniqueSlug(name || username);
     const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
       name, email, username, slug, role: 'owner',
-      subscription_status: 'none', trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
-      password_hash: hashPassword(password) }) });
+      subscription_status: 'none', password_hash: hashPassword(password) }) });
     const acct = created[0];
     if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
     const refSlug = clean(req.body.ref, 60).toLowerCase();
@@ -338,7 +338,6 @@ router.get('/api/auth/google/callback', async (req, res) => {
       const slug = await uniqueSlug(name || uname);
       const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
         name, email, username: uname, slug, role: 'owner', subscription_status: 'none',
-        trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
         password_hash: 'google:' + crypto.randomBytes(18).toString('hex') }) });
       acct = created[0];
       if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
@@ -346,8 +345,9 @@ router.get('/api/auth/google/callback', async (req, res) => {
       await saveSettings(acct.id, { notify_email: email }).catch(() => {});
     }
     setSession(res, acct);
-    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing'
-      || (acct.trial_ends_at && Date.now() < new Date(acct.trial_ends_at).getTime());
+    const trialing = (!acct.subscription_status || acct.subscription_status === 'none') && !acct.stripe_customer_id
+      && acct.created_at && Date.now() < new Date(acct.created_at).getTime() + 14 * 86400000;
+    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing' || trialing;
     res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');
   } catch (e) {
     console.error('[auth] google:', e.message);

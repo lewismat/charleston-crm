@@ -74,10 +74,12 @@ router.get('/api/billing/plans', async (req, res) => {
 /* ---------------- subscription gate ----------------
    CRM pages/APIs require an account whose subscription is active/trialing. */
 const TRIAL_DAYS = 14;
-// A brand-new studio gets a 14-day free trial the moment it signs up (tracked
-// by accounts.trial_ends_at) — no card required. After it lapses, or if the
-// column is missing, they fall back to needing a paid/Stripe-trial status.
-function inTrial(a) { return !!(a && a.trial_ends_at && Date.now() < new Date(a.trial_ends_at).getTime()); }
+// Every brand-new studio gets a 14-day free trial from the moment it signs up —
+// no card required. We derive the window from accounts.created_at (a column that
+// already exists) so no migration is needed. A studio that has ever had a Stripe
+// customer (i.e. subscribed or cancelled) doesn't get a fresh free ride.
+function trialEnd(a) { return a && a.created_at ? new Date(a.created_at).getTime() + TRIAL_DAYS * 86400000 : 0; }
+function inTrial(a) { return !!(a && (!a.subscription_status || a.subscription_status === 'none') && !a.stripe_customer_id && Date.now() < trialEnd(a)); }
 function acctActive(a) { return !!(a && (ACTIVE.has(a.subscription_status) || inTrial(a))); }
 async function subscriptionActive(accountId) {
   try { const a = await accountById(accountId); return acctActive(a); }
@@ -148,7 +150,7 @@ router.get('/api/billing/status', auth.requireAuth, async (req, res) => {
     const trial = inTrial(a);
     res.json({ ok: true, status: (a && ACTIVE.has(a.subscription_status)) ? a.subscription_status : (trial ? 'trialing' : ((a && a.subscription_status) || 'none')),
       active: acctActive(a), trial,
-      trialEndsAt: (a && a.trial_ends_at) || null,
+      trialEndsAt: inTrial(a) ? new Date(trialEnd(a)).toISOString() : null,
       periodEnd: (a && a.subscription_period_end) || null,
       hasCustomer: !!(a && a.stripe_customer_id) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
