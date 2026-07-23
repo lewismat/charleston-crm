@@ -527,6 +527,8 @@ router.get('/api/settings', requireAuth, async (req, res) => {
     res.json({ ok: true,
       businessName: s.business_name || '',
       businessLogo: s.business_logo || '',
+      remindersEnabled: s.reminders_enabled !== false,
+      reminderHours: s.reminder_hours || 24,
       notifyEmail: s.notify_email || '',
       notifyDefault: process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com',
       emailConfigured: await mail.configured(),
@@ -578,6 +580,8 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
     ['twilio_account_sid','twilio_auth_token','twilio_from','google_client_id','google_client_secret','ms_client_id','ms_client_secret','ms_tenant'].forEach(function(f){
       if (f in b) patch[f] = clean(b[f], 300) || null;
     });
+    if ('reminder_hours' in b) { const h = parseInt(b.reminder_hours, 10); patch.reminder_hours = (h > 0 ? Math.min(168, h) : 24); }
+    if ('reminders_enabled' in b) patch.reminders_enabled = !!b.reminders_enabled;
     await saveSettings(ownerId(req), patch);
     mail.clearCache(); _brandCache = {};
     res.json({ ok: true });

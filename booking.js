@@ -113,6 +113,51 @@ async function studioName(oid) {
   catch (e) { return 'Charleston'; }
 }
 
+/* ---------------- automated event reminders ----------------
+   No cron on the free tier, so reminders fire lazily: any calendar load runs
+   a throttled sweep that emails/texts students whose booked session is within
+   their studio's reminder window and hasn't been reminded yet. */
+const _remCfg = {};
+async function studioReminderCfg(oid) {
+  if (!oid) return { enabled: true, hours: 24 };
+  if (_remCfg[oid] && Date.now() - _remCfg[oid].at < 120000) return _remCfg[oid].v;
+  let v = { enabled: true, hours: 24 };
+  try {
+    const r = await sb(`settings?${oidF(oid)}&select=reminders_enabled,reminder_hours&limit=1`);
+    if (r && r[0]) {
+      if (r[0].reminders_enabled === false) v.enabled = false;
+      const h = parseInt(r[0].reminder_hours, 10); if (h > 0) v.hours = Math.min(168, h);
+    }
+  } catch (e) {}
+  _remCfg[oid] = { at: Date.now(), v };
+  return v;
+}
+let lastRemind = 0, reminding = null;
+async function sendDueReminders() {
+  if (reminding) return reminding;
+  reminding = (async () => {
+    try {
+      const now = new Date(), horizon = new Date(now.getTime() + 48 * 3600000);
+      const rows = await sb(`bookings?select=*,slots(*)&status=eq.confirmed&reminder_sent_at=is.null&order=created_at.asc&limit=200`);
+      for (const bk of (rows || [])) {
+        const slot = bk.slots; if (!slot || !slot.starts_at) continue;
+        const start = new Date(slot.starts_at);
+        if (start <= now || start > horizon) continue;
+        const cfg = await studioReminderCfg(slot.owner_id);
+        if (!cfg.enabled) continue;
+        if (start > new Date(now.getTime() + cfg.hours * 3600000)) continue;
+        const brand = await studioName(slot.owner_id); mail.setBrand(brand);
+        if (bk.email) { try { await mail.eventReminder(bk, slot, bk.manage_token); } catch (e) {} }
+        if (bk.phone) sms.sendSMS(bk.phone, `Reminder from ${brand}: ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${bk.manage_token}`).catch(() => {});
+        await sb(`bookings?id=eq.${bk.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ reminder_sent_at: new Date().toISOString() }) }).catch(() => {});
+      }
+    } catch (e) { console.error('[booking] reminders:', e.message); }
+    finally { lastRemind = Date.now(); reminding = null; }
+  })();
+  return reminding;
+}
+function maybeRemind() { if (Date.now() - lastRemind > 120000) sendDueReminders().catch(() => {}); }
+
 function requireHolly(req, res, next) {
   if (!DASH_PASS) return res.status(500).send('DASHBOARD_PASSWORD is not set on the server.');
   const [type, creds] = (req.headers.authorization || '').split(' ');
@@ -272,6 +317,7 @@ function maybeSweep() {
 router.get('/api/slots', async (req, res) => {
   try {
     maybeSweep();
+    maybeRemind();
     sweepPendingHolds();
     const oid = await resolveOwner(req);
     const rows = await sb(
@@ -805,6 +851,7 @@ router.get('/schedule', (req, res) =>
 router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
   try {
     await doSweep();
+    maybeRemind();
     const rows = await sb(`slots?select=*,bookings(*),waitlist(*)&${oidF(ownerId(req))}&order=starts_at.asc`);
     res.json(rows.map((s) => ({ ...s, seats_free: Math.max(0, free(s)) })));
   } catch (e) {

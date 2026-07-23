@@ -110,6 +110,22 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <div class="btnrow" style="margin-top:12px"><button class="save" id="biz_save">Save business profile</button><span class="msg" id="biz_msg"></span></div>
   </div>
 
+  <div class="panel" data-cat="business">
+    <h2>Event reminders</h2>
+    <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Automatically remind students by email and text before their booked session — the best way to cut no-shows.</p>
+    <label style="display:flex;align-items:center;gap:9px;font-weight:600;color:var(--sage-dk)"><input type="checkbox" id="rem_on" style="width:18px;height:18px"> Send automatic reminders</label>
+    <label style="margin-top:14px;display:block">How far ahead?</label>
+    <select id="rem_hours" style="padding:10px 12px;border:1px solid var(--tile-edge);border-radius:10px;background:#fff;font-family:var(--body);font-size:.95rem">
+      <option value="2">2 hours before</option>
+      <option value="4">4 hours before</option>
+      <option value="12">12 hours before</option>
+      <option value="24">1 day before</option>
+      <option value="48">2 days before</option>
+      <option value="72">3 days before</option>
+    </select>
+    <div class="btnrow" style="margin-top:12px"><button class="save" id="rem_save">Save reminders</button><span class="msg" id="rem_msg"></span></div>
+  </div>
+
   <div class="panel" data-cat="appearance">
     <h2>Appearance</h2>
     <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 6px">Pick a color theme for your workspace.</p>
@@ -406,4 +422,19 @@ $('inv_new').addEventListener('click',async function(){
 })();
 </script>
 <script src="/appnav.js"></script>
-</body></html>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  fetch('/api/settings').then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok)return;
+    if($('rem_on')) $('rem_on').checked = d.remindersEnabled!==false;
+    if($('rem_hours')) $('rem_hours').value = String(d.reminderHours||24);
+  }).catch(function(){});
+  if($('rem_save')) $('rem_save').addEventListener('click',function(){
+    var m=$('rem_msg'); m.textContent='Saving…';
+    fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({reminders_enabled:$('rem_on').checked, reminder_hours:parseInt($('rem_hours').value,10)})})
+      .then(function(r){return r.json();}).then(function(x){ m.textContent = (x&&x.ok)?'Saved.':((x&&x.error)||'Could not save.'); setTimeout(function(){m.textContent='';},2000); })
+      .catch(function(){ m.textContent='Could not save.'; });
+  });
+})();
+</script></body></html>

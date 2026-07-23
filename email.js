@@ -140,6 +140,22 @@ function bookingConfirmed(booking, slot, manageToken) {
 }
 
 // Sent when a session is full and they get in line.
+function eventReminder(booking, slot, manageToken) {
+  const url = `${SITE_URL}/booking/${manageToken}`;
+  return send({
+    to: booking.email,
+    subject: `Reminder — ${when(slot.starts_at)}`,
+    html: shell(
+      h1('See you soon!') +
+      big(when(slot.starts_at)) +
+      where(slot) +
+      p(`This is a friendly reminder about your ${(slot.title || '') || 'session'}.`) +
+      btn(url, 'View or manage booking') +
+      btn(`${SITE_URL}/booking/${manageToken}/google`, 'Add to calendar', false)
+    ),
+  });
+}
+
 function waitlistJoined(person, slot, token, position) {
   return send({
     to: person.email,
@@ -249,4 +265,4 @@ function bookingCancelledByHolly(booking, slot, note) {
   });
 }
 
-module.exports = { send, setBrand, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };
+module.exports = { send, setBrand, eventReminder, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };
