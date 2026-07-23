@@ -392,6 +392,8 @@ router.post('/api/book', async (req, res) => {
       pend = rows[0];
 
       const label = slot.title || TYPE_LABEL[slot.slot_type] || 'Mahjong with Tampa Bay Mahj';
+      const studioSlug = (req.query.studio || '').toString().toLowerCase();
+      const bookBase = studioSlug ? `${SITE_URL}/s/${encodeURIComponent(studioSlug)}/book` : `${SITE_URL}/book`;
       const session = await stripePost(key, 'checkout/sessions', {
         mode: 'payment',
         'line_items[0][price_data][currency]': 'usd',
@@ -402,7 +404,7 @@ router.post('/api/book', async (req, res) => {
         client_reference_id: pend.id,
         'metadata[pending_id]': pend.id,
         success_url: `${SITE_URL}/api/book/complete?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${SITE_URL}/book?payment=cancelled`,
+        cancel_url: `${bookBase}?payment=cancelled`,
       });
 
       await sb(`pending_bookings?id=eq.${pend.id}`, {
@@ -935,6 +937,20 @@ router.delete('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+async function studioExists(slug) {
+  const rows = await sb(`accounts?slug=eq.${encodeURIComponent(String(slug || '').toLowerCase())}&role=eq.owner&select=id&limit=1`).catch(() => []);
+  return !!(rows && rows[0]);
+}
+const pub = (f) => path.join(__dirname, 'public', f);
+const studioPage = (file) => async (req, res) => {
+  if (!(await studioExists(req.params.slug))) return res.status(404).sendFile(pub('home.html'));
+  res.sendFile(pub(file));
+};
+router.get('/s/:slug', studioPage('book.html'));
+router.get('/s/:slug/book', studioPage('book.html'));
+router.get('/s/:slug/card', studioPage('card.html'));
+router.get('/s/:slug/inquire', studioPage('index.html'));
 
 router.get('/book', (req, res) => res.sendFile(path.join(__dirname, 'public', 'book.html')));
 

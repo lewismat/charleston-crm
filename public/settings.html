@@ -82,6 +82,14 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <div class="set-body">
 
   <div class="panel" data-cat="business">
+    <h2>Your public pages</h2>
+    <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Share these with your students. Each is your own studio's page.</p>
+    <label>Booking page</label>
+    <div class="btnrow" style="align-items:center;gap:8px"><code id="pub_book" style="background:#00000010;padding:6px 10px;border-radius:8px;font-size:.86rem;word-break:break-all">—</code><button type="button" class="save" id="pub_copy">Copy link</button><span class="msg" id="pub_msg"></span></div>
+    <div style="margin-top:10px;font-size:.9rem"><a id="pub_card" href="#" target="_blank">Your card &#8599;</a> &nbsp;&middot;&nbsp; <a id="pub_inq" href="#" target="_blank">Inquiry form &#8599;</a></div>
+  </div>
+
+  <div class="panel" data-cat="business">
     <h2>Business profile</h2>
     <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Your logo and name show up on your booking page, inquiry form, dashboard and confirmations.</p>
     <label>Business name</label>
@@ -375,6 +383,24 @@ $('inv_new').addEventListener('click',async function(){
     if(d.ok){ m.className='msg ok'; m.textContent='Saved ✓'; }
     else{ m.className='msg err'; m.textContent=d.error||'Error'; }
   });
+})();
+</script>
+<script>
+(function(){
+  fetch('/api/auth/state').then(function(r){return r.json();}).then(function(d){
+    var slug = d && d.user && d.user.slug;
+    var o = location.origin;
+    var book = document.getElementById('pub_book');
+    if(!slug){ if(book) book.textContent = 'Available once your account is set up.'; return; }
+    if(book) book.textContent = o + '/s/' + slug;
+    var card=document.getElementById('pub_card'), inq=document.getElementById('pub_inq');
+    if(card) card.href = '/s/'+slug+'/card';
+    if(inq) inq.href = '/s/'+slug+'/inquire';
+    var btn=document.getElementById('pub_copy'), msg=document.getElementById('pub_msg');
+    if(btn) btn.addEventListener('click', function(){
+      navigator.clipboard.writeText(o+'/s/'+slug).then(function(){ if(msg){msg.textContent='Copied!'; setTimeout(function(){msg.textContent='';},1500);} });
+    });
+  }).catch(function(){});
 })();
 </script>
 </body></html>

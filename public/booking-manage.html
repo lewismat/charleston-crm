@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* per-studio public context: scope all /api calls + internal nav to /s/<slug> */
+(function(){
+  var m=location.pathname.match(/^\/s\/([^\/]+)/);
+  var slug=m?decodeURIComponent(m[1]):(new URLSearchParams(location.search).get('studio')||'');
+  window.__STUDIO__=slug;
+  if(!slug)return;
+  var F=window.fetch;
+  window.fetch=function(i,o){try{var u=(typeof i==='string')?i:(i&&i.url);if(u&&/^\/api\//.test(u)&&!/[?&]studio=/.test(u)){var s=u.indexOf('?')>=0?'&':'?';var n=u+s+'studio='+encodeURIComponent(slug);if(typeof i==='string')i=n;else i=new Request(n,i);}}catch(e){}return F.call(this,i,o);};
+  function fix(){document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href')||'';if(/^\/(book|card|inquire)(\/|$|\?)/.test(h))a.setAttribute('href','/s/'+encodeURIComponent(slug)+h);});}
+  if(document.readyState!=='loading')fix();else document.addEventListener('DOMContentLoaded',fix);
+})();
+</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your booking — Tampa Bay Mahj</title>

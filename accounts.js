@@ -153,13 +153,14 @@ router.get('/api/auth/state', async (req, res) => {
     const u = currentUser(req);
     let sub = 'none', active = false;
     if (u) {
-      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status&limit=1`);
+      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug&limit=1`);
         sub = (rows && rows[0] && rows[0].subscription_status) || 'none';
         active = sub === 'active' || sub === 'trialing';
+        u.slug = rows && rows[0] && rows[0].slug || null;
       } catch (e) {}
     }
     res.json({ ok: true, authed: !!u, subscription: sub, subscribed: active,
-      user: u ? { id: u.id, role: u.role, name: u.name } : null });
+      user: u ? { id: u.id, role: u.role, name: u.name, slug: u.slug || null } : null });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
