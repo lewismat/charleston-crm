@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="32" height="32" role="img" aria-label="Charleston">
+  
+  <circle cx="60" cy="60" r="58" fill="#2e5d3f"></circle>
+  <circle cx="60" cy="60" r="50" fill="none" stroke="#f6f3e2" stroke-width="3"></circle>
+  <text x="60" y="63" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail, cursive" font-size="66" fill="#f6f3e2">C</text>
+</svg>

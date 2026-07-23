@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <script>
 /* per-studio public context: scope all /api calls + internal nav to /s/<slug> */
 (function(){
@@ -17,7 +19,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your place in line — Tampa Bay Mahj</title>
+<title>Your place in line — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -105,7 +107,7 @@ function draw(w){
   if(w.status==='offered'){
     card.classList.add('hot');
     card.innerHTML=`
-      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <img src="/logo.png" alt="Charleston" onerror="this.remove()">
       <h1>A seat opened up.</h1>
       <p>Someone cancelled — ${w.seats>1?`${w.seats} seats are`:'it is'} yours if you want ${w.seats>1?'them':'it'}.</p>
       <div class="when">${when(s.starts_at)}</div>
@@ -131,7 +133,7 @@ function draw(w){
     const pips=Array.from({length:Math.min(p,7)},(_,i)=>
       `<span class="pip ${i===Math.min(p,7)-1?'you':''}"></span>`).join('');
     card.innerHTML=`
-      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <img src="/logo.png" alt="Charleston" onerror="this.remove()">
       <h1>You’re in line.</h1>
       <div class="line">${pips}</div>
       <div class="pos">#${p}</div>
@@ -150,7 +152,7 @@ function draw(w){
 
   if(w.status==='claimed'){
     card.innerHTML=`
-      <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+      <img src="/logo.png" alt="Charleston" onerror="this.remove()">
       <h1>The seat is yours.</h1>
       <div class="when">${when(s.starts_at)}</div>
       ${s.location?`<p>${esc(s.location)}</p>`:''}

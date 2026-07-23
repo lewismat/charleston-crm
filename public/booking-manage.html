@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <script>
 /* per-studio public context: scope all /api calls + internal nav to /s/<slug> */
 (function(){
@@ -17,7 +19,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your booking — Tampa Bay Mahj</title>
+<title>Your booking — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -73,7 +75,7 @@ function draw(b){
   const cancelled=b.status==='cancelled';
   card.className='card'+(cancelled?' cx':'');
   card.innerHTML=`
-    <img src="/logo.png" alt="Tampa Bay Mahj" onerror="this.remove()">
+    <img src="/logo.png" alt="Charleston" onerror="this.remove()">
     <h1>${cancelled?'Cancelled':'You are booked'}</h1>
     <div class="when">${when}</div>
     <p>${LABEL[s.slot_type]} · ${s.duration_minutes} minutes${b.seats>1?` · ${b.seats} seats`:''}</p>

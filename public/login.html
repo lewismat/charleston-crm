@@ -1,6 +1,8 @@
 <!DOCTYPE html><html lang="en"><head>
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sign in — Tampa Bay Mahj</title>
+<title>Sign in — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
@@ -42,7 +44,23 @@ button:hover{filter:brightness(1.06)}
 <div class="deco" id="deco"></div>
 <div class="box">
   <div class="mono">H</div>
-  <div class="brand">Tampa Bay Mahj</div>
+  <div class="brand" style="border:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="118" height="118" style="display:block;margin:0 auto 8px" role="img" aria-label="Charleston — Mahjong Trainer CRM">
+  
+  <defs>
+    <pattern id="chStripes" width="17" height="240" patternUnits="userSpaceOnUse">
+      <rect width="17" height="240" fill="#f7f4e6"></rect>
+      <rect width="8.5" height="240" fill="#efe6b0"></rect>
+    </pattern>
+  </defs>
+  <path d="M 120.00 22.00 A 12.79 12.79 0 0 1 145.36 25.34 A 12.79 12.79 0 0 1 169.00 35.13 A 12.79 12.79 0 0 1 189.30 50.70 A 12.79 12.79 0 0 1 204.87 71.00 A 12.79 12.79 0 0 1 214.66 94.64 A 12.79 12.79 0 0 1 218.00 120.00 A 12.79 12.79 0 0 1 214.66 145.36 A 12.79 12.79 0 0 1 204.87 169.00 A 12.79 12.79 0 0 1 189.30 189.30 A 12.79 12.79 0 0 1 169.00 204.87 A 12.79 12.79 0 0 1 145.36 214.66 A 12.79 12.79 0 0 1 120.00 218.00 A 12.79 12.79 0 0 1 94.64 214.66 A 12.79 12.79 0 0 1 71.00 204.87 A 12.79 12.79 0 0 1 50.70 189.30 A 12.79 12.79 0 0 1 35.13 169.00 A 12.79 12.79 0 0 1 25.34 145.36 A 12.79 12.79 0 0 1 22.00 120.00 A 12.79 12.79 0 0 1 25.34 94.64 A 12.79 12.79 0 0 1 35.13 71.00 A 12.79 12.79 0 0 1 50.70 50.70 A 12.79 12.79 0 0 1 71.00 35.13 A 12.79 12.79 0 0 1 94.64 25.34 A 12.79 12.79 0 0 1 120.00 22.00 Z" fill="#2e5d3f"></path>
+  <circle cx="120" cy="120" r="92" fill="#f6f3e2"></circle>
+  <circle cx="120" cy="120" r="86" fill="none" stroke="#2e5d3f" stroke-width="2.5"></circle>
+  <circle cx="120" cy="120" r="83" fill="url(#chStripes)"></circle>
+  <text x="120" y="110" text-anchor="middle" font-family="Yellowtail, cursive" font-size="33" fill="#2e5d3f">Charleston</text>
+  <line x1="44" y1="138" x2="60" y2="138" stroke="#7a9576" stroke-width="1"></line>
+  <line x1="180" y1="138" x2="196" y2="138" stroke="#7a9576" stroke-width="1"></line>
+  <text x="120" y="141" text-anchor="middle" font-family="&#39;Playfair Display&#39;, serif" font-weight="600" font-size="8" letter-spacing="1.9" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
+</svg></div>
   <h1 id="title">Welcome back</h1>
   <p class="sub" id="sub">Sign in to Holly's studio</p>
   <div class="rule"><span class="dot"></span></div>
@@ -75,7 +93,7 @@ function applyMode(){
   $('passHint').style.display=(isSetup||isReg)?'block':'none';
   $('userLabel').textContent=(isSetup||isReg)?'Username':'Login (email or username)';
   $('title').textContent=isSetup?'Set up your studio':(isReg?'Create your account':'Welcome back');
-  $('sub').textContent=isSetup?'Create the first login for Tampa Bay Mahj':(isReg?'You will need an invite code':"Sign in to Holly's studio");
+  $('sub').textContent=isSetup?'Create the first login for Charleston':(isReg?'You will need an invite code':"Sign in to Holly's studio");
   $('submitBtn').textContent=isSetup?'Create account':(isReg?'Create account':'Sign in');
   var isForgot=mode==='forgot', isReset=mode==='reset';
   if(isForgot||isReset){

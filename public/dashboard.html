@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tampa Bay Mahj — Holly&#39;s Dashboard</title>
+<title>Charleston — Holly&#39;s Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -171,13 +173,13 @@
 .tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.88;cursor:pointer}
 .tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}
 </style>
-<div class="tbmnav"><span class="brand">Tampa Bay Mahj</span><a href="/dashboard" class="active">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<div class="tbmnav"><span class="brand"><img src="/charleston-icon.svg" alt="" style="height:24px;width:24px;vertical-align:-6px;margin-right:7px">Charleston</span><a href="/dashboard" class="active">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
 <script>document.getElementById("tbmLogout").addEventListener("click",function(){fetch("/api/auth/logout",{method:"POST"}).then(function(){location.href="/login";});});</script>
 <div class="lock" id="lock" style="display:none">
   <div class="box">
     <img src="/logo.png" alt="" style="width:84px;height:84px;margin-bottom:14px">
     <div class="t1">Holly&#39;s Dashboard</div>
-    <div class="t2">Tampa Bay Mahj</div>
+    <div class="t2">Charleston</div>
     <form id="lockForm">
       <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" autofocus>
       <button type="submit">Unlock</button>
@@ -188,10 +190,10 @@
 
 <div class="wrap">
   <header>
-    <img src="/logo.png" alt="Tampa Bay Mahj logo">
+    <img src="/logo.png" alt="Charleston logo">
     <div class="t">
       <h1>Holly&#39;s Dashboard</h1>
-      <div class="s">Tampa Bay Mahj</div>
+      <div class="s">Charleston</div>
     </div>
     <div class="right">Inquiry form: <a href="/" target="_blank">open ↗</a></div>
   </header>

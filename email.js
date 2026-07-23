@@ -40,7 +40,7 @@ async function cfg() {
   return val;
 }
 function clearCache() { _cache = { at: 0, val: null }; }
-const SITE_URL = (process.env.SITE_URL || 'https://tampa-bay-mahj.onrender.com').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 const TZ = 'America/New_York';
 
 async function configured() { const c = await cfg(); return Boolean(c.key && c.from); }

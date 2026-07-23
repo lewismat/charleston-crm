@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Charleston">
+  
+  <path d="M 60.00 12.00 A 9.36 9.36 0 0 1 78.37 15.65 A 9.36 9.36 0 0 1 93.94 26.06 A 9.36 9.36 0 0 1 104.35 41.63 A 9.36 9.36 0 0 1 108.00 60.00 A 9.36 9.36 0 0 1 104.35 78.37 A 9.36 9.36 0 0 1 93.94 93.94 A 9.36 9.36 0 0 1 78.37 104.35 A 9.36 9.36 0 0 1 60.00 108.00 A 9.36 9.36 0 0 1 41.63 104.35 A 9.36 9.36 0 0 1 26.06 93.94 A 9.36 9.36 0 0 1 15.65 78.37 A 9.36 9.36 0 0 1 12.00 60.00 A 9.36 9.36 0 0 1 15.65 41.63 A 9.36 9.36 0 0 1 26.06 26.06 A 9.36 9.36 0 0 1 41.63 15.65 A 9.36 9.36 0 0 1 60.00 12.00 Z" fill="#2e5d3f"></path>
+  <circle cx="60" cy="60" r="45" fill="#f6f3e2"></circle>
+  <circle cx="60" cy="60" r="41" fill="none" stroke="#2e5d3f" stroke-width="2"></circle>
+  <text x="60" y="60" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail, cursive" font-size="52" fill="#2e5d3f">C</text>
+</svg>

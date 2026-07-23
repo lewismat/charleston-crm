@@ -1,6 +1,8 @@
 <!DOCTYPE html><html lang="en"><head>
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Settings — Tampa Bay Mahj</title>
+<title>Settings — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-dk:#8A6D14;--red:#B3542E;--green-ok:#3f7d4e;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--body:'Karla',system-ui,sans-serif;}
@@ -73,7 +75,7 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
   <link rel="stylesheet" href="/heritage.css">
 </head>
 <body>
-<div class="tbmnav"><span class="brand">Tampa Bay Mahj</span><a href="/dashboard">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings" class="active">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<div class="tbmnav"><span class="brand"><img src="/charleston-icon.svg" alt="" style="height:24px;width:24px;vertical-align:-6px;margin-right:7px">Charleston</span><a href="/dashboard">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings" class="active">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
 <div class="wrap">
   <h1>Settings</h1>
   <p class="sub">Everything about your studio, in one place.</p>
@@ -93,7 +95,7 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <h2>Business profile</h2>
     <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Your logo and name show up on your booking page, inquiry form, dashboard and confirmations.</p>
     <label>Business name</label>
-    <input id="biz_name" placeholder="Tampa Bay Mahj" autocomplete="off">
+    <input id="biz_name" placeholder="Charleston" autocomplete="off">
     <label style="margin-top:14px">Your logo</label>
     <div class="photorow">
       <div class="photoprev" id="logoprev"><span>No logo</span></div>
@@ -146,7 +148,7 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <label>Resend API key</label>
     <input id="resend_key" type="password" placeholder="re_…" autocomplete="off">
     <label>Send guests&rsquo; email from</label>
-    <input id="from_email" placeholder="Holly at Tampa Bay Mahj &lt;holly@yourdomain.com&gt;">
+    <input id="from_email" placeholder="Holly at Charleston &lt;holly@yourdomain.com&gt;">
     <div class="btnrow"><button class="save" id="ne_save">Save</button><button class="test" id="ne_test">Send test email</button><span class="msg" id="ne_msg"></span></div>
     <div class="note"><b>Setup:</b> make a free account at <a href="https://resend.com" target="_blank" rel="noopener">resend.com</a>, verify your domain under <b>Domains</b>, then create an API key. The <b>from</b> address must use that verified domain — otherwise Resend will only deliver to your own account address. Until this is filled in, no confirmations go out to anyone.</div>
   </div>

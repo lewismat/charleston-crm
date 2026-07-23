@@ -52,7 +52,7 @@ const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 const DASH_PASS = process.env.DASHBOARD_PASSWORD;
 const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
-const SITE_URL = (process.env.SITE_URL || 'https://tampa-bay-mahj.onrender.com').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 const OFFER_HOURS = parseInt(process.env.OFFER_HOURS, 10) || 24;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
