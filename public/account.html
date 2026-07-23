@@ -37,6 +37,15 @@ background:linear-gradient(180deg,var(--logo-2),var(--logo) 46%,var(--logo-dk));
     <div class="row" id="who">—</div>
     <a class="btn ghost" href="/settings">Studio settings</a>
   </div>
+  <div class="card" style="margin-top:16px">
+    <h2 style="font-family:'Cormorant Garamond',Georgia,serif;color:#2e5d3f;font-size:1.4rem;margin:0 0 4px">Refer a teacher</h2>
+    <p class="row" style="color:#5D6656;font-size:.9rem">Give a month, get a month — share your link. When a studio you refer subscribes, you both get a free month.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+      <code id="ref_link" style="background:#00000010;padding:8px 11px;border-radius:8px;font-size:.85rem;word-break:break-all;flex:1">—</code>
+      <button class="btn" id="ref_copy" style="margin:0">Copy</button>
+    </div>
+    <p class="row" id="ref_count" style="color:#9aa08e;font-size:.85rem;margin-top:8px"></p>
+  </div>
   <div class="links"><a href="/dashboard">← Back to dashboard</a><a href="#" id="out">Sign out</a></div>
 </div>
 <script>
@@ -64,4 +73,14 @@ var $=function(id){return document.getElementById(id)};
   var stt=$('start'); if(stt) stt.onclick=function(){location.href='/subscribe';};
 })();
 $('out').addEventListener('click',function(e){e.preventDefault();fetch('/api/auth/logout',{method:'POST'}).then(function(){location.href='/login';});});
+</script><script>
+(function(){
+  fetch('/api/referrals').then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok||!d.slug)return;
+    var url=location.origin+'/?ref='+encodeURIComponent(d.slug);
+    var l=document.getElementById('ref_link'); if(l)l.textContent=url;
+    var c=document.getElementById('ref_count'); if(c)c.textContent=d.count?('You\'ve referred '+d.count+' studio'+(d.count===1?'':'s')+'. Thank you!'):'No referrals yet — share your link!';
+    var b=document.getElementById('ref_copy'); if(b)b.addEventListener('click',function(){navigator.clipboard.writeText(url).then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},1500);});});
+  }).catch(function(){});
+})();
 </script></body></html>

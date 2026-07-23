@@ -53,7 +53,7 @@ $('f').addEventListener('submit',async function(e){
   $('go').disabled=true;$('go').textContent='Creating…';
   try{
     var r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name:name,email:email,password:pw})});
+      body:JSON.stringify({name:name,email:email,password:pw, ref:(new URLSearchParams(location.search).get("ref")||(document.cookie.match(/(?:^|; )cc_ref=([^;]+)/)||[])[1]||"")})});
     var d=await r.json();
     if(!d.ok)throw new Error(d.error||'Could not create account.');
     location.href=d.next||'/subscribe';

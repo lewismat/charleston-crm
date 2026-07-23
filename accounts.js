@@ -249,6 +249,8 @@ router.post('/api/auth/register', async (req, res) => {
       subscription_status: 'none', password_hash: hashPassword(password) }) });
     const acct = created[0];
     if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
+    const refSlug = clean(req.body.ref, 60).toLowerCase();
+    if (refSlug) { try { const rr = await sb(`accounts?slug=eq.${enc(refSlug)}&role=eq.owner&select=id&limit=1`); if (rr && rr[0] && rr[0].id !== acct.id) await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ referred_by: rr[0].id }) }); } catch (e) {} }
     setSession(res, acct);
     res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/subscribe' });
   } catch (e) {
@@ -274,6 +276,15 @@ router.post('/api/invites', requireAuth, requireOwner, async (req, res) => {
 router.post('/api/auth/logout', (req, res) => {
   res.set('Set-Cookie', `${COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`);
   res.json({ ok: true });
+});
+
+router.get('/api/referrals', requireAuth, async (req, res) => {
+  try {
+    const rows = await sb(`accounts?id=eq.${enc(req.account.id)}&select=slug&limit=1`);
+    const slug = rows && rows[0] && rows[0].slug;
+    const refs = await sb(`accounts?referred_by=eq.${enc(req.account.id)}&select=id`).catch(() => []);
+    res.json({ ok: true, slug, count: (refs || []).length });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 /* ================= GOOGLE SIGN-IN =================
