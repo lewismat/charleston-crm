@@ -140,6 +140,11 @@ function bookingConfirmed(booking, slot, manageToken) {
 }
 
 // Sent when a session is full and they get in line.
+function announcement(to, subject, message) {
+  const paras = String(message || '').split(/\n{2,}/).map((t) => p(esc(t).replace(/\n/g, '<br>'))).join('');
+  return send({ to, subject: subject || 'A note from your studio', html: shell(h1(subject || 'Hello!') + paras) });
+}
+
 function eventReminder(booking, slot, manageToken) {
   const url = `${SITE_URL}/booking/${manageToken}`;
   return send({
@@ -265,4 +270,4 @@ function bookingCancelledByHolly(booking, slot, note) {
   });
 }
 
-module.exports = { send, setBrand, eventReminder, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };
+module.exports = { send, setBrand, announcement, eventReminder, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };

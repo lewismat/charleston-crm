@@ -237,7 +237,7 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), billing.handleWebh
 // Paywall gate: admin CRM pages require sign-in AND an active subscription.
 const GATED_PAGES = [
   '/dashboard','/dashboard.html','/students','/students.html','/schedule','/schedule.html',
-  '/inquiries','/inquiries.html','/profile','/profile.html','/settings','/settings.html','/card','/card.html',
+  '/inquiries','/inquiries.html','/profile','/profile.html','/settings','/settings.html','/card','/card.html','/announce','/announce.html',
 ];
 app.get(GATED_PAGES, async (req, res, next) => {
   const u = auth.currentUser(req);
@@ -366,6 +366,7 @@ app.get('/', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'home.html')));
 app.get('/signup',    (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'signup.html')));
 app.get('/subscribe', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'subscribe.html')));
 app.get('/account',   (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'account.html')));
+app.get('/announce',  (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'announce.html')));
 
 // static files (serves / -> index.html, and everything in public/)
 app.use(express.static(PUBLIC_DIR));

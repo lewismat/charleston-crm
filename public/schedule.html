@@ -115,7 +115,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);bo
 .tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.88;cursor:pointer}
 .tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}
 </style>
-<div class="tbmnav"><span class="brand"><img src="/charleston-icon.svg" alt="" style="height:24px;width:24px;vertical-align:-6px;margin-right:7px">Charleston</span><a href="/dashboard">Dashboard</a><a href="/schedule" class="active">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
+<div class="tbmnav"><span class="brand"><img src="/charleston-icon.svg" alt="" style="height:24px;width:24px;vertical-align:-6px;margin-right:7px">Charleston</span><a href="/dashboard">Dashboard</a><a href="/schedule" class="active">Scheduling</a><a href="/students">Students</a><a href="/profile">Profile</a><a href="/announce">Announce</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
 <script>document.getElementById("tbmLogout").addEventListener("click",function(){fetch("/api/auth/logout",{method:"POST"}).then(function(){location.href="/login";});});</script>
 <div class="wrap">
   <div class="sched-main">

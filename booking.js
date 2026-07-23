@@ -848,6 +848,42 @@ router.get('/schedule', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'schedule.html'))
 );
 
+// Bulk announcement: email/text this studio's students, a segment, or one class.
+router.post('/api/admin/announce', auth.requireAuth, async (req, res) => {
+  try {
+    const oid = ownerId(req);
+    const b = req.body || {};
+    const subject = clean(b.subject, 140);
+    const message = clean(b.message, 4000);
+    const doEmail = b.email !== false;
+    const doSms = !!b.sms;
+    const audience = String(b.audience || 'all');
+    if (!message) return res.status(400).json({ ok: false, error: 'Write a message first.' });
+    if (doEmail && !subject) return res.status(400).json({ ok: false, error: 'Add a subject for the email.' });
+    let recips = [];
+    if (audience === 'all' || audience === 'students' || audience === 'leads') {
+      let f = `students?select=first_name,email,phone,status&${oidF(oid)}&archived=eq.false&limit=1000`;
+      if (audience === 'students') f += '&status=eq.student';
+      if (audience === 'leads') f += '&status=eq.lead';
+      const rows = await sb(f).catch(() => []);
+      recips = (rows || []).map((r) => ({ name: r.first_name, email: r.email, phone: r.phone }));
+    } else if (audience.indexOf('slot:') === 0) {
+      const slotId = audience.slice(5);
+      const rows = await sb(`bookings?select=first_name,email,phone&slot_id=eq.${encodeURIComponent(slotId)}&status=eq.confirmed&${oidF(oid)}&limit=1000`).catch(() => []);
+      recips = (rows || []).map((r) => ({ name: r.first_name, email: r.email, phone: r.phone }));
+    }
+    const seen = new Set();
+    recips = recips.filter((r) => { const k = String(r.email || r.phone || '').toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 500);
+    const brand = await studioName(oid); mail.setBrand(brand);
+    let emailed = 0, texted = 0;
+    for (const r of recips) {
+      if (doEmail && r.email) { try { const out = await mail.announcement(r.email, subject, message); if (out && out.ok) emailed++; } catch (e) {} }
+      if (doSms && r.phone) { sms.sendSMS(r.phone, `${brand}: ${message}`.slice(0, 600)).catch(() => {}); texted++; }
+    }
+    res.json({ ok: true, recipients: recips.length, emailed, texted });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // Next few sessions for the dashboard, with attendees.
 router.get('/api/admin/upcoming', auth.requireAuth, async (req, res) => {
   try {
