@@ -73,15 +73,12 @@ router.get('/api/billing/plans', async (req, res) => {
 
 /* ---------------- subscription gate ----------------
    CRM pages/APIs require an account whose subscription is active/trialing. */
-const TRIAL_DAYS = 14;
-// Every brand-new studio gets a 14-day free trial from the moment it signs up —
-// no card required. Window derived from accounts.created_at (existing column), so
-// no migration. Status 'none' means they never completed a subscription, so a
-// leftover Stripe customer object (from an abandoned checkout) shouldn't block the
-// trial. Once they subscribe & cancel, status becomes 'canceled' and the trial ends.
-function trialEnd(a) { return a && a.created_at ? new Date(a.created_at).getTime() + TRIAL_DAYS * 86400000 : 0; }
-function inTrial(a) { return !!(a && (!a.subscription_status || a.subscription_status === 'none') && Date.now() < trialEnd(a)); }
-function acctActive(a) { return !!(a && (ACTIVE.has(a.subscription_status) || inTrial(a))); }
+// Access requires an active or trialing Stripe subscription. A new studio starts
+// its 14-day free trial by adding a card at signup (Stripe trial_period_days:14),
+// which then charges $9.99 automatically the moment the trial ends — no lapse,
+// no second step. 'trialing' therefore already means "card on file, in trial".
+function inTrial(a) { return !!(a && a.subscription_status === 'trialing'); }
+function acctActive(a) { return !!(a && ACTIVE.has(a.subscription_status)); }
 async function subscriptionActive(accountId) {
   try { const a = await accountById(accountId); return acctActive(a); }
   catch { return false; }
@@ -148,10 +145,9 @@ router.post('/api/billing/portal', auth.requireAuth, async (req, res) => {
 router.get('/api/billing/status', auth.requireAuth, async (req, res) => {
   try {
     const a = await accountById(req.account.id);
-    const trial = inTrial(a);
-    res.json({ ok: true, status: (a && ACTIVE.has(a.subscription_status)) ? a.subscription_status : (trial ? 'trialing' : ((a && a.subscription_status) || 'none')),
-      active: acctActive(a), trial,
-      trialEndsAt: inTrial(a) ? new Date(trialEnd(a)).toISOString() : null,
+    res.json({ ok: true, status: (a && a.subscription_status) || 'none',
+      active: acctActive(a), trial: inTrial(a),
+      trialEndsAt: inTrial(a) ? ((a && a.subscription_period_end) || null) : null,
       periodEnd: (a && a.subscription_period_end) || null,
       hasCustomer: !!(a && a.stripe_customer_id) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }

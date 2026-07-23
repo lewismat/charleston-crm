@@ -164,13 +164,10 @@ router.get('/api/auth/state', async (req, res) => {
     const u = currentUser(req);
     let sub = 'none', active = false, exists = true;
     if (u) {
-      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,created_at,stripe_customer_id&limit=1`);
+      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug&limit=1`);
         if (rows && rows[0]) {
-          const st = rows[0].subscription_status || 'none';
-          const trial = (st === 'none') && rows[0].created_at
-            && Date.now() < new Date(rows[0].created_at).getTime() + 14 * 86400000;
-          active = st === 'active' || st === 'trialing' || !!trial;
-          sub = (st === 'active' || st === 'trialing') ? st : (trial ? 'trialing' : st);
+          sub = rows[0].subscription_status || 'none';
+          active = sub === 'active' || sub === 'trialing';
           u.slug = rows[0].slug || null;
         } else { exists = false; }
       } catch (e) {}
@@ -259,7 +256,7 @@ router.post('/api/auth/register', async (req, res) => {
     const refSlug = clean(req.body.ref, 60).toLowerCase();
     if (refSlug) { try { const rr = await sb(`accounts?slug=eq.${enc(refSlug)}&role=eq.owner&select=id&limit=1`); if (rr && rr[0] && rr[0].id !== acct.id) await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ referred_by: rr[0].id }) }); } catch (e) {} }
     setSession(res, acct);
-    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/dashboard?welcome=1' });
+    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/subscribe' });
   } catch (e) {
     console.error('[accounts] register:', e.message);
     res.status(400).json({ ok: false, error: 'Could not create that account. Please try again.' });
@@ -307,7 +304,10 @@ const googleConfigured = () => !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
 router.get('/api/auth/google/config', (req, res) => res.json({ enabled: googleConfigured() }));
 
 router.get('/api/auth/google', (req, res) => {
-  if (!googleConfigured()) return res.redirect('/login?error=google_unconfigured');
+  if (!googleConfigured()) {
+    const from = String(req.get('referer') || '');
+    return res.redirect(from.includes('/signup') ? '/signup?googleoff=1' : '/login?error=google_unconfigured');
+  }
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID, redirect_uri: GOOGLE_REDIRECT, response_type: 'code',
     scope: 'openid email profile', access_type: 'online', prompt: 'select_account',
@@ -345,9 +345,7 @@ router.get('/api/auth/google/callback', async (req, res) => {
       await saveSettings(acct.id, { notify_email: email }).catch(() => {});
     }
     setSession(res, acct);
-    const trialing = (!acct.subscription_status || acct.subscription_status === 'none')
-      && acct.created_at && Date.now() < new Date(acct.created_at).getTime() + 14 * 86400000;
-    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing' || trialing;
+    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing';
     res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');
   } catch (e) {
     console.error('[auth] google:', e.message);
