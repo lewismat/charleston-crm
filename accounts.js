@@ -920,15 +920,6 @@ router.get('/og.png', async (req, res) => {
     return res.send(buf);
   } catch (e) { return res.redirect('/charleston-og.png'); }
 });
-router.post('/api/og/save', express.text({ type: '*/*', limit: '8mb' }), async (req, res) => {
-  try {
-    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
-    let d = String(req.body || '').replace(/^data:image\/png;base64,/, '');
-    if (d.length < 2000) return res.status(400).json({ ok: false, error: 'image too small' });
-    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'og_png', value: d, updated_at: new Date().toISOString() }) });
-    res.json({ ok: true, bytes: d.length });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
-});
 
 // Public: the testimonial photo (stored in app_config), if imported.
 router.get('/api/testimonial-photo', async (req, res) => {
