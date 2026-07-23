@@ -38,6 +38,10 @@ background:linear-gradient(180deg,var(--logo-2),var(--logo) 46%,var(--logo-dk));
   <div class="brand">Charleston</div>
   <div id="banner"></div>
   <p class="tier">Your studio membership</p>
+  <div id="planToggle" style="display:flex;gap:8px;justify-content:center;margin:0 0 12px">
+    <button type="button" class="pt pt-on" data-plan="monthly" style="padding:8px 16px;border-radius:999px;border:1px solid #2e5d3f;background:#2e5d3f;color:#f6f3e2;font-weight:600;cursor:pointer;font-size:.85rem">Monthly</button>
+    <button type="button" class="pt" data-plan="annual" style="padding:8px 16px;border-radius:999px;border:1px solid #2e5d3f;background:#fff;color:#2e5d3f;font-weight:600;cursor:pointer;font-size:.85rem">Annual &middot; 2 months free</button>
+  </div>
   <p class="price"><span class="cur">$</span><span class="amt">9.99</span><span class="per"> / month</span></p>
   <p class="cancel"><b>14 days free</b>, then $9.99/month. Cancel anytime — no phone call, no guilt.</p>
   <hr class="rule">
@@ -55,6 +59,18 @@ background:linear-gradient(180deg,var(--logo-2),var(--logo) 46%,var(--logo-dk));
 </div></div>
 <script>
 var $=function(id){return document.getElementById(id)};
+window.__plan='monthly';
+(function(){
+  var btns=document.querySelectorAll('#planToggle .pt');
+  btns.forEach(function(b){ b.addEventListener('click',function(){
+    window.__plan=b.getAttribute('data-plan');
+    btns.forEach(function(x){ x.style.background='#fff'; x.style.color='#2e5d3f'; });
+    b.style.background='#2e5d3f'; b.style.color='#f6f3e2';
+    var amt=document.querySelector('.price .amt'), per=document.querySelector('.price .per');
+    if(window.__plan==='annual'){ if(amt)amt.textContent='99.90'; if(per)per.textContent=' / year'; }
+    else { if(amt)amt.textContent='9.99'; if(per)per.textContent=' / month'; }
+  }); });
+})();
 (async function(){
   var st=await fetch('/api/auth/state').then(function(r){return r.json()});
   if(!st.authed){location.href='/login';return;}
@@ -74,7 +90,7 @@ var $=function(id){return document.getElementById(id)};
 $('go').addEventListener('click',async function(){
   var m=$('msg');m.className='msg';m.textContent='Taking you to secure checkout…';$('go').disabled=true;
   try{
-    var d=await fetch('/api/billing/checkout',{method:'POST'}).then(function(r){return r.json()});
+    var d=await fetch('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:window.__plan||'monthly'})}).then(function(r){return r.json()});
     if(!d.ok||!d.url)throw new Error(d.error||'Could not start checkout.');
     location.href=d.url;
   }catch(e){m.className='msg err';m.textContent=e.message;$('go').disabled=false;}

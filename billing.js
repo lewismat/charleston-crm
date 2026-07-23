@@ -51,6 +51,26 @@ async function patchAccount(id, patch) {
   await sb(`accounts?id=eq.${enc(id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(patch) });
 }
 
+async function appConfig(key) { try { const r = await sb(`app_config?key=eq.${enc(key)}&select=value&limit=1`); return (r && r[0] && r[0].value) || ''; } catch (e) { return ''; } }
+async function setAppConfig(key, value) { try { await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key, value, updated_at: new Date().toISOString() }) }); } catch (e) {} }
+async function annualPriceId() { return process.env.STRIPE_PRICE_ID_ANNUAL || (await appConfig('stripe_price_annual')) || ''; }
+// Create the annual price (10x monthly = 2 months free) on first use, server-side.
+async function ensureAnnualPrice() {
+  let pid = await annualPriceId(); if (pid) return pid;
+  if (!STRIPE_KEY || !PRICE_ID) return '';
+  try {
+    const monthly = await stripe('prices/' + encodeURIComponent(PRICE_ID), null, 'GET');
+    const product = typeof monthly.product === 'string' ? monthly.product : (monthly.product && monthly.product.id);
+    const amount = (monthly.unit_amount || 999) * 10;
+    const price = await stripe('prices', { product, currency: monthly.currency || 'usd', 'recurring[interval]': 'year', unit_amount: String(amount) });
+    await setAppConfig('stripe_price_annual', price.id);
+    return price.id;
+  } catch (e) { console.error('[billing] ensureAnnualPrice:', e.message); return ''; }
+}
+router.get('/api/billing/plans', async (req, res) => {
+  res.json({ monthly: { amount: 9.99 }, annual: { amount: 99.90, available: true } });
+});
+
 /* ---------------- subscription gate ----------------
    CRM pages/APIs require an account whose subscription is active/trialing. */
 async function subscriptionActive(accountId) {
@@ -80,10 +100,13 @@ router.post('/api/billing/checkout', auth.requireAuth, async (req, res) => {
       await patchAccount(acct.id, { stripe_customer_id: customer });
     }
 
+    const plan = (req.body && req.body.plan) === 'annual' ? 'annual' : 'monthly';
+    let priceId = PRICE_ID;
+    if (plan === 'annual') { const ap = await ensureAnnualPrice(); if (ap) priceId = ap; }
     const session = await stripe('checkout/sessions', {
       mode: 'subscription',
       customer,
-      'line_items[0][price]': PRICE_ID,
+      'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
       'subscription_data[metadata][account_id]': acct.id,
       'subscription_data[trial_period_days]': '14',
