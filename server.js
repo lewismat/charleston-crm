@@ -62,7 +62,7 @@ const store = {
     if (USE_SB) {
       await sb('POST', 'visits', {
         visitor_id: v.visitorId, time: v.time, page: v.page, referrer: v.referrer,
-        user_agent: v.userAgent, ip: v.ip, screen: v.screen,
+        user_agent: v.userAgent, ip: v.ip, screen: v.screen, owner_id: v.ownerId || null,
       });
     } else { localdb.visits.push(v); saveDB(localdb); }
   },
@@ -75,24 +75,25 @@ const store = {
         location_name: q.locationName, street_address: q.streetAddress,
         city: q.city, state: q.state, zip: q.zip,
         about_event: q.aboutEvent, guest_count: q.guestCount, anything_else: q.anythingElse,
-        status: q.status,
+        status: q.status, owner_id: q.ownerId || null,
       });
       return rows && rows[0] ? rows[0].id : q.id;
     }
     localdb.inquiries.unshift(q); saveDB(localdb); return q.id;
   },
-  async getAll() {
+  async getAll(oid) {
     if (USE_SB) {
+      const f = oid ? '&owner_id=eq.' + encodeURIComponent(oid) : '';
       const [inq, vis] = await Promise.all([
-        sb('GET', 'inquiries?select=*&order=submitted_at.desc&limit=1000'),
-        sb('GET', 'visits?select=*&order=time.desc&limit=500'),
+        sb('GET', 'inquiries?select=*' + f + '&order=submitted_at.desc&limit=1000'),
+        sb('GET', 'visits?select=*' + f + '&order=time.desc&limit=500'),
       ]);
       return { inquiries: inq.map(camel), visits: vis.map(camel) };
     }
     return { inquiries: localdb.inquiries, visits: localdb.visits.slice(-500).reverse() };
   },
-  async setStatus(id, status) {
-    if (USE_SB) { await sb('PATCH', 'inquiries?id=eq.' + encodeURIComponent(id), { status }); return true; }
+  async setStatus(id, status, oid) {
+    if (USE_SB) { await sb('PATCH', 'inquiries?id=eq.' + encodeURIComponent(id) + (oid ? '&owner_id=eq.' + encodeURIComponent(oid) : ''), { status }); return true; }
     const q = localdb.inquiries.find((x) => x.id === id);
     if (!q) return false;
     q.status = status; saveDB(localdb); return true;
@@ -105,10 +106,11 @@ async function createLeadFromInquiry(q) {
   try {
     const email = (q.email || '').toLowerCase();
     if (email) {
-      const ex = await sb('GET', 'students?select=id&email=eq.' + encodeURIComponent(email) + '&limit=1');
+      const ex = await sb('GET', 'students?select=id&email=eq.' + encodeURIComponent(email) + (q.ownerId ? '&owner_id=eq.' + encodeURIComponent(q.ownerId) : '') + '&limit=1');
       if (ex && ex[0]) return; // already known
     }
     await sb('POST', 'students', {
+      owner_id: q.ownerId || null,
       first_name: q.firstName, last_name: q.lastName, email, phone: q.phone,
       status: 'lead', tags: 'inquiry form', source: 'website inquiry',
       notes: 'Asked about: ' + (q.eventType || 'a lesson') +
@@ -194,6 +196,32 @@ const app = express();
 const auth = require('./auth');
 const billing = require('./billing');
 
+// ---------- tenant scoping ----------
+function ownerId(req) { const a = req.account || {}; return a.oid || a.owner_id || a.id || null; }
+let _primaryOwner = { at: 0, id: null };
+async function primaryOwnerId() {
+  if (!USE_SB) return null;
+  if (_primaryOwner.id && Date.now() - _primaryOwner.at < 300000) return _primaryOwner.id;
+  try {
+    const rows = await sb('GET', 'accounts?role=eq.owner&select=id&order=created_at.asc&limit=1');
+    const id = (rows && rows[0] && rows[0].id) || null;
+    if (id) _primaryOwner = { at: Date.now(), id };
+    return id;
+  } catch { return null; }
+}
+async function resolveOwner(req) {
+  const u = auth.currentUser(req);
+  if (u) return u.oid || u.id;
+  const slug = req.query && req.query.studio ? String(req.query.studio).toLowerCase() : '';
+  if (slug) {
+    try {
+      const rows = await sb('GET', 'accounts?role=eq.owner&slug=eq.' + encodeURIComponent(slug) + '&select=id&limit=1');
+      if (rows && rows[0]) return rows[0].id;
+    } catch {}
+  }
+  return primaryOwnerId();
+}
+
 // Stripe webhook needs the RAW body for signature verification — register it
 // before any body parsing or static handling.
 app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), billing.handleWebhook);
@@ -219,8 +247,10 @@ app.post('/api/track', async (req, res) => {
     const isNew = !visitorId;
     if (!visitorId) visitorId = crypto.randomUUID();
 
+    const oid = await resolveOwner(req);
     await store.addVisit({
       id: crypto.randomUUID(),
+      ownerId: oid,
       visitorId,
       time: new Date().toISOString(),
       page: clean(body.page, 100) || '/',
@@ -267,6 +297,7 @@ app.post('/api/inquiries', async (req, res) => {
       anythingElse: clean(b.anythingElse, 3000),
       status: 'new',
     };
+    inquiry.ownerId = await resolveOwner(req);
     const id = await store.addInquiry(inquiry);
     notifyEmail(inquiry);
     // Every inquiry is a lead. This was defined but never called, so eight
@@ -294,7 +325,7 @@ app.post('/api/login', async (req, res) => {
 // dashboard data
 app.get('/api/dashboard', auth.requireAuth, async (req, res) => {
   try {
-    const { inquiries, visits } = await store.getAll();
+    const { inquiries, visits } = await store.getAll(ownerId(req));
     const uniqueVisitors = new Set(visits.map((v) => v.visitorId)).size;
     const formVisits = visits.filter((v) => v.page === '/' || v.page === '/index.html');
     sendJSON(res, 200, {
@@ -316,7 +347,7 @@ app.patch('/api/inquiries/:id', auth.requireAuth, async (req, res) => {
     const b = JSON.parse((await readBody(req)) || '{}');
     const allowed = ['new', 'contacted', 'booked', 'archived'];
     if (!allowed.includes(b.status)) return sendJSON(res, 400, { ok: false });
-    const ok = await store.setStatus(id, b.status);
+    const ok = await store.setStatus(id, b.status, ownerId(req));
     sendJSON(res, ok ? 200 : 404, { ok });
   } catch (e) { console.error('status:', e.message); sendJSON(res, 400, { ok: false }); }
 });

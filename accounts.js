@@ -94,7 +94,8 @@ function parseCookies(req) {
 }
 function setSession(res, account) {
   const exp = Date.now() + SESSION_DAYS * 864e5;
-  const token = signToken({ id: account.id, role: account.role, name: account.name, exp });
+  const oid = account.owner_id || account.id;
+  const token = signToken({ id: account.id, oid, role: account.role, name: account.name, exp });
   res.set('Set-Cookie', `${COOKIE}=${enc(token)}; Max-Age=${SESSION_DAYS * 86400}; Path=/; HttpOnly; SameSite=Lax`);
 }
 function currentUser(req) { return verifyToken(parseCookies(req)[COOKIE]); }
@@ -110,6 +111,40 @@ function requireOwner(req, res, next) {
 async function accountCount() {
   const rows = await sb('accounts?select=id');
   return Array.isArray(rows) ? rows.length : 0;
+}
+
+/* ---------------- tenant scoping ---------------- */
+// The studio (owner account) that a request belongs to. Owners map to
+// themselves; staff carry their owner's id in the session token.
+function ownerId(req) {
+  const a = req.account || {};
+  return a.oid || a.owner_id || a.id || null;
+}
+let _primaryOwner = { at: 0, id: null };
+async function primaryOwnerId() {
+  if (_primaryOwner.id && Date.now() - _primaryOwner.at < 300000) return _primaryOwner.id;
+  const rows = await sb('accounts?role=eq.owner&select=id&order=created_at.asc&limit=1').catch(() => []);
+  const id = (rows && rows[0] && rows[0].id) || null;
+  if (id) _primaryOwner = { at: Date.now(), id };
+  return id;
+}
+// For public routes with no session: a signed-in studio wins, else ?studio=slug,
+// else the primary (first) studio so single-studio installs keep working.
+async function resolveOwner(req) {
+  const u = currentUser(req);
+  if (u) return u.oid || u.id;
+  const slug = (req.query && req.query.studio) ? String(req.query.studio).toLowerCase() : '';
+  if (slug) {
+    const rows = await sb(`accounts?slug=eq.${enc(slug)}&role=eq.owner&select=id&limit=1`).catch(() => []);
+    if (rows && rows[0]) return rows[0].id;
+  }
+  return primaryOwnerId();
+}
+const oidF = (oid) => `owner_id=eq.${enc(oid)}`;
+async function saveSettings(oid, patch) {
+  const row = Object.assign({}, patch, { id: oid, owner_id: oid });
+  await sb('settings?on_conflict=owner_id', { method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(row) });
 }
 
 /* ================= AUTH ================= */
@@ -139,6 +174,7 @@ router.post('/api/auth/setup', async (req, res) => {
     const rows = await sb('accounts', { method: 'POST', body: JSON.stringify({
       name, email, username, role: 'owner', password_hash: hashPassword(password) }) });
     const acct = rows[0];
+    if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
     setSession(res, acct);
     res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name } });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
@@ -201,6 +237,7 @@ router.post('/api/auth/register', async (req, res) => {
       name, email, username, slug, role: 'owner',
       subscription_status: 'none', password_hash: hashPassword(password) }) });
     const acct = created[0];
+    if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
     setSession(res, acct);
     res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/subscribe' });
   } catch (e) {
@@ -211,14 +248,14 @@ router.post('/api/auth/register', async (req, res) => {
 
 // Invite codes (owner generates; team can view).
 router.get('/api/invites', requireAuth, async (req, res) => {
-  try { res.json({ ok: true, invites: await sb('invites?select=*&order=created_at.desc&limit=100') }); }
+  try { res.json({ ok: true, invites: await sb(`invites?${oidF(ownerId(req))}&select=*&order=created_at.desc&limit=100`) }); }
   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 router.post('/api/invites', requireAuth, requireOwner, async (req, res) => {
   try {
     const code = crypto.randomBytes(4).toString('hex').toUpperCase();
     const rows = await sb('invites', { method: 'POST', body: JSON.stringify({
-      code, created_by: req.account.id, note: clean(req.body.note, 120) || null }) });
+      code, created_by: req.account.id, owner_id: ownerId(req), note: clean(req.body.note, 120) || null }) });
     res.json({ ok: true, invite: rows[0] });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
@@ -231,7 +268,7 @@ router.post('/api/auth/logout', (req, res) => {
 /* ================= STAFF (owner manages) ================= */
 router.get('/api/staff', requireAuth, async (req, res) => {
   try {
-    const rows = await sb('accounts?select=id,name,email,username,role,active,last_login,created_at&order=created_at.asc');
+    const rows = await sb(`accounts?${oidF(ownerId(req))}&select=id,name,email,username,role,active,last_login,created_at&order=created_at.asc`);
     res.json({ ok: true, staff: rows });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
@@ -243,7 +280,7 @@ router.post('/api/staff', requireAuth, requireOwner, async (req, res) => {
     if (!name || !isEmail(email) || !username || password.length < 8)
       return res.status(400).json({ ok: false, error: 'Name, valid email, username, and an 8+ character password are required.' });
     const rows = await sb('accounts', { method: 'POST', body: JSON.stringify({
-      name, email, username, role, password_hash: hashPassword(password) }) });
+      name, email, username, role, owner_id: ownerId(req), password_hash: hashPassword(password) }) });
     const a = rows[0];
     res.json({ ok: true, staff: { id: a.id, name: a.name, email: a.email, username: a.username, role: a.role } });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
@@ -253,8 +290,9 @@ router.post('/api/staff', requireAuth, requireOwner, async (req, res) => {
 const PROFILE_FIELDS = ['display_name','tagline','bio','credentials','offerings','photo_url','email','phone','instagram','shopmy','website'];
 router.get('/api/profile', async (req, res) => {
   try {
-    const rows = await sb(`profile?id=eq.holly&limit=1`);
-    res.json({ ok: true, profile: (rows && rows[0]) || { id: 'holly' } });
+    const oid = await resolveOwner(req);
+    const rows = await sb(`profile?${oidF(oid)}&limit=1`);
+    res.json({ ok: true, profile: (rows && rows[0]) || { id: oid } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 router.put('/api/profile', requireAuth, async (req, res) => {
@@ -267,7 +305,8 @@ router.put('/api/profile', requireAuth, async (req, res) => {
     if (Array.isArray(req.body.details)) patch.details = req.body.details.slice(0, 24)
       .map((d) => ({ label: clean(d && d.label, 60), icon: clean(d && d.icon, 24), value: clean(d && d.value, 600) }))
       .filter((d) => d.label || d.value);
-    await sb(`profile?id=eq.holly`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(patch) });
+    const oid = ownerId(req); patch.id = oid; patch.owner_id = oid;
+    await sb('profile?on_conflict=owner_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(patch) });
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
@@ -290,7 +329,7 @@ router.get('/api/students', requireAuth, async (req, res) => {
       filters += `&or=(first_name.ilike.${enc(like)},last_name.ilike.${enc(like)},email.ilike.${enc(like)},tags.ilike.${enc(like)})`;
     }
     if (status) filters += `&status=eq.${status}`;
-    filters += '&archived=eq.false&order=updated_at.desc&limit=500';
+    filters += `&${oidF(ownerId(req))}&archived=eq.false&order=updated_at.desc&limit=500`;
     res.json({ ok: true, students: await sb('students?' + filters) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
@@ -298,21 +337,23 @@ router.post('/api/students', requireAuth, async (req, res) => {
   try {
     const body = stuBody(req.body);
     if (!body.first_name) return res.status(400).json({ ok: false, error: 'First name is required.' });
+    body.owner_id = ownerId(req);
     const rows = await sb('students', { method: 'POST', body: JSON.stringify(body) });
     res.json({ ok: true, student: rows[0] });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
 router.get('/api/students/:id', requireAuth, async (req, res) => {
   try {
-    const rows = await sb(`students?id=eq.${enc(req.params.id)}&limit=1`);
+    const oid = ownerId(req);
+    const rows = await sb(`students?id=eq.${enc(req.params.id)}&${oidF(oid)}&limit=1`);
     const student = rows && rows[0];
     if (!student) return res.status(404).json({ ok: false, error: 'Not found.' });
     let bookings = [], inquiries = [];
     if (student.email) {
       const em = enc(student.email);
       [bookings, inquiries] = await Promise.all([
-        sb(`bookings?select=id,created_at,seats,status,slot_id&email=eq.${em}&order=created_at.desc`).catch(() => []),
-        sb(`inquiries?select=id,submitted_at,event_type,event_date,status&email=eq.${em}&order=submitted_at.desc`).catch(() => []),
+        sb(`bookings?select=id,created_at,seats,status,slot_id&email=eq.${em}&${oidF(oid)}&order=created_at.desc`).catch(() => []),
+        sb(`inquiries?select=id,submitted_at,event_type,event_date,status&email=eq.${em}&${oidF(oid)}&order=submitted_at.desc`).catch(() => []),
       ]);
     }
     res.json({ ok: true, student, history: { bookings, inquiries } });
@@ -321,7 +362,7 @@ router.get('/api/students/:id', requireAuth, async (req, res) => {
 router.put('/api/students/:id', requireAuth, async (req, res) => {
   try {
     const body = stuBody(req.body); body.updated_at = new Date().toISOString();
-    await sb(`students?id=eq.${enc(req.params.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(body) });
+    await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(body) });
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
@@ -333,16 +374,16 @@ async function stripeGet(key, pathq) {
   if (!r.ok) throw new Error((j.error && j.error.message) || ('Stripe ' + r.status));
   return j;
 }
-async function getStripeKey() {
-  const rows = await sb('settings?id=eq.app&select=stripe_secret_key&limit=1').catch(() => []);
+async function getStripeKey(oid) {
+  const rows = await sb(`settings?${oidF(oid)}&select=stripe_secret_key&limit=1`).catch(() => []);
   return (rows && rows[0] && rows[0].stripe_secret_key) || '';
 }
 // Any lead who shows up as a paid Stripe customer becomes a student. Lazy — runs on revenue fetch.
-async function convertPaidLeads(emails) {
+async function convertPaidLeads(emails, oid) {
   for (const em of emails) {
     if (!em) continue;
     try {
-      await sb(`students?status=eq.lead&email=eq.${enc(em)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
+      await sb(`students?status=eq.lead&email=eq.${enc(em)}&${oidF(oid)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ status: 'student', updated_at: new Date().toISOString() }) });
     } catch (e) {}
   }
@@ -352,7 +393,8 @@ async function convertPaidLeads(emails) {
 // One honest answer to "is this thing actually working?" — used by the dashboard checklist.
 router.get('/api/health', requireAuth, async (req, res) => {
   try {
-    const rows = await sb('settings?id=eq.app&limit=1').catch(() => []);
+    const oid = ownerId(req);
+    const rows = await sb(`settings?${oidF(oid)}&limit=1`).catch(() => []);
     const s = (rows && rows[0]) || {};
     const emailOn = await mail.configured();
     const stripeKey = s.stripe_secret_key || '';
@@ -360,7 +402,7 @@ router.get('/api/health', requireAuth, async (req, res) => {
 
     let events = 0;
     try {
-      const up = await sb(`slots?select=id&published=eq.true&starts_at=gte.${new Date().toISOString()}`);
+      const up = await sb(`slots?select=id&published=eq.true&${oidF(oid)}&starts_at=gte.${new Date().toISOString()}`);
       events = (up || []).length;
     } catch (e) { /* non-fatal */ }
 
@@ -391,21 +433,23 @@ router.get('/api/health', requireAuth, async (req, res) => {
 
 // Public: the studio's own logo + name, shown on every page. No auth — it's
 // the same branding a visitor sees on the booking page anyway.
-let _brandCache = { at: 0, val: null };
+let _brandCache = {};
 router.get('/api/branding', async (req, res) => {
   try {
-    if (_brandCache.val && Date.now() - _brandCache.at < 20000) return res.json(_brandCache.val);
-    const rows = await sb('settings?id=eq.app&select=business_logo,business_name&limit=1').catch(() => []);
+    const oid = await resolveOwner(req);
+    const hit = _brandCache[oid];
+    if (hit && Date.now() - hit.at < 20000) return res.json(hit.val);
+    const rows = await sb(`settings?${oidF(oid)}&select=business_logo,business_name&limit=1`).catch(() => []);
     const s = (rows && rows[0]) || {};
     const val = { logo: s.business_logo || '', name: s.business_name || '' };
-    _brandCache = { at: Date.now(), val };
+    _brandCache[oid] = { at: Date.now(), val };
     res.json(val);
   } catch (e) { res.json({ logo: '', name: '' }); }
 });
 
 router.get('/api/settings', requireAuth, async (req, res) => {
   try {
-    const rows = await sb('settings?id=eq.app&limit=1');
+    const rows = await sb(`settings?${oidF(ownerId(req))}&limit=1`);
     const s = (rows && rows[0]) || {};
     const k = s.stripe_secret_key || '';
     const proto = req.get('x-forwarded-proto') || 'https';
@@ -464,8 +508,8 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
     ['twilio_account_sid','twilio_auth_token','twilio_from','google_client_id','google_client_secret','ms_client_id','ms_client_secret','ms_tenant'].forEach(function(f){
       if (f in b) patch[f] = clean(b[f], 300) || null;
     });
-    await sb('settings?id=eq.app', { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(patch) });
-    mail.clearCache(); _brandCache = { at: 0, val: null };
+    await saveSettings(ownerId(req), patch);
+    mail.clearCache(); _brandCache = {};
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
@@ -473,7 +517,7 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
 // Validate Twilio creds (no message sent).
 router.post('/api/settings/twilio/test', requireAuth, async (req, res) => {
   try {
-    const rows = await sb('settings?id=eq.app&select=twilio_account_sid,twilio_auth_token&limit=1');
+    const rows = await sb(`settings?${oidF(ownerId(req))}&select=twilio_account_sid,twilio_auth_token&limit=1`);
     const s = rows && rows[0];
     if (!s || !s.twilio_account_sid || !s.twilio_auth_token) return res.json({ ok: false, error: 'Twilio not saved yet.' });
     const r = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + s.twilio_account_sid + '.json',
@@ -488,10 +532,10 @@ router.post('/api/settings/twilio/test', requireAuth, async (req, res) => {
 router.get('/api/cal/:file', async (req, res) => {
   try {
     const token = String(req.params.file || '').replace(/\.ics$/, '');
-    const rows = await sb('settings?id=eq.app&select=calendar_token&limit=1');
-    const tok = rows && rows[0] && rows[0].calendar_token;
-    if (!tok || token !== tok) return res.status(404).send('Not found');
-    const slots = await sb('slots?select=*&published=eq.true&order=starts_at.asc&limit=800').catch(() => []);
+    const rows = await sb(`settings?calendar_token=eq.${enc(token)}&select=owner_id&limit=1`);
+    const owner = rows && rows[0] && rows[0].owner_id;
+    if (!owner) return res.status(404).send('Not found');
+    const slots = await sb(`slots?select=*&published=eq.true&${oidF(owner)}&order=starts_at.asc&limit=800`).catch(() => []);
     const LBL = { private_lesson: 'Private lesson', group_class: 'Group class', private_party: 'Private party' };
     const pad = (n) => String(n).padStart(2, '0');
     const z = (d) => { const x = new Date(d); return x.getUTCFullYear() + pad(x.getUTCMonth()+1) + pad(x.getUTCDate()) + 'T' + pad(x.getUTCHours()) + pad(x.getUTCMinutes()) + '00Z'; };
@@ -513,7 +557,7 @@ router.get('/api/cal/:file', async (req, res) => {
 // Sends a real email to the alert address so Holly can confirm delivery end to end.
 router.post('/api/settings/email/test', requireAuth, async (req, res) => {
   try {
-    const rows = await sb('settings?id=eq.app&select=notify_email&limit=1').catch(() => []);
+    const rows = await sb(`settings?${oidF(ownerId(req))}&select=notify_email&limit=1`).catch(() => []);
     const to = (rows && rows[0] && rows[0].notify_email) || process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
     const out = await mail.ownerAlert(to, 'Test email from Tampa Bay Mahj', {
       Status: 'Email delivery is working.',
@@ -528,7 +572,7 @@ router.post('/api/settings/email/test', requireAuth, async (req, res) => {
 
 router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
   try {
-    const key = await getStripeKey();
+    const key = await getStripeKey(ownerId(req));
     if (!key) return res.json({ ok: false, error: 'No key saved yet.' });
     const bal = await stripeGet(key, 'balance');
     res.json({ ok: true, livemode: !!bal.livemode });
@@ -538,7 +582,8 @@ router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
 // Revenue for the dashboard, computed from Stripe charges (best-effort, recent pages).
 router.get('/api/revenue', requireAuth, async (req, res) => {
   try {
-    const key = await getStripeKey();
+    const oid = ownerId(req);
+    const key = await getStripeKey(oid);
     if (!key) return res.json({ ok: true, connected: false });
     let charges = [], after = null, pages = 0, more = true;
     while (more && pages < 4) {
@@ -562,7 +607,7 @@ router.get('/api/revenue', requireAuth, async (req, res) => {
         if (em) emails.add(em);
       }
     });
-    convertPaidLeads(Array.from(emails)).catch(() => {});
+    convertPaidLeads(Array.from(emails), oid).catch(() => {});
     res.json({ ok: true, connected: true, currency: cur, month: month / 100, all: all / 100, count, truncated: more });
   } catch (e) { res.json({ ok: true, connected: true, error: e.message }); }
 });
@@ -571,6 +616,7 @@ router.get('/api/revenue', requireAuth, async (req, res) => {
 // A prospect asks for a lesson from Holly's card. Lands in the CRM as a lead.
 router.post('/api/lead', async (req, res) => {
   try {
+    const oid = await resolveOwner(req);
     const first = clean(req.body.first_name, 120);
     const last = clean(req.body.last_name, 120);
     const email = clean(req.body.email, 200).toLowerCase();
@@ -581,7 +627,7 @@ router.post('/api/lead', async (req, res) => {
     }
     // Don't duplicate someone we already know.
     let existing = [];
-    if (email) existing = await sb(`students?select=id&email=eq.${enc(email)}&limit=1`).catch(() => []);
+    if (email) existing = await sb(`students?select=id&email=eq.${enc(email)}&${oidF(oid)}&limit=1`).catch(() => []);
     if (existing && existing[0]) {
       await sb(`students?id=eq.${existing[0].id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ updated_at: new Date().toISOString() }) }).catch(() => {});
@@ -589,7 +635,7 @@ router.post('/api/lead', async (req, res) => {
       return res.json({ ok: true, existing: true });
     }
     await sb('students', { method: 'POST', body: JSON.stringify({
-      first_name: first, last_name: last, email, phone,
+      first_name: first, last_name: last, email, phone, owner_id: oid,
       status: 'lead', tags: 'lead', source: 'lesson request',
       notes: message ? ('Lesson request: ' + message) : 'Lesson request',
     }) });
@@ -605,7 +651,7 @@ router.post('/api/lead', async (req, res) => {
 router.post('/api/students/:id/archive', requireAuth, async (req, res) => {
   try {
     const archived = req.body.archived !== false;
-    await sb(`students?id=eq.${enc(req.params.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
+    await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ archived, updated_at: new Date().toISOString() }) });
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
@@ -615,7 +661,7 @@ router.post('/api/students/:id/archive', requireAuth, async (req, res) => {
 // handler will call this automatically once a lesson is actually paid.
 router.post('/api/students/:id/convert', requireAuth, async (req, res) => {
   try {
-    await sb(`students?id=eq.${enc(req.params.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
+    await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'student', updated_at: new Date().toISOString() }) });
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
@@ -635,7 +681,7 @@ function sanitizeCSS(raw) {
 }
 
 router.get('/api/inquiry-config', async (req, res) => {
-  try { const rows = await sb('settings?id=eq.app&select=inquiry_config&limit=1');
+  try { const oid = await resolveOwner(req); const rows = await sb(`settings?${oidF(oid)}&select=inquiry_config&limit=1`);
     res.json({ ok: true, config: (rows && rows[0] && rows[0].inquiry_config) || {} });
   } catch (e) { res.json({ ok: true, config: {} }); }
 });
@@ -653,8 +699,7 @@ router.put('/api/inquiry-config', requireAuth, async (req, res) => {
         css: sanitizeCSS(p && p.css),
       })) : [],
     };
-    await sb('settings?id=eq.app', { method: 'PATCH', headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ inquiry_config: cfg, updated_at: new Date().toISOString() }) });
+    await saveSettings(ownerId(req), { inquiry_config: cfg, updated_at: new Date().toISOString() });
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });

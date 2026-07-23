@@ -1,6 +1,6 @@
-async function ownerEmail() {
+async function ownerEmail(oid) {
   try {
-    const rows = await sb('settings?id=eq.app&select=notify_email&limit=1');
+    const rows = await sb(oid ? `settings?${oidF(oid)}&select=notify_email&limit=1` : 'settings?select=notify_email&limit=1');
     const v = rows && rows[0] && rows[0].notify_email;
     if (v) return v;
   } catch (e) { /* fall through to the env default */ }
@@ -84,6 +84,28 @@ async function sb(pathname, opts = {}) {
   return data;
 }
 
+/* ---------------- tenant scoping ---------------- */
+const ownerId = (req) => { const a = req.account || {}; return a.oid || a.owner_id || a.id || null; };
+let _primaryOwner = { at: 0, id: null };
+async function primaryOwnerId() {
+  if (_primaryOwner.id && Date.now() - _primaryOwner.at < 300000) return _primaryOwner.id;
+  const rows = await sb('accounts?role=eq.owner&select=id&order=created_at.asc&limit=1').catch(() => []);
+  const id = (rows && rows[0] && rows[0].id) || null;
+  if (id) _primaryOwner = { at: Date.now(), id };
+  return id;
+}
+async function resolveOwner(req) {
+  const u = auth.currentUser(req);
+  if (u) return u.oid || u.id;
+  const slug = (req.query && req.query.studio) ? String(req.query.studio).toLowerCase() : '';
+  if (slug) {
+    const rows = await sb(`accounts?slug=eq.${encodeURIComponent(slug)}&role=eq.owner&select=id&limit=1`).catch(() => []);
+    if (rows && rows[0]) return rows[0].id;
+  }
+  return primaryOwnerId();
+}
+const oidF = (oid) => `owner_id=eq.${encodeURIComponent(oid)}`;
+
 function requireHolly(req, res, next) {
   if (!DASH_PASS) return res.status(500).send('DASHBOARD_PASSWORD is not set on the server.');
   const [type, creds] = (req.headers.authorization || '').split(' ');
@@ -111,9 +133,9 @@ const fmt = (d) => new Date(d).toLocaleString('en-US', {
 
 // Holly's notifications keep going through FormSubmit — already working, already activated.
 /* ---------------- Stripe (paid bookings) ---------------- */
-async function getStripeKey() {
+async function getStripeKey(oid) {
   try {
-    const rows = await sb('settings?id=eq.app&select=stripe_secret_key&limit=1');
+    const rows = await sb(`settings?${oidF(oid)}&select=stripe_secret_key&limit=1`);
     return (rows && rows[0] && rows[0].stripe_secret_key) || '';
   } catch (e) { return ''; }
 }
@@ -155,8 +177,9 @@ async function upsertStudentFromBooking(person, slot) {
       ? new Date(slot.starts_at).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) : '';
     const label = (TYPE_LABEL[slot.slot_type] || slot.slot_type || 'event') + (when ? ' \u00b7 ' + when : '');
     const tag = 'booked: ' + label;
+    const OWN = slot && slot.owner_id;
     let ex = [];
-    if (email) ex = await sb(`students?select=id,tags&email=eq.${encodeURIComponent(email)}&limit=1`).catch(() => []);
+    if (email) ex = await sb(`students?select=id,tags&email=eq.${encodeURIComponent(email)}${OWN ? '&' + oidF(OWN) : ''}&limit=1`).catch(() => []);
     if (ex && ex[0]) {
       const tags = (ex[0].tags || '').split(',').map((t) => t.trim()).filter(Boolean);
       if (!tags.includes(tag)) tags.push(tag);
@@ -164,7 +187,7 @@ async function upsertStudentFromBooking(person, slot) {
         body: JSON.stringify({ status: 'student', source: 'event booking', tags: tags.join(', '), updated_at: new Date().toISOString() }) });
     } else {
       await sb('students', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
-        first_name: person.first_name, last_name: person.last_name, email, phone: person.phone,
+        first_name: person.first_name, last_name: person.last_name, email, phone: person.phone, owner_id: OWN || null,
         status: 'student', source: 'event booking', tags: tag, notes: 'Booked ' + label }) });
     }
   } catch (e) { console.error('[booking] student upsert:', e.message); }
@@ -239,9 +262,10 @@ router.get('/api/slots', async (req, res) => {
   try {
     maybeSweep();
     sweepPendingHolds();
+    const oid = await resolveOwner(req);
     const rows = await sb(
       `slots?select=id,slot_type,starts_at,duration_minutes,location,seats_total,seats_taken,seats_held,price_note,price_cents,title,notes,waitlist(status)` +
-      `&published=eq.true&starts_at=gte.${new Date().toISOString()}&order=starts_at.asc`
+      `&${oidF(oid)}&published=eq.true&starts_at=gte.${new Date().toISOString()}&order=starts_at.asc`
     );
     res.json(rows.map((s) => {
       const line = (s.waitlist || []).filter((w) => w.status === 'waiting' || w.status === 'offered').length;
@@ -294,6 +318,9 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
   if (!result?.ok) return { ok: false, error: result?.error || 'That time just filled up.' };
 
   const [slot] = await sb(`slots?select=*&id=eq.${slot_id}`);
+  if (slot && slot.owner_id && result.manage_token) {
+    await sb(`bookings?manage_token=eq.${encodeURIComponent(result.manage_token)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: slot.owner_id }) }).catch(() => {});
+  }
   upsertStudentFromBooking(payload, slot);
 
   mail.bookingConfirmed({ ...payload, seats }, slot, result.manage_token);
@@ -318,6 +345,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
 router.post('/api/book', async (req, res) => {
   try {
     const b = req.body || {};
+    const oid = await resolveOwner(req);
     const p = person(b);
     const seats = Math.max(1, parseInt(b.seats, 10) || 1);
     const bad = validate(p, b.slot_id);
@@ -332,7 +360,7 @@ router.post('/api/book', async (req, res) => {
       headcount: clean(String(b.headcount ?? ''), 10),
     };
 
-    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}`);
+    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}&${oidF(oid)}`);
     if (!slot) return res.status(404).json({ error: 'That event is no longer on the calendar.' });
 
     const price = Math.max(0, parseInt(slot.price_cents, 10) || 0);
@@ -345,7 +373,7 @@ router.post('/api/book', async (req, res) => {
     }
 
     /* ---- Paid event: hold the seat, send them to Stripe ---- */
-    const key = await getStripeKey();
+    const key = await getStripeKey(oid);
     if (!key) return res.status(503).json({ error: 'Payment is not set up yet for this event. Please text Holly to reserve.' });
     if (seats > free(slot)) return res.status(409).json({ error: 'That time just filled up.' });
 
@@ -359,7 +387,7 @@ router.post('/api/book', async (req, res) => {
     try {
       const rows = await sb('pending_bookings', {
         method: 'POST', headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ slot_id: slot.id, seats, payload }),
+        body: JSON.stringify({ slot_id: slot.id, seats, payload, owner_id: oid }),
       });
       pend = rows[0];
 
@@ -409,15 +437,15 @@ router.get('/api/book/complete', async (req, res) => {
     const sid = String(req.query.session_id || '');
     if (!sid) return back('missing');
 
-    const key = await getStripeKey();
+    const rows = await sb(`pending_bookings?select=*&session_id=eq.${encodeURIComponent(sid)}&limit=1`);
+    const pend = rows && rows[0];
+    if (!pend) return back('missing');
+
+    const key = await getStripeKey(pend.owner_id);
     if (!key) return back('unconfigured');
 
     const session = await stripeGetJSON(key, 'checkout/sessions/' + encodeURIComponent(sid));
     if (session.payment_status !== 'paid') return back('unpaid');
-
-    const rows = await sb(`pending_bookings?select=*&session_id=eq.${encodeURIComponent(sid)}&limit=1`);
-    const pend = rows && rows[0];
-    if (!pend) return back('missing');
 
     // Already finished (e.g. they refreshed the receipt page) — don't double-book.
     if (pend.status === 'paid') {
@@ -469,13 +497,15 @@ router.post('/api/waitlist', async (req, res) => {
     const bad = validate(p, b.slot_id);
     if (bad) return res.status(400).json({ error: bad });
 
+    const oid = await resolveOwner(req);
     const result = await sb('rpc/join_waitlist', {
       method: 'POST',
       body: JSON.stringify({ p_slot_id: b.slot_id, p_seats: seats, p_person: p }),
     });
     if (!result?.ok) return res.status(409).json({ error: result.error });
+    if (result.token) sb(`waitlist?token=eq.${encodeURIComponent(result.token)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: oid }) }).catch(() => {});
 
-    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}`);
+    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}&${oidF(oid)}`);
 
     if (!result.already) {
       mail.waitlistJoined(p, slot, result.token, result.position);
@@ -664,13 +694,14 @@ router.get('/booking/:token/google', async (req, res) => {
 // Copy an event to a new date, without its guests.
 router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, async (req, res) => {
   try {
-    const [src] = await sb(`slots?select=*&id=eq.${encodeURIComponent(req.params.id)}`);
+    const [src] = await sb(`slots?select=*&id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`);
     if (!src) return res.status(404).json({ error: 'That event is no longer here.' });
     const when = req.body && req.body.starts_at ? new Date(req.body.starts_at) : new Date(new Date(src.starts_at).getTime() + 7 * 864e5);
     if (isNaN(when)) return res.status(400).json({ error: 'That date did not make sense.' });
     const [copy] = await sb('slots', {
       method: 'POST',
       body: JSON.stringify({
+        owner_id: ownerId(req),
         slot_type: src.slot_type, title: src.title, price_cents: src.price_cents,
         starts_at: when.toISOString(), duration_minutes: src.duration_minutes,
         location: src.location, seats_total: src.seats_total,
@@ -690,7 +721,7 @@ router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) 
     if (!p.first_name || !p.last_name) return res.status(400).json({ error: 'Add a first and last name.' });
     const seats = Math.max(1, parseInt(b.seats, 10) || 1);
 
-    const [slot] = await sb(`slots?select=*&id=eq.${id}`);
+    const [slot] = await sb(`slots?select=*&id=eq.${id}&${oidF(ownerId(req))}`);
     if (!slot) return res.status(404).json({ error: 'That event is no longer here.' });
     if (seats > free(slot)) {
       return res.status(409).json({ error: `Only ${Math.max(0, free(slot))} seat(s) left. Add seats to the event first.` });
@@ -705,6 +736,7 @@ router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) 
       body: JSON.stringify({ p_slot_id: req.params.id, p_seats: seats, p_booking: payload }),
     });
     if (!result?.ok) return res.status(409).json({ error: result?.error || 'That event just filled up.' });
+    if (slot.owner_id && result.manage_token) await sb(`bookings?manage_token=eq.${encodeURIComponent(result.manage_token)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: slot.owner_id }) }).catch(() => {});
 
     upsertStudentFromBooking(payload, slot);
     let emailed = false;
@@ -725,7 +757,7 @@ router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) 
 router.post('/api/admin/bookings/:id/cancel', auth.requireAuth, async (req, res) => {
   try {
     const id = encodeURIComponent(req.params.id);
-    const [bk] = await sb(`bookings?select=*,slots(*)&id=eq.${id}`);
+    const [bk] = await sb(`bookings?select=*,slots(*)&id=eq.${id}&${oidF(ownerId(req))}`);
     if (!bk) return res.status(404).json({ error: 'That booking is no longer here.' });
     if (bk.status !== 'confirmed') return res.status(409).json({ error: 'That seat is already cancelled.' });
 
@@ -758,7 +790,7 @@ router.get('/schedule', (req, res) =>
 router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
   try {
     await doSweep();
-    const rows = await sb('slots?select=*,bookings(*),waitlist(*)&order=starts_at.asc');
+    const rows = await sb(`slots?select=*,bookings(*),waitlist(*)&${oidF(ownerId(req))}&order=starts_at.asc`);
     res.json(rows.map((s) => ({ ...s, seats_free: Math.max(0, free(s)) })));
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -780,6 +812,7 @@ router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
 
     const exclusive = b.slot_type !== 'group_class';
     const base = {
+      owner_id: ownerId(req),
       slot_type: b.slot_type,
       title: clean(b.title, 120) || null,
       price_cents: cents,
@@ -809,7 +842,7 @@ router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
 router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
   try {
     const id = encodeURIComponent(req.params.id);
-    const [before] = await sb(`slots?select=*&id=eq.${id}`);
+    const [before] = await sb(`slots?select=*&id=eq.${id}&${oidF(ownerId(req))}`);
     if (!before) return res.status(404).json({ error: 'That event is no longer here.' });
 
     const b = req.body || {};
@@ -846,7 +879,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
       return res.status(400).json({ error: trap.error, price_trap: true, suggested_cents: trap.suggested_cents });
     }
 
-    const [updated] = await sb(`slots?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    const [updated] = await sb(`slots?id=eq.${id}&${oidF(ownerId(req))}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
     // Work out what a guest would actually care about.
     const fmtDur = (m) => `${m} minutes`;
@@ -865,7 +898,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
     // lie that let broken email go unnoticed for weeks.
     let notified = 0, failed = 0, warning = null;
     if (changes.length && b.notify_guests) {
-      const live = await sb(`bookings?select=*&slot_id=eq.${id}&status=eq.confirmed`).catch(() => []);
+      const live = await sb(`bookings?select=*&slot_id=eq.${id}&status=eq.confirmed&${oidF(ownerId(req))}`).catch(() => []);
       for (const bk of (live || [])) {
         try {
           const out = await mail.eventChanged(bk, updated, bk.manage_token, changes);
@@ -892,11 +925,11 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
 
 router.delete('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
   try {
-    const [slot] = await sb(`slots?select=seats_taken,seats_held&id=eq.${encodeURIComponent(req.params.id)}`);
+    const [slot] = await sb(`slots?select=seats_taken,seats_held&id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`);
     if (slot?.seats_taken > 0 || slot?.seats_held > 0) {
       return res.status(409).json({ error: 'Someone is booked or holding a seat here. Hide it instead, then call them.' });
     }
-    await sb(`slots?id=eq.${encodeURIComponent(req.params.id)}`, { method: 'DELETE' });
+    await sb(`slots?id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`, { method: 'DELETE' });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
