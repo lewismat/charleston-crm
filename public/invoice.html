@@ -40,7 +40,10 @@ background:linear-gradient(180deg,#C24E32,#98371F);color:#FFF7EE;font-weight:700
 .foot{text-align:center;color:var(--stone);font-size:.74rem;margin-top:22px;opacity:.8}
 .secure{text-align:center;color:var(--stone);font-size:.76rem;margin-top:10px}
 .loading{text-align:center;color:var(--stone);padding:40px}
-</style></head><body>
+.dlbtn{display:block;width:100%;margin-top:12px;padding:12px;border:1px solid var(--edge);border-radius:12px;background:#fff;color:var(--logo);font-weight:600;font-size:.95rem;cursor:pointer;font-family:inherit}
+.dlbtn:hover{background:#FCFAF2;border-color:var(--gold)}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+</head><body>
 <div class="scene"><div class="st"></div><div class="wash"></div></div>
 <div class="paper" id="paper"><div class="loading" id="loading">Loading your invoice…</div></div>
 <script>
@@ -78,8 +81,10 @@ async function render(){
       html+='<div class="manual">Please contact '+biz+' to arrange payment.</div>';
     }
   }
+  html+='<button class="dlbtn" id="dl">Download PDF</button>';
   html+='<div class="foot">Powered by Charleston</div>';
   P.innerHTML=html;
+  var dl=document.getElementById('dl'); if(dl) dl.onclick=function(){ makePDF(d); };
   var pb=document.getElementById('pay');
   if(pb) pb.onclick=async function(){
     pb.disabled=true;pb.textContent='Redirecting to secure checkout…';
@@ -90,6 +95,37 @@ async function render(){
       throw new Error(dd.error||'Could not start payment.');
     }catch(e){ pb.disabled=false;pb.textContent='Pay '+fmt(due)+' by card'; alert(e.message); }
   };
+}
+function makePDF(d){
+  if(!window.jspdf){ alert('PDF is still loading — try again in a second.'); return; }
+  var jsPDF=window.jspdf.jsPDF; var doc=new jsPDF({unit:'pt',format:'letter'});
+  var M=54, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), y=68;
+  var green=[46,93,63], stone=[93,102,86], ink=[34,48,31];
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(green[0],green[1],green[2]);
+  doc.text((d.studio&&d.studio.name)||'Charleston', M, y);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(stone[0],stone[1],stone[2]);
+  doc.text('INVOICE', W-M, y-13, {align:'right'});
+  doc.setFontSize(14);doc.setTextColor(ink[0],ink[1],ink[2]);
+  doc.text(String(d.number||''), W-M, y+5, {align:'right'});
+  y+=30; doc.setDrawColor(220,211,180);doc.line(M,y,W-M,y); y+=28;
+  if(d.customer&&d.customer.name){ doc.setFontSize(10);doc.setTextColor(stone[0],stone[1],stone[2]);doc.text('BILLED TO', M, y);
+    doc.setFontSize(13);doc.setTextColor(ink[0],ink[1],ink[2]);doc.text(String(d.customer.name), M, y+17); y+=44; }
+  doc.setFontSize(11);
+  (d.items||[]).forEach(function(it){
+    doc.setTextColor(ink[0],ink[1],ink[2]);
+    var dl2=doc.splitTextToSize(String(it.desc||'Item'), W-2*M-90);
+    doc.text(dl2, M, y);
+    doc.text('$'+(it.amount/100).toFixed(2), W-M, y, {align:'right'});
+    y+=Math.max(dl2.length*13, 13)+6; doc.setDrawColor(238,231,204);doc.line(M,y,W-M,y); y+=18;
+  });
+  y+=6; doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(green[0],green[1],green[2]);
+  doc.text('Total', M, y); doc.text('$'+(d.amount/100).toFixed(2), W-M, y, {align:'right'}); doc.setFont('helvetica','normal');
+  if(d.dueDate){ y+=20;doc.setFontSize(10);doc.setTextColor(stone[0],stone[1],stone[2]);doc.text('Due '+d.dueDate, W-M, y, {align:'right'}); }
+  if(d.status==='paid'){ y+=28;doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(green[0],green[1],green[2]);
+    doc.text('PAID — thank you'+(d.paidAt?(' ('+new Date(d.paidAt).toLocaleDateString()+')'):''), M, y);doc.setFont('helvetica','normal'); }
+  if(d.notes){ y+=30;doc.setFontSize(10);doc.setTextColor(stone[0],stone[1],stone[2]);var ln=doc.splitTextToSize(String(d.notes), W-2*M);doc.text(ln,M,y); }
+  doc.setFontSize(9);doc.setTextColor(stone[0],stone[1],stone[2]);doc.text('Powered by Charleston', M, H-40);
+  doc.save(String(d.number||'invoice')+'.pdf');
 }
 render();
 </script>

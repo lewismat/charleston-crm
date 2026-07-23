@@ -56,6 +56,11 @@ a.txt{color:var(--gold-dk);font-weight:700;text-decoration:none}
 .imgview{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px}
 .imgview.on{display:flex}.imgview img{max-width:100%;max-height:100%;border-radius:10px}
 .note{font-size:.8rem;color:var(--stone);margin-top:8px;line-height:1.5}
+.filerow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.filebtn{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--edge);border-radius:10px;background:#fff;color:var(--logo);font-weight:600;font-size:.85rem;cursor:pointer}
+.filebtn:hover{background:#FCFAF2;border-color:var(--gold)}
+.filebtn.scan{color:var(--gold-dk);border-color:var(--gold)}
+.filebtn[disabled]{opacity:.6}
 </style></head><body>
 <div class="wrap">
   <h1>Invoices</h1>
@@ -115,9 +120,14 @@ a.txt{color:var(--gold-dk);font-weight:700;text-decoration:none}
   <select id="pMethod"><option value="check">Check</option><option value="cash">Cash</option><option value="zelle">Zelle</option><option value="venmo">Venmo</option><option value="stripe">Card / Stripe</option><option value="other">Other</option></select>
   <div class="row"><div><label>Amount</label><input id="pAmount" type="number" step="0.01" placeholder="0.00"></div><div><label>Date</label><input id="pDate" type="date"></div></div>
   <div id="stripeRefWrap" style="display:none"><label>Stripe transaction ID / link</label><input id="pStripeRef" placeholder="pi_... or a Stripe receipt URL"></div>
-  <label>Proof — photo of the check, receipt, etc. (optional)</label>
-  <input id="pPhoto" type="file" accept="image/*" capture="environment">
+  <label>Proof — photo of the check or receipt (optional)</label>
+  <div class="filerow">
+    <label class="filebtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.2"/></svg>Take a photo<input id="pCamera" type="file" accept="image/*" capture="environment" hidden></label>
+    <label class="filebtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>Upload<input id="pPhoto" type="file" accept="image/*" hidden></label>
+    <button type="button" class="filebtn scan" id="pScan" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M4 12h16"/></svg>Smart scan</button>
+  </div>
   <img class="prev" id="pPrev">
+  <div id="pScanMsg" style="font-size:.8rem;margin-top:6px;min-height:1em;color:var(--stone)"></div>
   <label>Note (optional)</label><input id="pNote" placeholder="Check #1234">
   <button class="btn" id="pSave" style="width:100%">Save payment</button>
   <div class="msg" id="pMsg"></div>
@@ -128,6 +138,7 @@ a.txt{color:var(--gold-dk);font-weight:700;text-decoration:none}
 <script src="/sidebar.js"></script>
 <script src="/branding.js"></script>
 <script src="/toast.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
 <script>
 var $=function(i){return document.getElementById(i)};
 var fmt=function(c){return '$'+(c/100).toFixed(2)};
@@ -265,7 +276,7 @@ $('imgView').onclick=function(){$('imgView').classList.remove('on');};
 function openPay(id,due){
   curId=id;$('pMsg').textContent='';$('pMethod').value='check';$('pAmount').value=(due/100).toFixed(2);
   $('pDate').value=new Date().toISOString().slice(0,10);$('pNote').value='';$('pStripeRef').value='';
-  $('pPhoto').value='';$('pPrev').style.display='none';$('pPrev').src='';window._proof='';
+  $('pPhoto').value='';if($('pCamera'))$('pCamera').value='';$('pPrev').style.display='none';$('pPrev').src='';window._proof='';$('pScan').style.display='none';$('pScanMsg').textContent='';
   $('stripeRefWrap').style.display='none';
   var inv=invoices.filter(function(x){return x.id===id})[0];
   $('payFor').textContent=inv?(inv.number+' · '+(inv.customer&&inv.customer.name||'')):'';
@@ -273,15 +284,41 @@ function openPay(id,due){
 }
 $('payX').onclick=function(){$('payOv').classList.remove('on');};
 $('pMethod').onchange=function(){$('stripeRefWrap').style.display=this.value==='stripe'?'block':'none';};
-$('pPhoto').onchange=function(){
-  var f=this.files&&this.files[0];if(!f)return;
+function handleProof(f){
+  if(!f)return;
   var img=new Image();img.onload=function(){
-    var mx=1400,sc=Math.min(1,mx/Math.max(img.width,img.height));
+    var mx=1600,sc=Math.min(1,mx/Math.max(img.width,img.height));
     var cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;
     cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-    window._proof=cv.toDataURL('image/jpeg',0.72);
+    window._proof=cv.toDataURL('image/jpeg',0.78);
     $('pPrev').src=window._proof;$('pPrev').style.display='block';
+    $('pScan').style.display='inline-flex';
   };img.src=URL.createObjectURL(f);
+}
+$('pPhoto').onchange=function(){handleProof(this.files&&this.files[0]);};
+if($('pCamera'))$('pCamera').onchange=function(){handleProof(this.files&&this.files[0]);};
+function scanAmount(text){
+  var re=/\$?\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{2}))?/g,m,amts=[];
+  while((m=re.exec(text))){var whole=(m[1]||'').replace(/,/g,'');var cents=m[2]||'';var val=parseFloat(whole+'.'+(cents||'0'));if(val>0&&val<1000000)amts.push({val:val,dol:/\$/.test(m[0]),cents:!!cents});}
+  amts.sort(function(a,b){return (b.dol-a.dol)||(b.cents-a.cents)||(b.val-a.val);});
+  return amts.length?amts[0].val:null;
+}
+$('pScan').onclick=async function(){
+  if(!window._proof)return;
+  var sm=$('pScanMsg');sm.style.color='var(--stone)';sm.textContent='Scanning… (first scan downloads the reader, a few seconds)';
+  $('pScan').setAttribute('disabled','');
+  try{
+    if(!window.Tesseract)throw new Error('Scanner still loading — try again in a moment, or type the amount.');
+    var res=await Tesseract.recognize(window._proof,'eng');
+    var text=(res&&res.data&&res.data.text)||'';
+    var amt=scanAmount(text);
+    var chk=(text.match(/(?:check|cheque|no\.?|#)\s*#?\s*(\d{3,6})/i)||[])[1];
+    if(amt)$('pAmount').value=amt.toFixed(2);
+    if(chk&&!$('pNote').value){$('pNote').value='Check #'+chk;}
+    if(amt||chk){sm.style.color='var(--logo)';sm.textContent='Scanned '+(amt?('$'+amt.toFixed(2)):'')+(chk?(' · check #'+chk):'')+' — please double-check it.';}
+    else{sm.style.color='#8C3F1E';sm.textContent='Couldn’t read it clearly — please type the amount.';}
+  }catch(e){sm.style.color='#8C3F1E';sm.textContent=e.message||'Scan failed — please type the amount.';}
+  $('pScan').removeAttribute('disabled');
 };
 $('pSave').onclick=async function(){
   var m=$('pMsg');m.className='msg';m.textContent='';$('pSave').disabled=true;$('pSave').textContent='Saving…';
