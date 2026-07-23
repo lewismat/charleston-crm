@@ -275,7 +275,7 @@ body>header,body>main,body>footer{position:relative;z-index:1}
 .plan-open .note{margin:18px auto 0;font-size:.82rem;color:var(--stone);max-width:460px;line-height:1.6}
 @media(max-width:560px){.includes-grid{grid-template-columns:1fr}}
 </style>
-<style>#one-home{position:relative;z-index:1}#one-home .section-head h2{color:var(--velvet)}#one-home .eyebrow{color:var(--gold-dp)}#one-home .section-head p{color:var(--stone)}</style>
+<style>#one-home{position:relative;z-index:1}.cons-col{display:flex;flex-direction:column;align-items:center;gap:11px}.cons-lbl{font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#9A7A22;font-weight:600}.consolidate{gap:26px;margin-top:36px}#one-home .section-head h2{color:var(--velvet)}#one-home .eyebrow{color:var(--gold-dp)}#one-home .section-head p{color:var(--stone)}</style>
 </head>
 <body>
 <div class="mjsky" id="mjsky" aria-hidden="true"></div>
@@ -404,15 +404,21 @@ body>header,body>main,body>footer{position:relative;z-index:1}
         <p>Calendly for booking, JotForm for inquiries, Linktree for your links, a spreadsheet for students, a notes app for who paid&hellip; that&rsquo;s a lot of tiles to chase. Charleston gathers every one into a single, cheerful home &mdash; draw one tile, not twelve.</p>
       </div>
       <div class="consolidate reveal">
-        <div class="oldtiles">
-          <span class="oldtile">Calendly</span>
-          <span class="oldtile">JotForm</span>
-          <span class="oldtile">Linktree</span>
-          <span class="oldtile">Spreadsheets</span>
-          <span class="oldtile">Sticky notes</span>
+        <div class="cons-col">
+          <span class="cons-lbl">The old juggling act</span>
+          <div class="oldtiles">
+            <span class="oldtile">Calendly</span>
+            <span class="oldtile">JotForm</span>
+            <span class="oldtile">Linktree</span>
+            <span class="oldtile">Spreadsheets</span>
+            <span class="oldtile">Sticky notes</span>
+          </div>
         </div>
         <span class="cons-arrow">&rarr;</span>
-        <span class="onehome"><svg width="26" height="26" viewBox="0 0 240 240" style="flex:none"><circle cx="120" cy="120" r="110" fill="#f6f3e2"/><circle cx="120" cy="120" r="100" fill="none" stroke="#2e5d3f" stroke-width="10"/><text x="120" y="120" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail,cursive" font-size="120" fill="#2e5d3f">C</text></svg>Charleston</span>
+        <div class="cons-col">
+          <span class="cons-lbl">One calm home</span>
+          <span class="onehome"><svg width="26" height="26" viewBox="0 0 240 240" style="flex:none"><circle cx="120" cy="120" r="110" fill="#f6f3e2"/><circle cx="120" cy="120" r="100" fill="none" stroke="#2e5d3f" stroke-width="10"/><text x="120" y="120" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail,cursive" font-size="120" fill="#2e5d3f">C</text></svg>Charleston</span>
+        </div>
       </div>
     </div>
   </section>
