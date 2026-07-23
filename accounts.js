@@ -906,6 +906,30 @@ async function requireSuperadmin(req, res, next) {
 
 router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'hq.html')));
 
+// --- Social share image (og.png) rendered in-browser with the real Yellowtail script,
+// then cached in app_config so link previews show the correct logo/type. ---
+const OG_SECRET = process.env.OG_SECRET || 'cs_og_7Kq2Xr9v';
+router.get('/og.png', async (req, res) => {
+  try {
+    const rows = await sb(`app_config?key=eq.og_png&select=value&limit=1`).catch(() => []);
+    const b64 = rows && rows[0] && rows[0].value;
+    if (!b64) return res.redirect('/charleston-og.png');
+    const buf = Buffer.from(b64, 'base64');
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=600');
+    return res.send(buf);
+  } catch (e) { return res.redirect('/charleston-og.png'); }
+});
+router.post('/api/og/save', express.text({ type: '*/*', limit: '8mb' }), async (req, res) => {
+  try {
+    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
+    let d = String(req.body || '').replace(/^data:image\/png;base64,/, '');
+    if (d.length < 2000) return res.status(400).json({ ok: false, error: 'image too small' });
+    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'og_png', value: d, updated_at: new Date().toISOString() }) });
+    res.json({ ok: true, bytes: d.length });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // Public: the testimonial photo (stored in app_config), if imported.
 router.get('/api/testimonial-photo', async (req, res) => {
   try {
