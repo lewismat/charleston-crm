@@ -396,6 +396,7 @@ $('inv_new').addEventListener('click',async function(){
         if(data.length>3500000) data=c.toDataURL('image/jpeg',0.85);
         $('biz_logo').value=data; showLogo(data);
       };
+      img.onerror=function(){ var m=$('biz_msg'); if(m){m.className='msg err';m.textContent='Could not read that image — try a JPG or PNG.';} };
       img.src=e.target.result;
     };
     r.readAsDataURL(file);
