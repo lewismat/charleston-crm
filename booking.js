@@ -27,7 +27,7 @@ async function tellHolly(subject, fields) {
 }
 
 /**
- * booking.js — Tampa Bay Mahj booking + waitlist
+ * booking.js — Charleston booking + waitlist
  *
  * Mount from server.js with ONE line:
  *     app.use(require('./booking'));
@@ -105,6 +105,13 @@ async function resolveOwner(req) {
   return primaryOwnerId();
 }
 const oidF = (oid) => `owner_id=eq.${encodeURIComponent(oid)}`;
+const _snCache = {};
+async function studioName(oid) {
+  if (!oid) return 'Charleston';
+  if (_snCache[oid] && Date.now() - _snCache[oid].at < 300000) return _snCache[oid].v;
+  try { const r = await sb(`settings?${oidF(oid)}&select=business_name&limit=1`); const v = (r && r[0] && r[0].business_name) || 'Charleston'; _snCache[oid] = { at: Date.now(), v }; return v; }
+  catch (e) { return 'Charleston'; }
+}
 
 function requireHolly(req, res, next) {
   if (!DASH_PASS) return res.status(500).send('DASHBOARD_PASSWORD is not set on the server.');
@@ -113,7 +120,7 @@ function requireHolly(req, res, next) {
     const pass = Buffer.from(creds, 'base64').toString().split(':').slice(1).join(':');
     if (pass === DASH_PASS) return next();
   }
-  res.set('WWW-Authenticate', 'Basic realm="Tampa Bay Mahj scheduling"');
+  res.set('WWW-Authenticate', 'Basic realm="Charleston scheduling"');
   res.status(401).send('Password required.');
 }
 
@@ -328,7 +335,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
   upsertStudentFromBooking(payload, slot);
 
   mail.bookingConfirmed({ ...payload, seats }, slot, result.manage_token);
-  if (payload.phone) sms.sendSMS(payload.phone, `You're booked with Tampa Bay Mahj \u2014 ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
+  if (payload.phone) sms.sendSMS(payload.phone, `You're booked with ${brand} \u2014 ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
   tellHolly(`New booking — ${slot.title || TYPE_LABEL[slot.slot_type]} — ${fmt(slot.starts_at)}`, {
     Name: `${payload.first_name} ${payload.last_name}`,
     Email: payload.email,
@@ -395,7 +402,7 @@ router.post('/api/book', async (req, res) => {
       });
       pend = rows[0];
 
-      const label = slot.title || TYPE_LABEL[slot.slot_type] || 'Mahjong with Tampa Bay Mahj';
+      const label = slot.title || TYPE_LABEL[slot.slot_type] || ('Mahjong with ' + (await studioName(oid)));
       const studioSlug = (req.query.studio || '').toString().toLowerCase();
       const bookBase = studioSlug ? `${SITE_URL}/s/${encodeURIComponent(studioSlug)}/book` : `${SITE_URL}/book`;
       const session = await stripePost(key, 'checkout/sessions', {
@@ -514,6 +521,7 @@ router.post('/api/waitlist', async (req, res) => {
     const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}&${oidF(oid)}`);
 
     if (!result.already) {
+      mail.setBrand(await studioName(oid));
       mail.waitlistJoined(p, slot, result.token, result.position);
       tellHolly(`Waitlist — ${p.first_name} ${p.last_name} is #${result.position} for ${fmt(slot.starts_at)}`, {
         Name: `${p.first_name} ${p.last_name}`,
@@ -581,9 +589,10 @@ router.post('/api/waitlist/:token/claim', async (req, res) => {
 
     const [w] = await sb(`waitlist?select=*,slots(*)&token=eq.${encodeURIComponent(req.params.token)}`);
     if (!result.already && w) {
+      const brand = await studioName(w.slots && w.slots.owner_id); mail.setBrand(brand);
       upsertStudentFromBooking(w, w.slots);
       mail.offerClaimed({ ...w, starts_at: w.slots.starts_at, location: w.slots.location }, result.manage_token);
-      if (w.phone) sms.sendSMS(w.phone, `Your seat is confirmed with Tampa Bay Mahj \u2014 ${TYPE_LABEL[w.slots.slot_type]} on ${fmt(w.slots.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
+      if (w.phone) sms.sendSMS(w.phone, `Your seat is confirmed with ${brand} \u2014 ${TYPE_LABEL[w.slots.slot_type]} on ${fmt(w.slots.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
       tellHolly(`Waitlist claimed — ${w.first_name} ${w.last_name} — ${fmt(w.slots.starts_at)}`, {
         Name: `${w.first_name} ${w.last_name}`,
         Email: w.email,
@@ -659,12 +668,12 @@ router.get('/booking/:token/calendar.ics', async (req, res) => {
     const s = bk.slots;
     const stamp = (d) => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const ics = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tampa Bay Mahj//EN', 'BEGIN:VEVENT',
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Charleston//EN', 'BEGIN:VEVENT',
       `UID:${bk.id}@tampabaymahj`,
       `DTSTAMP:${stamp(bk.created_at)}`,
       `DTSTART:${stamp(s.starts_at)}`,
       `DTEND:${stamp(endsAt(s))}`,
-      `SUMMARY:${s.title || TYPE_LABEL[s.slot_type] + ' with Holly'} — Tampa Bay Mahj`,
+      `SUMMARY:${s.title || TYPE_LABEL[s.slot_type]} — Charleston`,
       `LOCATION:${(s.location || [bk.street_address, bk.city, bk.state].filter(Boolean).join(', ') || 'TBD').replace(/,/g, '\\,')}`,
       `DESCRIPTION:Manage this booking: ${SITE_URL}/booking/${req.params.token}`,
       'END:VEVENT', 'END:VCALENDAR',
@@ -686,7 +695,7 @@ router.get('/booking/:token/google', async (req, res) => {
     const stamp = (d) => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const url = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
       action: 'TEMPLATE',
-      text: `${s.title || TYPE_LABEL[s.slot_type] + ' with Holly'} — Tampa Bay Mahj`,
+      text: `${s.title || TYPE_LABEL[s.slot_type]} — Charleston`,
       dates: `${stamp(s.starts_at)}/${stamp(endsAt(s))}`,
       location: s.location || [bk.street_address, bk.city, bk.state, bk.zip].filter(Boolean).join(', ') || '',
       details: `Manage or cancel this booking: ${SITE_URL}/booking/${req.params.token}`,
@@ -903,6 +912,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
     // Count only what actually sent. Reporting attempts would be the same silent
     // lie that let broken email go unnoticed for weeks.
     let notified = 0, failed = 0, warning = null;
+    const brand = await studioName(before.owner_id); mail.setBrand(brand);
     if (changes.length && b.notify_guests) {
       const live = await sb(`bookings?select=*&slot_id=eq.${id}&status=eq.confirmed&${oidF(ownerId(req))}`).catch(() => []);
       for (const bk of (live || [])) {
@@ -911,7 +921,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
           if (out && out.ok) notified++;
           else { failed++; if (out && (out.reason || out.error)) warning = out.reason || out.error; }
           if (bk.phone) {
-            sms.sendSMS(bk.phone, `Update from Tampa Bay Mahj — your ${updated.title || TYPE_LABEL[updated.slot_type]} is now ${fmt(updated.starts_at)}. Details: ${SITE_URL}/booking/${bk.manage_token}`).catch(() => {});
+            sms.sendSMS(bk.phone, `Update from ${brand} — your ${updated.title || TYPE_LABEL[updated.slot_type]} is now ${fmt(updated.starts_at)}. Details: ${SITE_URL}/booking/${bk.manage_token}`).catch(() => {});
           }
         } catch (e) { failed++; console.error('[booking] change notice failed:', e.message); }
       }

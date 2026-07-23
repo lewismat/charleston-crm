@@ -1,5 +1,5 @@
 /**
- * Tampa Bay Mahj — Event Inquiry App
+ * Charleston — Event Inquiry App
  * Zero-dependency Node.js server.
  *
  * Storage: Supabase (if SUPABASE_URL + SUPABASE_KEY env vars set), else local JSON file.
@@ -381,7 +381,7 @@ app.use(require('./booking'));
 
 app.listen(PORT, () => {
   console.log('');
-  console.log('  Tampa Bay Mahj is up!');
+  console.log('  Charleston is up!');
   console.log('  Storage: ' + (USE_SB ? 'Supabase' : 'local JSON file'));
   console.log('  Email notifications -> ' + NOTIFY_EMAIL);
   console.log('  Inquiry form:  http://localhost:' + PORT);

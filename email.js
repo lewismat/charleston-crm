@@ -90,6 +90,8 @@ async function send({ to, subject, html }) {
 
 /* ------------------------------------------------------------- template */
 
+let _brand = 'Charleston';
+function setBrand(b) { _brand = (b && String(b).slice(0,80)) || 'Charleston'; }
 function shell(inner) {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#EFE7D2;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EFE7D2;padding:28px 12px;">
@@ -98,7 +100,7 @@ function shell(inner) {
 <tr><td style="padding:32px 30px;font-family:Georgia,'Times New Roman',serif;color:#2C3327;">
 ${inner}
 <p style="margin:26px 0 0;padding-top:16px;border-top:1px solid #DED3B4;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#5D6656;">
-Tampa Bay Mahj · Tampa, Florida<br>
+${_brand}<br>
 Questions? Just reply to this email.
 </p>
 </td></tr></table>
@@ -247,4 +249,4 @@ function bookingCancelledByHolly(booking, slot, note) {
   });
 }
 
-module.exports = { send, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };
+module.exports = { send, setBrand, configured, clearCache, ownerAlert, eventChanged, bookingCancelledByHolly, bookingConfirmed, waitlistJoined, waitlistOffer, offerClaimed };

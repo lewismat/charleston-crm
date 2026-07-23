@@ -1,5 +1,5 @@
 /**
- * auth.js — shared session verification for Tampa Bay Mahj.
+ * auth.js — shared session verification for Charleston.
  * Token scheme matches accounts.js exactly, so a session set at login
  * validates everywhere (dashboard, scheduling, CRM, profile).
  */

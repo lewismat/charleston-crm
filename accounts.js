@@ -144,6 +144,13 @@ async function resolveOwner(req) {
   return primaryOwnerId();
 }
 const oidF = (oid) => `owner_id=eq.${enc(oid)}`;
+const _snCache = {};
+async function studioName(oid) {
+  if (!oid) return 'Charleston';
+  if (_snCache[oid] && Date.now() - _snCache[oid].at < 300000) return _snCache[oid].v;
+  try { const r = await sb(`settings?${oidF(oid)}&select=business_name&limit=1`); const v = (r && r[0] && r[0].business_name) || 'Charleston'; _snCache[oid] = { at: Date.now(), v }; return v; }
+  catch (e) { return 'Charleston'; }
+}
 async function saveSettings(oid, patch) {
   const row = Object.assign({}, patch, { id: oid, owner_id: oid });
   await sb('settings?on_conflict=owner_id', { method: 'POST',
@@ -544,7 +551,7 @@ router.get('/api/cal/:file', async (req, res) => {
     const pad = (n) => String(n).padStart(2, '0');
     const z = (d) => { const x = new Date(d); return x.getUTCFullYear() + pad(x.getUTCMonth()+1) + pad(x.getUTCDate()) + 'T' + pad(x.getUTCHours()) + pad(x.getUTCMinutes()) + '00Z'; };
     const esc = (v) => String(v || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
-    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Tampa Bay Mahj//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Tampa Bay Mahj\r\n';
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Charleston//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Charleston\r\n';
     (slots || []).forEach((sl) => {
       const end = new Date(new Date(sl.starts_at).getTime() + (sl.duration_minutes || 120) * 60000);
       ics += 'BEGIN:VEVENT\r\nUID:' + sl.id + '@tampabaymahj\r\nDTSTAMP:' + z(new Date()) + '\r\nDTSTART:' + z(sl.starts_at) + '\r\nDTEND:' + z(end) + '\r\n';
@@ -563,7 +570,7 @@ router.post('/api/settings/email/test', requireAuth, async (req, res) => {
   try {
     const rows = await sb(`settings?${oidF(ownerId(req))}&select=notify_email&limit=1`).catch(() => []);
     const to = (rows && rows[0] && rows[0].notify_email) || process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
-    const out = await mail.ownerAlert(to, 'Test email from Tampa Bay Mahj', {
+    const out = await mail.ownerAlert(to, 'Test email from Charleston', {
       Status: 'Email delivery is working.',
       'Sent to': to,
       When: new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }),
@@ -621,6 +628,7 @@ router.get('/api/revenue', requireAuth, async (req, res) => {
 router.post('/api/lead', async (req, res) => {
   try {
     const oid = await resolveOwner(req);
+    const brandName = await studioName(oid); mail.setBrand(brandName);
     const first = clean(req.body.first_name, 120);
     const last = clean(req.body.last_name, 120);
     const email = clean(req.body.email, 200).toLowerCase();
@@ -644,9 +652,9 @@ router.post('/api/lead', async (req, res) => {
       notes: message ? ('Lesson request: ' + message) : 'Lesson request',
     }) });
     tellHolly(`New lesson request: ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' }, oid);
-    if (email) mail.send({ to: email, subject: 'Thanks for reaching out — Tampa Bay Mahj',
-      html: '<div style="font-family:Georgia,serif;color:#2C3327;max-width:460px"><h2 style="color:#3B4832">Thank you, ' + (first || 'friend') + '!</h2><p>Holly has your mahjong lesson request and will be in touch soon to set up your first game.</p><p style="color:#8A6D14">— Tampa Bay Mahj · Tampa &amp; St. Pete</p></div>' }).catch(() => {});
-    if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your Tampa Bay Mahj lesson request — Holly will reach out soon. \u2014 Holly').catch(() => {});
+    if (email) mail.send({ to: email, subject: 'Thanks for reaching out — ' + brandName,
+      html: '<div style="font-family:Georgia,serif;color:#2C3327;max-width:460px"><h2 style="color:#3B4832">Thank you, ' + (first || 'friend') + '!</h2><p>We have your mahjong lesson request and will be in touch soon to set up your first game.</p><p style="color:#8A6D14">— ' + brandName + '</p></div>' }).catch(() => {});
+    if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your ' + brandName + ' lesson request — we will reach out soon. \u2014 ' + brandName + '').catch(() => {});
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
 });
@@ -745,7 +753,7 @@ router.post('/api/auth/forgot', async (req, res) => {
     const acct = rows && rows[0];
     if (!acct) return res.json(same);
     const link = `${SITE_URL}/login?reset=${encodeURIComponent(resetToken(acct))}&who=${encodeURIComponent(acct.id)}`;
-    const out = await mail.ownerAlert(acct.email, 'Reset your Tampa Bay Mahj password', {
+    const out = await mail.ownerAlert(acct.email, 'Reset your Charleston password', {
       'Reset link': link,
       'Good for': 'One hour, once.',
       'Not you?': 'Ignore this and nothing changes.',
