@@ -240,7 +240,7 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), billing.handleWebh
 // Paywall gate: admin CRM pages require sign-in AND an active subscription.
 const GATED_PAGES = [
   '/dashboard','/dashboard.html','/students','/students.html','/schedule','/schedule.html',
-  '/inquiries','/inquiries.html','/profile','/profile.html','/settings','/settings.html','/card','/card.html','/announce','/announce.html',
+  '/inquiries','/inquiries.html','/profile','/profile.html','/settings','/settings.html','/card','/card.html','/announce','/announce.html','/invoices','/invoices.html',
 ];
 app.get(GATED_PAGES, async (req, res, next) => {
   const u = auth.currentUser(req);
@@ -379,6 +379,9 @@ app.use(express.static(PUBLIC_DIR));
 
 // accounts, profile card, student CRM
 app.use(require('./accounts'));
+
+// text-to-invoice + payment tracking
+app.use(require('./invoices'));
 
 // billing / subscriptions
 app.use(billing.router);

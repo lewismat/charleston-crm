@@ -10,6 +10,7 @@
     settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 12a7.5 7.5 0 0 0-.1-1.2l1.9-1.5-1.8-3.1-2.3.9a7 7 0 0 0-2-1.2L14.6 2.5h-3.6l-.4 2.4a7 7 0 0 0-2 1.2l-2.3-.9L2.5 8.3l1.9 1.5A7.5 7.5 0 0 0 4.3 12c0 .4 0 .8.1 1.2l-1.9 1.5 1.8 3.1 2.3-.9a7 7 0 0 0 2 1.2l.4 2.4h3.6l.4-2.4a7 7 0 0 0 2-1.2l2.3.9 1.8-3.1-1.9-1.5c.1-.4.1-.8.1-1.2Z"/>',
     logout:'<path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9"/><path d="M14 12h7M18 8l3 4-3 4"/>',
     announce:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 3.5v-11L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14.5 8.5a4.5 4.5 0 0 1 0 7"/>',
+    invoices:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>'
   };
   function svg(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>';}
@@ -63,6 +64,7 @@
     '<nav class="sb-nav">'+
       item('/dashboard','dashboard','Dashboard')+
       item('/students','students','Students')+
+      item('/invoices','invoices','Invoices')+
       item('/schedule','schedule','Events')+
       item('/inquiries','inquiry','Inquiry')+
       item('/announce','announce','Announce')+

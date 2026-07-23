@@ -1,0 +1,251 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
+<title>Invoices — Charleston</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Karla:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--logo:#2e5d3f;--logo-2:#3f6b4d;--cream:#f6f3e2;--ink:#22301F;--stone:#5D6656;--edge:#DED3B4;--gold:#C9A24B;--gold-dk:#8A6D14;--red:#B3542E}
+*{box-sizing:border-box;margin:0}body{font-family:'Karla',system-ui,sans-serif;font-weight:300;color:var(--ink);background:#FBF8EF;min-height:100vh}
+.tbmnav,.nav{display:none}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 90px}
+h1{font-family:'Cormorant Garamond',serif;color:var(--logo);font-size:2.2rem;font-weight:700}
+.sub{color:var(--stone);margin:2px 0 18px}
+.totals{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.tot{flex:1;min-width:150px;background:#fff;border:1px solid var(--edge);border-radius:14px;padding:14px 18px;box-shadow:0 6px 16px rgba(46,93,63,.06)}
+.tot .k{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+.tot .v{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:var(--logo);line-height:1.1}
+.card{background:#fff;border:1px solid var(--edge);border-radius:16px;padding:22px;box-shadow:0 8px 22px rgba(46,93,63,.07);margin-bottom:22px}
+.card h2{font-family:'Cormorant Garamond',serif;color:var(--logo);font-size:1.4rem;font-weight:700;margin-bottom:6px}
+label{display:block;font-weight:700;color:var(--logo);margin:12px 0 5px;font-size:.85rem}
+input,textarea,select{width:100%;padding:11px 12px;border:1px solid var(--edge);border-radius:10px;background:#fff;font-family:inherit;font-size:16px;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+textarea{min-height:70px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>div{flex:1;min-width:150px}
+.li{display:flex;gap:10px;align-items:center;margin-top:8px}
+.li input.d{flex:1}.li input.a{width:130px}
+.li button{flex:none;width:38px;height:42px;border:1px solid var(--edge);border-radius:10px;background:#FBF8EF;color:var(--red);font-size:1.2rem;cursor:pointer}
+.addli{margin-top:8px;background:none;border:none;color:var(--gold-dk);font-weight:700;cursor:pointer;font-size:.9rem;padding:4px 0}
+.btn{margin-top:18px;padding:13px 26px;border:none;border-radius:11px;background:linear-gradient(180deg,var(--logo-2),var(--logo));color:var(--cream);font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 8px 18px rgba(46,93,63,.2)}
+.btn:disabled{opacity:.6}
+.btn.sm{padding:8px 14px;font-size:.85rem;margin:0}
+.btn.ghost{background:#fff;color:var(--logo);border:1px solid var(--edge);box-shadow:none}
+.msg{margin-top:12px;font-size:.9rem;min-height:1.1em}.msg.ok{color:var(--logo)}.msg.err{color:var(--red)}
+.linkbox{margin-top:14px;padding:14px;border:1px dashed var(--gold);border-radius:12px;background:#FDFBF2;display:none}
+.linkbox .lk{font-size:.86rem;word-break:break-all;color:var(--logo);font-weight:600;margin-bottom:10px}
+.linkbox .acts{display:flex;gap:8px;flex-wrap:wrap}
+.inv{border:1px solid var(--edge);border-radius:14px;padding:16px 18px;margin-bottom:14px;background:#fff;box-shadow:0 6px 16px rgba(46,93,63,.05)}
+.inv .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.inv .num{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.2rem;color:var(--logo)}
+.inv .amt{margin-left:auto;font-weight:700;font-size:1.2rem;color:var(--ink)}
+.badge{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px}
+.b-unpaid{background:#FBEEE6;color:#B3542E}.b-paid{background:#E7F0E7;color:#2e5d3f}.b-partial{background:#FBF3DF;color:#8A6D14}
+.meta{color:var(--stone);font-size:.86rem;margin-top:5px}
+.inv .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pay{margin-top:12px;border-top:1px dashed var(--edge);padding-top:10px}
+.pay .p{display:flex;align-items:center;gap:10px;font-size:.86rem;color:var(--stone);padding:4px 0}
+.pay .p img{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--edge);cursor:pointer}
+.pay .p .pm{font-weight:700;color:var(--ink);text-transform:capitalize}
+a.txt{color:var(--gold-dk);font-weight:700;text-decoration:none}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(44,51,39,.5);display:none;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.ov.on{display:flex}
+.modal{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:440px;max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.modal h3{font-family:'Cormorant Garamond',serif;color:var(--logo);font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.prev{margin-top:10px;max-width:100%;border-radius:10px;border:1px solid var(--edge);display:none}
+.x{float:right;background:none;border:none;font-size:1.4rem;color:var(--stone);cursor:pointer}
+.imgview{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px}
+.imgview.on{display:flex}.imgview img{max-width:100%;max-height:100%;border-radius:10px}
+.note{font-size:.8rem;color:var(--stone);margin-top:8px;line-height:1.5}
+</style></head><body>
+<div class="wrap">
+  <h1>Invoices</h1>
+  <p class="sub">Bill a student, send them a link, and track what's been paid — with proof.</p>
+
+  <div class="totals">
+    <div class="tot"><div class="k">Outstanding</div><div class="v" id="tOut">—</div></div>
+    <div class="tot"><div class="k">Collected</div><div class="v" id="tColl">—</div></div>
+  </div>
+
+  <div class="card">
+    <h2>New invoice</h2>
+    <div class="row">
+      <div><label>Customer name</label><input id="cName" placeholder="Jane Smith"></div>
+      <div><label>Email (for the link &amp; receipt)</label><input id="cEmail" type="email" placeholder="jane@email.com"></div>
+    </div>
+    <div class="row">
+      <div><label>Phone (optional)</label><input id="cPhone" placeholder="(555) 123-4567"></div>
+      <div><label>Due date (optional)</label><input id="cDue" type="date"></div>
+    </div>
+    <label>Line items</label>
+    <div id="items"></div>
+    <button class="addli" id="addLi">+ Add line</button>
+    <label>Notes (optional)</label><textarea id="cNotes" placeholder="Thanks for playing! Payment due within 14 days."></textarea>
+    <button class="btn" id="create">Create invoice &amp; get link</button>
+    <div class="msg" id="cMsg"></div>
+    <div class="linkbox" id="linkBox">
+      <div class="lk" id="lk"></div>
+      <div class="acts">
+        <button class="btn sm" id="copyLk">Copy link</button>
+        <a class="btn sm ghost" id="emailLk">Email it</a>
+        <a class="btn sm ghost" id="smsLk">Text it</a>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-family:'Cormorant Garamond',serif;color:var(--logo);font-size:1.5rem;margin:4px 0 12px">Your invoices</h2>
+  <div id="list"><p class="meta">Loading…</p></div>
+</div>
+
+<!-- record payment modal -->
+<div class="ov" id="payOv"><div class="modal">
+  <button class="x" id="payX">&times;</button>
+  <h3>Record a payment</h3>
+  <p class="meta" id="payFor"></p>
+  <label>How were you paid?</label>
+  <select id="pMethod"><option value="check">Check</option><option value="cash">Cash</option><option value="zelle">Zelle</option><option value="venmo">Venmo</option><option value="stripe">Card / Stripe</option><option value="other">Other</option></select>
+  <div class="row"><div><label>Amount</label><input id="pAmount" type="number" step="0.01" placeholder="0.00"></div><div><label>Date</label><input id="pDate" type="date"></div></div>
+  <div id="stripeRefWrap" style="display:none"><label>Stripe transaction ID / link</label><input id="pStripeRef" placeholder="pi_... or a Stripe receipt URL"></div>
+  <label>Proof — photo of the check, receipt, etc. (optional)</label>
+  <input id="pPhoto" type="file" accept="image/*" capture="environment">
+  <img class="prev" id="pPrev">
+  <label>Note (optional)</label><input id="pNote" placeholder="Check #1234">
+  <button class="btn" id="pSave" style="width:100%">Save payment</button>
+  <div class="msg" id="pMsg"></div>
+</div></div>
+
+<div class="imgview" id="imgView"><img id="imgBig" src=""></div>
+
+<script src="/sidebar.js"></script>
+<script src="/branding.js"></script>
+<script src="/toast.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var fmt=function(c){return '$'+(c/100).toFixed(2)};
+var invoices=[], curId=null;
+
+function liRow(desc,amt){
+  var d=document.createElement('div');d.className='li';
+  d.innerHTML='<input class="d" placeholder="Private lesson — 1 hour" value="'+(desc||'')+'"><input class="a" type="number" step="0.01" placeholder="0.00" value="'+(amt||'')+'"><button title="remove">&times;</button>';
+  d.querySelector('button').onclick=function(){d.remove();if(!$('items').children.length)addLine();};
+  return d;
+}
+function addLine(desc,amt){$('items').appendChild(liRow(desc,amt));}
+addLine();
+$('addLi').onclick=function(){addLine();};
+
+function collectItems(){
+  var out=[];Array.prototype.forEach.call($('items').children,function(r){
+    var d=r.querySelector('.d').value.trim(),a=r.querySelector('.a').value;
+    if(d||a)out.push({desc:d,amount:a});
+  });return out;
+}
+
+$('create').onclick=async function(){
+  var m=$('cMsg');m.className='msg';m.textContent='';
+  var items=collectItems();
+  if(!items.length||!items.some(function(i){return parseFloat(i.amount)>0})){m.className='msg err';m.textContent='Add at least one line item with an amount.';return;}
+  $('create').disabled=true;$('create').textContent='Creating…';
+  try{
+    var r=await fetch('/api/invoices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      customerName:$('cName').value,email:$('cEmail').value,phone:$('cPhone').value,dueDate:$('cDue').value,notes:$('cNotes').value,items:items})});
+    var d=await r.json();
+    if(!d.ok)throw new Error(d.error||'Could not create invoice.');
+    var link=d.link;
+    $('lk').textContent=link;$('linkBox').style.display='block';
+    var em=$('cEmail').value.trim();
+    $('emailLk').href='mailto:'+encodeURIComponent(em)+'?subject='+encodeURIComponent('Your invoice '+d.invoice.number)+'&body='+encodeURIComponent('Hi'+($('cName').value?' '+$('cName').value:'')+',\n\nHere is your invoice: '+link+'\n\nThank you!');
+    $('smsLk').href='sms:'+encodeURIComponent($('cPhone').value.trim())+'?&body='+encodeURIComponent('Here is your invoice: '+link);
+    $('copyLk').onclick=function(){navigator.clipboard.writeText(link);$('copyLk').textContent='Copied!';setTimeout(function(){$('copyLk').textContent='Copy link';},1500);};
+    m.className='msg ok';m.textContent='Invoice created.';
+    // reset line items + name
+    $('cName').value='';$('cEmail').value='';$('cPhone').value='';$('cDue').value='';$('cNotes').value='';$('items').innerHTML='';addLine();
+    load();
+  }catch(e){m.className='msg err';m.textContent=e.message;}
+  $('create').disabled=false;$('create').textContent='Create invoice & get link';
+};
+
+function statusBadge(s){var c=s==='paid'?'b-paid':(s==='partial'?'b-partial':'b-unpaid');return '<span class="badge '+c+'">'+s+'</span>';}
+
+function render(){
+  var L=$('list');
+  if(!invoices.length){L.innerHTML='<p class="meta">No invoices yet — create your first one above.</p>';return;}
+  L.innerHTML='';
+  invoices.forEach(function(inv){
+    var el=document.createElement('div');el.className='inv';
+    var pays='';
+    (inv.payments||[]).forEach(function(p){
+      pays+='<div class="p">'+(p.proofUrl?'<img src="'+p.proofUrl+'" data-big="'+p.proofUrl+'">':'')+
+        '<span class="pm">'+p.method+'</span> '+fmt(p.amount)+' · '+(p.date||'')+
+        (p.stripeRef?' · <span style="opacity:.8">'+p.stripeRef.slice(0,22)+'</span>':'')+
+        (p.note?' · '+p.note:'')+
+        ' <a class="txt rmpay" data-inv="'+inv.id+'" data-pid="'+p.id+'" style="margin-left:6px">remove</a></div>';
+    });
+    var due=inv.amount-(inv.paidTotal||0);
+    el.innerHTML=
+      '<div class="top"><span class="num">'+inv.number+'</span>'+statusBadge(inv.status)+'<span class="amt">'+fmt(inv.amount)+'</span></div>'+
+      '<div class="meta">'+(inv.customer&&inv.customer.name?inv.customer.name+' · ':'')+
+        (inv.items||[]).map(function(i){return i.desc||'Item'}).join(', ')+
+        (inv.dueDate?' · due '+inv.dueDate:'')+
+        (inv.status!=='paid'&&inv.paidTotal? ' · '+fmt(due)+' remaining':'')+'</div>'+
+      (pays?'<div class="pay">'+pays+'</div>':'')+
+      '<div class="acts">'+
+        '<button class="btn sm rec" data-id="'+inv.id+'" data-due="'+due+'">Record payment</button>'+
+        '<button class="btn sm ghost copy" data-link="'+inv.link+'">Copy link</button>'+
+        '<a class="btn sm ghost" href="'+inv.link+'" target="_blank">View</a>'+
+        '<button class="btn sm ghost del" data-id="'+inv.id+'" style="color:#B3542E">Delete</button>'+
+      '</div>';
+    L.appendChild(el);
+  });
+  L.querySelectorAll('.rec').forEach(function(b){b.onclick=function(){openPay(b.dataset.id, +b.dataset.due);};});
+  L.querySelectorAll('.copy').forEach(function(b){b.onclick=function(){navigator.clipboard.writeText(b.dataset.link);b.textContent='Copied!';setTimeout(function(){b.textContent='Copy link';},1500);};});
+  L.querySelectorAll('.del').forEach(function(b){b.onclick=async function(){if(!confirm('Delete this invoice?'))return;await fetch('/api/invoices/'+b.dataset.id,{method:'DELETE'});load();};});
+  L.querySelectorAll('.pay img').forEach(function(im){im.onclick=function(){$('imgBig').src=im.dataset.big;$('imgView').classList.add('on');};});
+  L.querySelectorAll('.rmpay').forEach(function(a){a.onclick=async function(){if(!confirm('Remove this payment record?'))return;await fetch('/api/invoices/'+a.dataset.inv+'/payment/'+a.dataset.pid,{method:'DELETE'});load();};});
+}
+$('imgView').onclick=function(){$('imgView').classList.remove('on');};
+
+function openPay(id,due){
+  curId=id;$('pMsg').textContent='';$('pMethod').value='check';$('pAmount').value=(due/100).toFixed(2);
+  $('pDate').value=new Date().toISOString().slice(0,10);$('pNote').value='';$('pStripeRef').value='';
+  $('pPhoto').value='';$('pPrev').style.display='none';$('pPrev').src='';window._proof='';
+  $('stripeRefWrap').style.display='none';
+  var inv=invoices.filter(function(x){return x.id===id})[0];
+  $('payFor').textContent=inv?(inv.number+' · '+(inv.customer&&inv.customer.name||'')):'';
+  $('payOv').classList.add('on');
+}
+$('payX').onclick=function(){$('payOv').classList.remove('on');};
+$('pMethod').onchange=function(){$('stripeRefWrap').style.display=this.value==='stripe'?'block':'none';};
+$('pPhoto').onchange=function(){
+  var f=this.files&&this.files[0];if(!f)return;
+  var img=new Image();img.onload=function(){
+    var mx=1400,sc=Math.min(1,mx/Math.max(img.width,img.height));
+    var cv=document.createElement('canvas');cv.width=img.width*sc;cv.height=img.height*sc;
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    window._proof=cv.toDataURL('image/jpeg',0.72);
+    $('pPrev').src=window._proof;$('pPrev').style.display='block';
+  };img.src=URL.createObjectURL(f);
+};
+$('pSave').onclick=async function(){
+  var m=$('pMsg');m.className='msg';m.textContent='';$('pSave').disabled=true;$('pSave').textContent='Saving…';
+  try{
+    var body={method:$('pMethod').value,amount:$('pAmount').value,date:$('pDate').value,note:$('pNote').value,stripeRef:$('pStripeRef').value,image:window._proof||''};
+    var r=await fetch('/api/invoices/'+curId+'/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();if(!d.ok)throw new Error(d.error||'Could not save.');
+    $('payOv').classList.remove('on');load();
+    if(window.toast)toast('Payment recorded');
+  }catch(e){m.className='msg err';m.textContent=e.message;}
+  $('pSave').disabled=false;$('pSave').textContent='Save payment';
+};
+
+async function load(){
+  try{
+    var r=await fetch('/api/invoices');var d=await r.json();
+    invoices=d.invoices||[];
+    $('tOut').textContent=fmt((d.totals&&d.totals.outstanding)||0);
+    $('tColl').textContent=fmt((d.totals&&d.totals.collected)||0);
+    render();
+  }catch(e){$('list').innerHTML='<p class="msg err">Could not load invoices.</p>';}
+}
+load();
+</script>
+</body></html>
