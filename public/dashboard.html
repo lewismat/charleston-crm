@@ -557,9 +557,21 @@ async function loadHealth(){
   $('ob_logopick').addEventListener('click',function(){$('ob_logofile').click();});
   $('ob_logofile').addEventListener('change',function(e){
     var file=e.target.files[0]; if(!file) return;
-    if(file.size>4000000){$('ob_msg').textContent='That image is a bit large — try one under 4MB.';return;}
     var rd=new FileReader();
-    rd.onload=function(){ $('ob_logo').value=rd.result; var p=$('ob_logoprev'); p.innerHTML='<img src="'+rd.result+'" style="width:100%;height:100%;object-fit:cover">'; };
+    rd.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var max=512,w=img.width,h=img.height;
+        if(w>h){ if(w>max){h=Math.round(h*max/w);w=max;} } else { if(h>max){w=Math.round(w*max/h);h=max;} }
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        var data=c.toDataURL('image/png');
+        if(data.length>3500000) data=c.toDataURL('image/jpeg',0.85);
+        $('ob_logo').value=data; var p=$('ob_logoprev'); p.innerHTML='<img src="'+data+'" style="width:100%;height:100%;object-fit:cover">';
+      };
+      img.onerror=function(){ $('ob_msg').textContent='That file did not look like an image.'; };
+      img.src=ev.target.result;
+    };
     rd.readAsDataURL(file);
   });
 

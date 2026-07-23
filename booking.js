@@ -947,15 +947,13 @@ async function studioExists(slug) {
   return !!(rows && rows[0]);
 }
 const pub = (f) => path.join(__dirname, 'public', f);
-const studioPage = (file) => async (req, res) => {
-  if (!(await studioExists(req.params.slug))) return res.status(404).sendFile(pub('home.html'));
-  res.sendFile(pub(file));
-};
+const studioPage = (file) => (req, res) => res.sendFile(pub(file));
 router.get('/s/:slug', studioPage('book.html'));
 router.get('/s/:slug/book', studioPage('book.html'));
 router.get('/s/:slug/card', studioPage('card.html'));
 router.get('/s/:slug/inquire', studioPage('index.html'));
 
 router.get('/book', (req, res) => res.sendFile(path.join(__dirname, 'public', 'book.html')));
+router.get('/inquire', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 module.exports = router;
