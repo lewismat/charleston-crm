@@ -3,7 +3,8 @@ async function ownerEmail(oid) {
     const rows = await sb(oid ? `settings?${oidF(oid)}&select=notify_email&limit=1` : 'settings?select=notify_email&limit=1');
     const v = rows && rows[0] && rows[0].notify_email;
     if (v) return v;
-  } catch (e) { /* fall through to the env default */ }
+  } catch (e) { /* fall through */ }
+  try { if (oid) { const a = await sb(`accounts?id=eq.${encodeURIComponent(oid)}&select=email&limit=1`); if (a && a[0] && a[0].email) return a[0].email; } } catch (e) {}
   return NOTIFY_EMAIL;
 }
 
@@ -348,7 +349,7 @@ function person(b) {
 function validate(p, slot_id) {
   if (!p.first_name || !p.last_name) return 'Add your first and last name.';
   if (!isEmail(p.email)) return 'That email address does not look right.';
-  if (!p.phone || p.phone.replace(/[^0-9]/g, '').length < 10) return 'Add a phone number so Holly can reach you.';
+  if (!p.phone || p.phone.replace(/[^0-9]/g, '').length < 10) return 'Add a phone number so we can reach you.';
   if (!slot_id) return 'Pick a time first.';
   return null;
 }
@@ -432,7 +433,7 @@ router.post('/api/book', async (req, res) => {
 
     /* ---- Paid event: hold the seat, send them to Stripe ---- */
     const key = await getStripeKey(oid);
-    if (!key) return res.status(503).json({ error: 'Payment is not set up yet for this event. Please text Holly to reserve.' });
+    if (!key) return res.status(503).json({ error: 'Payment is not set up yet for this event. Please contact the studio to reserve.' });
     if (seats > free(slot)) return res.status(409).json({ error: 'That time just filled up.' });
 
     // Hold the seat(s) so nobody else takes them while this person checks out.
@@ -652,7 +653,7 @@ router.post('/api/waitlist/:token/claim', async (req, res) => {
     res.json({ ok: true, manage_url: `${SITE_URL}/booking/${result.manage_token}` });
   } catch (e) {
     console.error('[booking] claim', e.message);
-    res.status(500).json({ error: 'Could not claim that seat. Please text Holly.' });
+    res.status(500).json({ error: 'Could not claim that seat. Please contact the studio.' });
   }
 });
 
@@ -704,7 +705,7 @@ router.post('/api/booking/:token/cancel', async (req, res) => {
     doSweep().catch(() => {});
     res.json({ ok: true });
   } catch {
-    res.status(500).json({ error: 'Could not cancel that. Please text Holly.' });
+    res.status(500).json({ error: 'Could not cancel that. Please contact the studio.' });
   }
 });
 
@@ -791,7 +792,7 @@ router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) 
 
     // bookings has no paid_how column, so record it where it will actually survive and show.
     const how = clean(b.paid_how, 40) || 'not recorded';
-    const stamp = `Added by Holly · paid: ${how}`;
+    const stamp = `Added manually · paid: ${how}`;
     const payload = { ...p, notes: p.notes ? `${p.notes} — ${stamp}` : stamp };
     const result = await sb('rpc/book_slot', {
       method: 'POST',

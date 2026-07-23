@@ -50,7 +50,8 @@ const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
 // Fire-and-forget note to Holly (same FormSubmit path the booking side uses).
 async function tellHolly(subject, fields, oid) {
   let to = NOTIFY_EMAIL;
-  try { if (oid) { const rows = await sb(`settings?owner_id=eq.${enc(oid)}&select=notify_email&limit=1`); if (rows && rows[0] && rows[0].notify_email) to = rows[0].notify_email; } } catch (e) {}
+  try { if (oid) { const rows = await sb(`settings?owner_id=eq.${enc(oid)}&select=notify_email&limit=1`); if (rows && rows[0] && rows[0].notify_email) to = rows[0].notify_email;
+    else { const a = await sb(`accounts?id=eq.${enc(oid)}&select=email&limit=1`); if (a && a[0] && a[0].email) to = a[0].email; } } } catch (e) {}
   try { const r = await mail.ownerAlert(to, subject, fields); if (r && r.ok) return; } catch (e) {}
   fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -589,7 +590,7 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
     if ('from_email' in b) {
       const v = clean(b.from_email, 200);
       if (v && !/<[^\s@]+@[^\s@]+\.[^\s@]+>|^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-        return res.status(400).json({ error: 'Use an address like holly@yourdomain.com, or Name <holly@yourdomain.com>' });
+        return res.status(400).json({ error: 'Use an address like you@yourdomain.com, or Name <you@yourdomain.com>' });
       }
       patch.from_email = v || null;
     }

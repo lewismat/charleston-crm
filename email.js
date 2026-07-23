@@ -127,14 +127,14 @@ function bookingConfirmed(booking, slot, manageToken) {
     subject: `You're booked — ${when(slot.starts_at)}`,
     html: shell(
       h1('You’re booked.') +
-      p(`Hi ${esc(booking.first_name)} — Holly has you down for a ${LABEL[slot.slot_type]}.`) +
+      p(`Hi ${esc(booking.first_name)} — you're booked for a ${LABEL[slot.slot_type]}.`) +
       big(when(slot.starts_at)) +
       p(`${slot.duration_minutes} minutes${booking.seats > 1 ? ` · ${booking.seats} seats` : ''}`) +
       where(slot) +
       btn(`${url}/google`, 'Add to Google Calendar') +
       btn(`${url}/calendar.ics`, 'Apple / Outlook (.ics)', false) +
       btn(url, 'View or cancel', false) +
-      p('Nothing to bring — Holly provides the tiles and the cards.')
+      p('Nothing to bring — we provide the tiles and the cards.')
     ),
   });
 }
@@ -244,14 +244,14 @@ function eventChanged(booking, slot, manageToken, changes) {
     subject: `Updated — your ${LABEL[slot.slot_type]} on ${when(slot.starts_at)}`,
     html: shell(
       h1('A change to your booking.') +
-      p(`Hi ${esc(booking.first_name)} — Holly updated the details for your ${LABEL[slot.slot_type]}. Your seat is still reserved.`) +
+      p(`Hi ${esc(booking.first_name)} — the details for your ${LABEL[slot.slot_type]} changed. Your seat is still reserved.`) +
       `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:10px 0 4px;">${lines}</table>` +
       big(when(slot.starts_at)) +
       where(slot) +
       btn(`${url}/google`, 'Update Google Calendar') +
       btn(`${url}/calendar.ics`, 'Apple / Outlook (.ics)', false) +
       btn(url, 'View or cancel', false) +
-      p('If the new time does not work, you can cancel from that link and Holly will be told.')
+      p('If the new time does not work, you can cancel from that link and we will be notified.')
     ),
   });
 }
@@ -263,9 +263,9 @@ function bookingCancelledByHolly(booking, slot, note) {
     subject: `Cancelled — ${LABEL[slot.slot_type]} on ${when(slot.starts_at)}`,
     html: shell(
       h1('Your booking was cancelled.') +
-      p(`Hi ${esc(booking.first_name)} — Holly cancelled your seat for the ${LABEL[slot.slot_type]} on ${when(slot.starts_at)}.`) +
+      p(`Hi ${esc(booking.first_name)} — your seat for the ${LABEL[slot.slot_type]} on ${when(slot.starts_at)} was cancelled.`) +
       (note ? p(esc(note)) : '') +
-      p('If this is a surprise, just reply to this email and Holly will sort it out.')
+      p('If this is a surprise, just reply to this email and we will sort it out.')
     ),
   });
 }

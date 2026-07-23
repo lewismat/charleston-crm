@@ -129,8 +129,11 @@ async function ownerNotifyEmail(oid) {
   if (!USE_SB || !oid) return NOTIFY_EMAIL;
   try {
     const rows = await sb('GET', 'settings?owner_id=eq.' + encodeURIComponent(oid) + '&select=notify_email&limit=1');
-    return (rows && rows[0] && rows[0].notify_email) || NOTIFY_EMAIL;
-  } catch (e) { return NOTIFY_EMAIL; }
+    if (rows && rows[0] && rows[0].notify_email) return rows[0].notify_email;
+    const a = await sb('GET', 'accounts?id=eq.' + encodeURIComponent(oid) + '&select=email&limit=1');
+    if (a && a[0] && a[0].email) return a[0].email;
+  } catch (e) {}
+  return NOTIFY_EMAIL;
 }
 async function notifyEmail(q) {
   const to = await ownerNotifyEmail(q.ownerId);
