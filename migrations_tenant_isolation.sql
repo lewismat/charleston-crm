@@ -64,3 +64,24 @@ create unique index if not exists uq_profile_owner  on profile(owner_id);
 
 -- 7) slug lookup for public per-studio pages (Phase 2 uses this)
 create index if not exists idx_accounts_slug on accounts(slug);
+
+-- ============================================================================
+-- 8) Foreign keys required for PostgREST embeds (slots<->bookings/waitlist).
+-- The reconstructed Charleston schema was missing these, which 500'd the
+-- public calendar (/api/slots) and the admin schedule. Idempotent.
+-- ============================================================================
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname='bookings_slot_fk') then
+    alter table bookings add constraint bookings_slot_fk foreign key (slot_id) references slots(id) on delete cascade;
+  end if;
+  if not exists (select 1 from pg_constraint where conname='waitlist_slot_fk') then
+    alter table waitlist add constraint waitlist_slot_fk foreign key (slot_id) references slots(id) on delete cascade;
+  end if;
+  if not exists (select 1 from pg_constraint where conname='pending_slot_fk') then
+    alter table pending_bookings add constraint pending_slot_fk foreign key (slot_id) references slots(id) on delete cascade;
+  end if;
+  if not exists (select 1 from pg_constraint where conname='waitlist_booking_fk') then
+    alter table waitlist add constraint waitlist_booking_fk foreign key (booking_id) references bookings(id) on delete set null;
+  end if;
+end $$;
+notify pgrst, 'reload schema';
