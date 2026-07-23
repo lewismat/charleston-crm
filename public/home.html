@@ -65,9 +65,11 @@ header{padding:26px 0}
 .mark{display:flex;align-items:center;gap:12px;text-decoration:none}
 .mark .name{font-family:var(--display);font-size:1.5rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--velvet);font-weight:600}
-.navlinks{display:flex;gap:32px;font-size:.9rem}
-.navlinks a{text-decoration:none;color:var(--stone);transition:color .25s var(--ease)}
-.navlinks a:hover{color:var(--gold-dp)}
+.navlinks{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.navtile{display:inline-flex;align-items:center;padding:9px 15px;border-radius:10px;background:linear-gradient(160deg,#FFFEF9,#F4EFDC 78%,#E4DBBB);border:1px solid #D8CFAF;color:#3B5C41;font-weight:600;font-size:.88rem;text-decoration:none;box-shadow:inset 0 -4px 0 rgba(76,91,64,.2),0 3px 8px rgba(59,72,50,.15);transition:transform .12s ease,box-shadow .12s ease}
+.navtile:hover{transform:translateY(-2px);box-shadow:inset 0 -4px 0 rgba(76,91,64,.24),0 6px 14px rgba(59,72,50,.22);color:#2C4630}
+.navtile-cta{background:linear-gradient(180deg,#4A6E50,#2C4630);color:#FBF7EA;border-color:#2C4630;box-shadow:inset 0 -4px 0 rgba(0,0,0,.2),0 4px 12px rgba(46,93,63,.3)}
+.navtile-cta:hover{filter:brightness(1.08);color:#FBF7EA}
 
 /* ---------------- buttons ---------------- */
 .btn{display:inline-block;font-size:.88rem;font-weight:500;letter-spacing:.14em;
@@ -223,7 +225,10 @@ section{padding:56px 0 88px}
   .wrap{padding:0 20px}
   section{padding:40px 0 60px}
   .hero{padding:56px 0 28px}
-  .navlinks{display:none}
+  .nav{flex-wrap:wrap;justify-content:center;gap:14px}
+  .mark svg{width:52px;height:52px}
+  .mark .name{font-size:1.5rem !important}
+  .navtile{padding:8px 12px;font-size:.82rem}
   .btn{display:block;text-align:center}
   .hero .cta{flex-direction:column;align-items:stretch}
   .plan{padding:38px 24px}
@@ -251,6 +256,7 @@ section{padding:56px 0 88px}
 .plan-cta{display:block;text-align:center;margin:22px auto 0;padding:15px 30px;border-radius:12px;background:linear-gradient(180deg,#C24E32,#98371F);color:#FFF7EE !important;font-weight:700;font-size:1.06rem;letter-spacing:.02em;text-decoration:none;box-shadow:0 10px 24px rgba(152,55,31,.35);border:1px solid #7d2c17;max-width:300px}
 .plan-cta:hover{filter:brightness(1.07);transform:translateY(-1px)}
 @media(max-width:560px){.cons-arrow{transform:rotate(90deg)}}
+@media(max-width:430px){.navtile-what{display:none}}
 </style>
 <style>
 .mjsky{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -275,10 +281,9 @@ body>header,body>main,body>footer{position:relative;z-index:1}
 .plan-open .note{margin:18px auto 0;font-size:.82rem;color:var(--stone);max-width:460px;line-height:1.6}
 @media(max-width:560px){.includes-grid{grid-template-columns:1fr}}
 </style>
-<style>#one-home{position:relative;z-index:1}.cons-col{display:flex;flex-direction:column;align-items:center;gap:11px}.cons-lbl{font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#9A7A22;font-weight:600}.consolidate{gap:26px;margin-top:36px}#one-home .section-head h2{color:var(--velvet)}#one-home .eyebrow{color:var(--gold-dp)}#one-home .section-head p{color:var(--stone)}</style>
+<style>#one-home>.wrap{position:relative;z-index:1}.cons-col{display:flex;flex-direction:column;align-items:center;gap:11px}.cons-lbl{font-size:.62rem;letter-spacing:.17em;text-transform:uppercase;color:#9A7A22;font-weight:600}.consolidate{gap:26px;margin-top:36px}#one-home .section-head h2{color:var(--velvet)}#one-home .eyebrow{color:var(--gold-dp)}#one-home .section-head p{color:var(--stone)}</style>
 </head>
 <body>
-<div class="mjsky" id="mjsky" aria-hidden="true"></div>
 
 <div class="scene" aria-hidden="true">
   <div class="stripes"></div>
@@ -305,7 +310,9 @@ body>header,body>main,body>footer{position:relative;z-index:1}
       <span class="name" style="font-size:2rem;letter-spacing:.14em">Charleston</span>
     </a>
     <nav class="navlinks">
-      <a href="#what">What it does</a><a href="/login">Sign in</a>
+      <a class="navtile navtile-what" href="#what">What it does</a>
+      <a class="navtile" href="/login">Sign in</a>
+      <a class="navtile navtile-cta" href="/signup">Sign up</a>
     </nav>
   </div>
 </header>
@@ -396,7 +403,8 @@ body>header,body>main,body>footer{position:relative;z-index:1}
     </div>
   </section>
 
-  <section id="one-home" style="padding:72px 0">
+  <section id="one-home" style="padding:72px 0;position:relative;overflow:hidden">
+    <div id="one-home-tiles" aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0"></div>
     <div class="wrap">
       <div class="section-head reveal">
         <p class="eyebrow">One happy home</p>
@@ -453,9 +461,9 @@ body>header,body>main,body>footer{position:relative;z-index:1}
 </script>
 <script>(function(){var r=new URLSearchParams(location.search).get("ref");if(r){document.cookie="cc_ref="+encodeURIComponent(r)+"; Max-Age=2592000; Path=/; SameSite=Lax";}})();</script><script>
 (function(){
-  var sky=document.querySelector('.scene')||document.getElementById('mjsky'); if(!sky) return;
+  var sky=document.getElementById('one-home-tiles'); if(!sky) return;
   var G=['中','發','一','二','三','四','五','六','七','八','九','東','南','西','北'];
-  var N=window.innerWidth<640?9:17;
+  var N=window.innerWidth<640?7:12;
   for(var i=0;i<N;i++){
     var t=document.createElement('div'); t.className='mtile drift';
     var size=26+Math.random()*34;
