@@ -1,23 +1,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
-<rect width="1200" height="630" fill="#f6f3e2"/>
-<g transform="translate(180,155) scale(1.33)">
-  
   <defs>
+    <pattern id="ystripes" width="40" height="630" patternUnits="userSpaceOnUse">
+      <rect width="40" height="630" fill="#FDF6D8"/>
+      <rect width="20" height="630" fill="#FCE44D"/>
+    </pattern>
     <pattern id="chStripes" width="17" height="240" patternUnits="userSpaceOnUse">
       <rect width="17" height="240" fill="#f7f4e6"></rect>
       <rect width="8.5" height="240" fill="#efe6b0"></rect>
     </pattern>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#3B5C41" flood-opacity="0.22"/>
+    </filter>
   </defs>
-  <path d="M 120.00 22.00 A 12.79 12.79 0 0 1 145.36 25.34 A 12.79 12.79 0 0 1 169.00 35.13 A 12.79 12.79 0 0 1 189.30 50.70 A 12.79 12.79 0 0 1 204.87 71.00 A 12.79 12.79 0 0 1 214.66 94.64 A 12.79 12.79 0 0 1 218.00 120.00 A 12.79 12.79 0 0 1 214.66 145.36 A 12.79 12.79 0 0 1 204.87 169.00 A 12.79 12.79 0 0 1 189.30 189.30 A 12.79 12.79 0 0 1 169.00 204.87 A 12.79 12.79 0 0 1 145.36 214.66 A 12.79 12.79 0 0 1 120.00 218.00 A 12.79 12.79 0 0 1 94.64 214.66 A 12.79 12.79 0 0 1 71.00 204.87 A 12.79 12.79 0 0 1 50.70 189.30 A 12.79 12.79 0 0 1 35.13 169.00 A 12.79 12.79 0 0 1 25.34 145.36 A 12.79 12.79 0 0 1 22.00 120.00 A 12.79 12.79 0 0 1 25.34 94.64 A 12.79 12.79 0 0 1 35.13 71.00 A 12.79 12.79 0 0 1 50.70 50.70 A 12.79 12.79 0 0 1 71.00 35.13 A 12.79 12.79 0 0 1 94.64 25.34 A 12.79 12.79 0 0 1 120.00 22.00 Z" fill="#2e5d3f"></path>
-  <circle cx="120" cy="120" r="92" fill="#f6f3e2"></circle>
-  <circle cx="120" cy="120" r="86" fill="none" stroke="#2e5d3f" stroke-width="2.5"></circle>
-  <circle cx="120" cy="120" r="83" fill="url(#chStripes)"></circle>
-  <text x="120" y="110" text-anchor="middle" font-family="Yellowtail, cursive" font-size="33" fill="#2e5d3f">Charleston</text>
-  <line x1="44" y1="138" x2="60" y2="138" stroke="#7a9576" stroke-width="1"></line>
-  <line x1="180" y1="138" x2="196" y2="138" stroke="#7a9576" stroke-width="1"></line>
-  <text x="120" y="141" text-anchor="middle" font-family="&#39;Playfair Display&#39;, serif" font-weight="600" font-size="8" letter-spacing="1.9" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
-</g>
-<text x="740" y="300" font-family="Georgia,serif" font-size="76" font-weight="700" fill="#2e5d3f">Charleston</text>
-<text x="742" y="350" font-family="Georgia,serif" font-size="26" letter-spacing="4" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
-<text x="742" y="405" font-family="Helvetica,Arial,sans-serif" font-size="24" fill="#5D6656">Booking, payments &amp; students — all in one place.</text>
+
+  <!-- brand striped table + ivory wash -->
+  <rect width="1200" height="630" fill="url(#ystripes)"/>
+  <rect width="1200" height="630" fill="#FFFDF4" opacity="0.40"/>
+
+  <!-- clean card panel -->
+  <rect x="70" y="60" width="1060" height="510" rx="42" fill="#FFFDF6" stroke="#C9A227" stroke-opacity="0.5" stroke-width="2" filter="url(#soft)"/>
+
+  <!-- badge logo (canonical) -->
+  <g transform="translate(150,200) scale(0.96)">
+    <path d="M 120.00 22.00 A 12.79 12.79 0 0 1 145.36 25.34 A 12.79 12.79 0 0 1 169.00 35.13 A 12.79 12.79 0 0 1 189.30 50.70 A 12.79 12.79 0 0 1 204.87 71.00 A 12.79 12.79 0 0 1 214.66 94.64 A 12.79 12.79 0 0 1 218.00 120.00 A 12.79 12.79 0 0 1 214.66 145.36 A 12.79 12.79 0 0 1 204.87 169.00 A 12.79 12.79 0 0 1 189.30 189.30 A 12.79 12.79 0 0 1 169.00 204.87 A 12.79 12.79 0 0 1 145.36 214.66 A 12.79 12.79 0 0 1 120.00 218.00 A 12.79 12.79 0 0 1 94.64 214.66 A 12.79 12.79 0 0 1 71.00 204.87 A 12.79 12.79 0 0 1 50.70 189.30 A 12.79 12.79 0 0 1 35.13 169.00 A 12.79 12.79 0 0 1 25.34 145.36 A 12.79 12.79 0 0 1 22.00 120.00 A 12.79 12.79 0 0 1 25.34 94.64 A 12.79 12.79 0 0 1 35.13 71.00 A 12.79 12.79 0 0 1 50.70 50.70 A 12.79 12.79 0 0 1 71.00 35.13 A 12.79 12.79 0 0 1 94.64 25.34 A 12.79 12.79 0 0 1 120.00 22.00 Z" fill="#2e5d3f"></path>
+    <circle cx="120" cy="120" r="92" fill="#f6f3e2"></circle>
+    <circle cx="120" cy="120" r="86" fill="none" stroke="#2e5d3f" stroke-width="2.5"></circle>
+    <circle cx="120" cy="120" r="83" fill="url(#chStripes)"></circle>
+    <text x="120" y="112" text-anchor="middle" font-family="Caladea, Georgia, serif" font-style="italic" font-weight="700" font-size="34" fill="#2e5d3f">Charleston</text>
+    <line x1="52" y1="140" x2="66" y2="140" stroke="#7a9576" stroke-width="1.4"></line>
+    <line x1="174" y1="140" x2="188" y2="140" stroke="#7a9576" stroke-width="1.4"></line>
+    <text x="120" y="143" text-anchor="middle" font-family="Carlito, Arial, sans-serif" font-weight="700" font-size="8" letter-spacing="1.9" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
+  </g>
+
+  <!-- wordmark + tagline, centered in the right region so nothing clips -->
+  <text x="770" y="258" text-anchor="middle" font-family="Caladea, Georgia, serif" font-weight="700" font-size="92" fill="#2e5d3f">Charleston</text>
+  <rect x="668" y="286" width="204" height="4" rx="2" fill="#C9A227"/>
+  <text x="770" y="332" text-anchor="middle" font-family="Carlito, Arial, sans-serif" font-weight="700" font-size="23" letter-spacing="7" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
+  <text x="770" y="392" text-anchor="middle" font-family="Carlito, Arial, sans-serif" font-size="27" fill="#5D6656">Bookings, payments &amp; students —</text>
+  <text x="770" y="428" text-anchor="middle" font-family="Carlito, Arial, sans-serif" font-size="27" fill="#5D6656">all in one calm place.</text>
+
+  <!-- friendly trial pill -->
+  <rect x="628" y="470" width="284" height="46" rx="23" fill="#FDFBF2" stroke="#C9A227" stroke-opacity="0.6" stroke-width="1.5"/>
+  <text x="770" y="500" text-anchor="middle" font-family="Carlito, Arial, sans-serif" font-weight="700" font-size="19" letter-spacing="1" fill="#9A7A22">14 days free · then $9.99/mo</text>
 </svg>
