@@ -234,7 +234,7 @@ section{padding:56px 0 88px}
 </style>
 <style>
 .pricing .price{font-family:var(--display) !important;font-weight:600 !important;font-style:normal}
-.pricing .price .amt{font-family:var(--display) !important;font-weight:600 !important;font-size:1em;letter-spacing:-.01em}
+.pricing .price .amt{font-family:var(--display) !important;font-weight:600 !important;letter-spacing:-.01em;color:#A8432B}
 .pricing .price .cur,.pricing .price .per{font-family:var(--display) !important;font-weight:600 !important}
 .pricing .price .per{font-weight:400 !important}
 .pricing .trial-fun{font-family:var(--display) !important;font-style:italic !important;font-weight:500 !important;font-size:1.15rem !important}
@@ -261,6 +261,19 @@ section{padding:56px 0 88px}
 .mtile{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#FFFEF9,#F4EFDC 78%,#E4DBBB);border:1px solid #D8CFAF;border-radius:14%;box-shadow:inset 0 -5px 0 rgba(76,91,64,.24),0 4px 9px rgba(59,72,50,.18);font-family:'Cormorant Garamond',serif;font-weight:700;user-select:none}
 body>header,body>main,body>footer{position:relative;z-index:1}
 @media(prefers-reduced-motion:reduce){.mjsky .drift{animation:none}}
+</style>
+<style>
+.plan-open{max-width:660px;margin:6px auto 0;text-align:center;position:relative;z-index:1}
+.plan-open .tier{font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;color:#9A7A22}
+.plan-open .price{margin:14px 0 0;line-height:1}
+.plan-open .trial-fun{color:#9A7A22;margin:6px 0 2px}
+.plan-open .cancel{font-size:.9rem;color:var(--stone);margin:14px auto 26px;max-width:430px}
+.includes-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 40px;max-width:660px;margin:0 auto 30px;text-align:left;list-style:none;padding:0}
+.includes-grid li{display:flex;gap:11px;align-items:flex-start;padding:9px 0;font-size:.96rem;color:var(--ink)}
+.includes-grid svg{flex:none;margin-top:5px;color:#3B5C41}
+.plan-open .plan-cta{margin:6px auto 0}
+.plan-open .note{margin:18px auto 0;font-size:.82rem;color:var(--stone);max-width:460px;line-height:1.6}
+@media(max-width:560px){.includes-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -403,14 +416,12 @@ body>header,body>main,body>footer{position:relative;z-index:1}
         <span class="onehome"><svg width="26" height="26" viewBox="0 0 240 240" style="flex:none"><circle cx="120" cy="120" r="110" fill="#f6f3e2"/><circle cx="120" cy="120" r="100" fill="none" stroke="#2e5d3f" stroke-width="10"/><text x="120" y="120" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail,cursive" font-size="120" fill="#2e5d3f">C</text></svg>Charleston</span>
       </div>
 
-      <div class="plan-frame reveal">
-        <div class="plan">
-        <p class="tier">The whole table</p>
+      <div class="plan-open reveal">
+        <p class="tier">The whole table &mdash; one plan, no tiers</p>
         <p class="price"><span class="cur">$</span><span class="amt">9.99</span><span class="per"> / month</span></p>
-        <p class="trial-fun" style="text-align:center;color:#C9A227;font-weight:700;margin:-6px 0 4px;font-size:1rem;font-family:'Yellowtail',cursive">Start with 14 days free &mdash; on the house</p>
+        <p class="trial-fun">Start with 14 days free &mdash; on the house</p>
         <p class="cancel">Stay as long as it&rsquo;s fun. Leave in two clicks &mdash; no phone call, no guilt.</p>
-        <hr class="rack-rule">
-        <ul class="includes">
+        <ul class="includes includes-grid">
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Booking, waitlists &amp; reminders <span class="bye">bye, Calendly</span></li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Inquiry forms that land in your CRM <span class="bye">bye, JotForm</span></li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your own booking page &amp; one link <span class="bye">bye, Linktree</span></li>
@@ -420,8 +431,7 @@ body>header,body>main,body>footer{position:relative;z-index:1}
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your records, exportable, always yours</li>
         </ul>
         <a class="btn plan-cta" href="/signup">Start 14 days free &rarr;</a>
-        <p class="note"><b>Your students&rsquo; payments go straight to your own Stripe account.</b><br>Charleston never holds or takes a cut of your money &mdash; we charge $9.99 for the software, nothing more.</p>
-        </div>
+        <p class="note">Your students&rsquo; payments go straight to your own Stripe &mdash; Charleston never takes a cut. Just $9.99 for the software.</p>
       </div>
     </div>
   </section>
