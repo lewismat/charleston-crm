@@ -83,6 +83,12 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <nav class="set-nav" id="setNav"></nav>
     <div class="set-body">
 
+  <div class="panel" data-cat="whatsnew">
+    <h2>Product releases</h2>
+    <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 14px">What's new in Charleston. We ship improvements often — here's the latest.</p>
+    <div id="releaseList" style="display:flex;flex-direction:column;gap:16px">Loading…</div>
+  </div>
+
   <div class="panel" data-cat="business">
     <h2>Your public pages</h2>
     <p style="color:var(--ink-soft);font-size:.88rem;font-weight:300;margin:2px 0 12px">Share these with your students. Each is your own studio's page.</p>
@@ -343,7 +349,7 @@ $('inv_new').addEventListener('click',async function(){
   var CATS=[
     ['business','Business'],['appearance','Appearance'],['account','Account'],
     ['payments','Payments'],['email','Email'],['texts','Texts'],
-    ['calendar','Calendar'],['team','Team']
+    ['calendar','Calendar'],['team','Team'],['whatsnew','Releases']
   ];
   var nav=document.getElementById('setNav');
   function show(cat){
@@ -436,5 +442,22 @@ $('inv_new').addEventListener('click',async function(){
       .then(function(r){return r.json();}).then(function(x){ m.textContent = (x&&x.ok)?'Saved.':((x&&x.error)||'Could not save.'); setTimeout(function(){m.textContent='';},2000); })
       .catch(function(){ m.textContent='Could not save.'; });
   });
+})();
+</script><script>
+(function(){
+  var box=document.getElementById('releaseList'); if(!box) return;
+  function esc(t){return String(t==null?'':t).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  fetch('/releases.json').then(function(r){return r.json();}).then(function(d){
+    var rs=(d&&d.releases)||[]; if(!rs.length){box.textContent='No releases yet.';return;}
+    box.innerHTML=rs.map(function(rel,i){
+      var badge=i===0?'<span style="background:#2e5d3f;color:#f6f3e2;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:8px">Latest</span>':'';
+      var items=(rel.items||[]).map(function(x){return '<li style="margin:4px 0">'+esc(x)+'</li>';}).join('');
+      return '<div style="border-left:3px solid #C9A24B;padding:2px 0 2px 14px">'+
+        '<div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:8px">'+
+        '<span style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:1.25rem;color:#2e5d3f;font-weight:700">'+esc(rel.title||rel.version)+'</span>'+badge+
+        '<span style="color:#9aa08e;font-size:.82rem">'+esc(rel.version)+' &middot; '+esc(rel.date)+'</span></div>'+
+        '<ul style="margin:6px 0 0;padding-left:18px;color:#5D6656;font-size:.92rem">'+items+'</ul></div>';
+    }).join('');
+  }).catch(function(){ box.textContent='Could not load releases.'; });
 })();
 </script></body></html>

@@ -1,0 +1,32 @@
+{
+  "releases": [
+    {
+      "version": "v3.0", "date": "July 23, 2026", "title": "Run your day",
+      "items": [
+        "Automated event reminders — students get an email and text before every session",
+        "Upcoming sessions on your dashboard, with one-tap attendance check-off",
+        "Export your students and leads to a spreadsheet anytime",
+        "New annual plan — two months free"
+      ]
+    },
+    {
+      "version": "v2.0", "date": "July 23, 2026", "title": "Made yours",
+      "items": [
+        "Fresh Charleston look and logo across the whole app",
+        "Sign in with Google",
+        "Your booking and inquiry links now show your studio's own logo and name",
+        "Reminders and confirmations are branded to your studio",
+        "Mobile menu and a smoother, cleaner sign-in"
+      ]
+    },
+    {
+      "version": "v1.0", "date": "July 22, 2026", "title": "Charleston launches",
+      "items": [
+        "Your own booking page, inquiry form, and shareable public card",
+        "Students, leads, scheduling, waitlists and payments — all in one place",
+        "A private, secure studio: your data is yours alone",
+        "14-day free trial to start"
+      ]
+    }
+  ]
+}
