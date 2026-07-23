@@ -276,6 +276,65 @@ router.post('/api/auth/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+/* ================= GOOGLE SIGN-IN =================
+   One-click sign-in. When someone signs up with Google we also capture their
+   Gmail as the studio's notification address, so event signups and inquiries
+   go straight to their inbox. Needs GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET;
+   until those are set the button stays hidden. */
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_REDIRECT = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '') + '/api/auth/google/callback';
+const googleConfigured = () => !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
+
+router.get('/api/auth/google/config', (req, res) => res.json({ enabled: googleConfigured() }));
+
+router.get('/api/auth/google', (req, res) => {
+  if (!googleConfigured()) return res.redirect('/login?error=google_unconfigured');
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID, redirect_uri: GOOGLE_REDIRECT, response_type: 'code',
+    scope: 'openid email profile', access_type: 'online', prompt: 'select_account',
+  });
+  res.redirect('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
+});
+
+router.get('/api/auth/google/callback', async (req, res) => {
+  try {
+    if (!googleConfigured()) return res.redirect('/login');
+    const code = String(req.query.code || '');
+    if (!code) return res.redirect('/login?error=google');
+    const tok = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code, client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, redirect_uri: GOOGLE_REDIRECT, grant_type: 'authorization_code' }),
+    }).then((r) => r.json());
+    if (!tok.access_token) return res.redirect('/login?error=google');
+    const prof = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: 'Bearer ' + tok.access_token } }).then((r) => r.json());
+    const email = (prof.email || '').toLowerCase();
+    if (!email) return res.redirect('/login?error=google');
+    let rows = await sb(`accounts?email=eq.${enc(email)}&limit=1`);
+    let acct = rows && rows[0];
+    let isNew = false;
+    if (!acct) {
+      isNew = true;
+      const name = clean(prof.name, 120) || email.split('@')[0];
+      const uname = (email.split('@')[0] || 'studio').toLowerCase();
+      const slug = await uniqueSlug(name || uname);
+      const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
+        name, email, username: uname, slug, role: 'owner', subscription_status: 'none',
+        password_hash: 'google:' + crypto.randomBytes(18).toString('hex') }) });
+      acct = created[0];
+      if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
+      // auto-route their studio's alerts to this Gmail
+      await saveSettings(acct.id, { notify_email: email }).catch(() => {});
+    }
+    setSession(res, acct);
+    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing';
+    res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');
+  } catch (e) {
+    console.error('[auth] google:', e.message);
+    res.redirect('/login?error=google');
+  }
+});
+
 /* ================= STAFF (owner manages) ================= */
 router.get('/api/staff', requireAuth, async (req, res) => {
   try {
