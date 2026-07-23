@@ -199,6 +199,7 @@
   </header>
 
   <div id="health"></div>
+  <div id="upcoming" style="margin:6px 0 18px"></div>
 
   <div class="cards">
     <div class="card"><div class="n" id="stVisits">–</div><div class="l">Form Visits</div></div>
@@ -621,5 +622,47 @@ async function loadHealth(){
 })();
 </script>
 <script src="/appnav.js"></script>
-</body>
+<script>
+(function(){
+  var wrap=document.getElementById('upcoming'); if(!wrap) return;
+  function fmt(d){ try{return new Date(d).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return d;} }
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var LBL={private_lesson:'Private lesson',group_class:'Group class',private_party:'Private party'};
+  function load(){
+    fetch('/api/admin/upcoming').then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok||!d.slots||!d.slots.length){ wrap.innerHTML=''; return; }
+      var h='<h2 style="font-family:\'Cormorant Garamond\',Georgia,serif;color:#2e5d3f;font-size:1.5rem;margin:6px 0 10px">Upcoming sessions</h2>';
+      h+='<div style="display:flex;flex-direction:column;gap:10px">';
+      d.slots.slice(0,6).forEach(function(sl){
+        var booked=(sl.bookings||[]).filter(function(b){return b.status==='confirmed';});
+        h+='<div style="background:#fff;border:1px solid #E4DCC3;border-radius:12px;padding:13px 15px">'+
+          '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:baseline">'+
+          '<div style="font-weight:700;color:#2C3327">'+esc(sl.title||LBL[sl.slot_type]||'Session')+'</div>'+
+          '<div style="color:#5D6656;font-size:.9rem">'+fmt(sl.starts_at)+'</div></div>'+
+          '<div style="color:#7a856f;font-size:.82rem;margin-top:3px">'+(sl.seats_total-sl.seats_free)+' / '+sl.seats_total+' seats filled</div>';
+        if(booked.length){
+          h+='<div style="margin-top:9px;display:flex;flex-direction:column;gap:6px">';
+          booked.forEach(function(b){
+            var on=!!b.attended;
+            h+='<label style="display:flex;align-items:center;gap:9px;font-size:.9rem;color:#2C3327;cursor:pointer">'+
+               '<input type="checkbox" data-bk="'+b.id+'" '+(on?'checked':'')+' style="width:17px;height:17px">'+
+               '<span>'+esc((b.first_name||'')+' '+(b.last_name||''))+'</span>'+
+               (b.email?'<span style="color:#9aa08e;font-size:.8rem">'+esc(b.email)+'</span>':'')+'</label>';
+          });
+          h+='</div>';
+        } else { h+='<div style="color:#9aa08e;font-size:.85rem;margin-top:6px">No bookings yet.</div>'; }
+        h+='</div>';
+      });
+      h+='</div>';
+      wrap.innerHTML=h;
+      wrap.querySelectorAll('input[data-bk]').forEach(function(cb){
+        cb.addEventListener('change',function(){
+          fetch('/api/admin/bookings/'+cb.getAttribute('data-bk')+'/attended',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({attended:cb.checked})}).catch(function(){cb.checked=!cb.checked;});
+        });
+      });
+    }).catch(function(){});
+  }
+  load();
+})();
+</script></body>
 </html>

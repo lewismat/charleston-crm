@@ -848,6 +848,26 @@ router.get('/schedule', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'schedule.html'))
 );
 
+// Next few sessions for the dashboard, with attendees.
+router.get('/api/admin/upcoming', auth.requireAuth, async (req, res) => {
+  try {
+    maybeRemind();
+    const now = new Date().toISOString();
+    const rows = await sb(`slots?select=*,bookings(id,first_name,last_name,email,phone,seats,status,attended)&${oidF(ownerId(req))}&published=eq.true&starts_at=gte.${now}&order=starts_at.asc&limit=8`);
+    res.json({ ok: true, slots: (rows || []).map((s) => ({ ...s, seats_free: Math.max(0, free(s)) })) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Mark whether a booked guest showed up.
+router.post('/api/admin/bookings/:id/attended', auth.requireAuth, async (req, res) => {
+  try {
+    const attended = !!(req.body && req.body.attended);
+    const [updated] = await sb(`bookings?id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ attended }) });
+    if (!updated) return res.status(404).json({ ok: false, error: 'That booking is no longer here.' });
+    res.json({ ok: true, attended: updated.attended });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
   try {
     await doSweep();
