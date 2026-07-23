@@ -40,6 +40,7 @@ background:linear-gradient(180deg,#C24E32,#98371F);color:#FFF7EE;font-weight:700
 .foot{text-align:center;color:var(--stone);font-size:.74rem;margin-top:22px;opacity:.8}
 .secure{text-align:center;color:var(--stone);font-size:.76rem;margin-top:10px}
 .loading{text-align:center;color:var(--stone);padding:40px}
+@media print{body{background:#fff;padding:0}.scene,#tiles,.dlbtn,.paybtn,.secure,.pay,.manual{display:none!important}.paper{box-shadow:none;border:none;max-width:100%;border-radius:0}}
 .dlbtn{display:block;width:100%;margin-top:12px;padding:12px;border:1px solid var(--edge);border-radius:12px;background:#fff;color:var(--logo);font-weight:600;font-size:.95rem;cursor:pointer;font-family:inherit}
 .dlbtn:hover{background:#FCFAF2;border-color:var(--gold)}
 </style><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -96,8 +97,20 @@ async function render(){
     }catch(e){ pb.disabled=false;pb.textContent='Pay '+fmt(due)+' by card'; alert(e.message); }
   };
 }
-function makePDF(d){
-  if(!window.jspdf){ alert('PDF is still loading — try again in a second.'); return; }
+async function ensureJsPDF(){
+  if(window.jspdf&&window.jspdf.jsPDF)return true;
+  var urls=['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];
+  for(var i=0;i<urls.length;i++){
+    try{ await new Promise(function(res,rej){var sc=document.createElement('script');sc.src=urls[i];sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);setTimeout(rej,7000);}); }catch(e){}
+    if(window.jspdf&&window.jspdf.jsPDF)return true;
+  }
+  return false;
+}
+async function makePDF(d){
+  var btn=document.getElementById('dl'); if(btn){btn.disabled=true;btn.textContent='Preparing…';}
+  var ok=await ensureJsPDF();
+  if(btn){btn.disabled=false;btn.textContent='Download PDF';}
+  if(!ok){ window.print(); return; }
   var jsPDF=window.jspdf.jsPDF; var doc=new jsPDF({unit:'pt',format:'letter'});
   var M=54, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), y=68;
   var green=[46,93,63], stone=[93,102,86], ink=[34,48,31];
