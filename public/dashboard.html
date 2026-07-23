@@ -192,10 +192,10 @@
   <header>
     <img id="dashLogo" src="/charleston-badge.svg" alt="" style="object-fit:contain">
     <div class="t">
-      <h1 id="dashTitle">Dashboard</h1>
-      <div class="s">Charleston</div>
+      <h1 id="dashTitle">Welcome back</h1>
+      <div class="s" id="dashDate"></div>
     </div>
-    <div class="right">Inquiry form: <a href="/" target="_blank">open ↗</a></div>
+    <div class="right">Your inquiry form: <a href="/inquire" target="_blank">open ↗</a></div>
   </header>
 
   <div id="health"></div>
@@ -666,8 +666,9 @@ async function loadHealth(){
 })();
 </script><script>
 (function dashBrand(){
+  var d=document.getElementById('dashDate');
+  if(d){ try{ d.textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }catch(e){} }
   fetch('/api/branding').then(function(r){return r.json();}).then(function(b){
-    if(b&&b.name){ var t=document.getElementById('dashTitle'); if(t)t.textContent=b.name; }
     if(b&&b.logo){ var l=document.getElementById('dashLogo'); if(l)l.src=b.logo; }
   }).catch(function(){});
 })();
