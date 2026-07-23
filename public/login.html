@@ -7,7 +7,7 @@
 <style>
 :root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden;
+body{font-family:var(--body);color:var(--ink);min-height:100vh;display:flex;align-items:safe center;justify-content:center;padding:28px 28px 40px;position:relative;overflow-y:auto;
 background:var(--cream);background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.22) 0 3px,transparent 3px 30px)}
 .deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .dtile{position:absolute;width:48px;height:62px;border-radius:9px;background:var(--tile);border:1px solid var(--tile-edge);border-bottom:4px solid var(--gold-soft);
@@ -43,8 +43,7 @@ button:hover{filter:brightness(1.06)}
 <body>
 <div class="deco" id="deco"></div>
 <div class="box">
-  <div class="mono">H</div>
-  <div class="brand" style="border:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="118" height="118" style="display:block;margin:0 auto 8px" role="img" aria-label="Charleston — Mahjong Trainer CRM">
+  <div class="brand" style="border:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="96" height="96" style="display:block;margin:0 auto 6px" role="img" aria-label="Charleston — Mahjong Trainer CRM">
   
   <defs>
     <pattern id="chStripes" width="17" height="240" patternUnits="userSpaceOnUse">
@@ -62,7 +61,7 @@ button:hover{filter:brightness(1.06)}
   <text x="120" y="141" text-anchor="middle" font-family="&#39;Playfair Display&#39;, serif" font-weight="600" font-size="8" letter-spacing="1.9" fill="#6f8a6a">MAHJONG TRAINER CRM</text>
 </svg></div>
   <h1 id="title">Welcome back</h1>
-  <p class="sub" id="sub">Sign in to Holly's studio</p>
+  <p class="sub" id="sub">Sign in to your studio</p>
   <div class="rule"><span class="dot"></span></div>
   <form id="form" autocomplete="off">
     <div id="setupFields" style="display:none">
@@ -80,7 +79,7 @@ button:hover{filter:brightness(1.06)}
   <div class="switch"><a id="toggleMode">Have an invite code? Create an account</a></div>
   <div class="switch" id="forgotWrap"><a id="forgotLink">Forgot your password?</a></div>
   <div id="googleWrap" style="display:none;margin:14px 0 4px"><div style="text-align:center;color:#8a8a7a;font-size:.8rem;margin:8px 0;position:relative"><span style="background:transparent;padding:0 10px">or</span></div><a href="/api/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border:1px solid #DED3B4;border-radius:10px;background:#fff;color:#3c4a34;text-decoration:none;font-weight:600;font-size:.92rem"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.1-3.8 6.5-9.4 6.5-16.9z"/><path fill="#FBBC05" d="M10.4 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C.9 16.1 0 19.9 0 24s.9 7.9 2.5 11.3l7.9-6.7z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.3-4.6 2.1-7.9 2.1-6.3 0-11.7-3.7-13.6-9.1l-7.9 6.7C6.4 42.6 14.6 48 24 48z"/></svg>Continue with Google</a></div><script>fetch("/api/auth/google/config").then(function(r){return r.json();}).then(function(c){if(c&&c.enabled)document.getElementById("googleWrap").style.display="block";}).catch(function(){});</script>
-  <div class="foot">Tampa &amp; St. Pete, Florida</div>
+  <div class="foot">Charleston · Mahjong Trainer CRM</div>
 </div>
 <script>
 (function(){var g=['中','發','南','西','八','北'],sp=[[6,10],[14,82],[74,6],[82,72],[40,90],[60,4]],d=document.getElementById('deco');
@@ -94,7 +93,7 @@ function applyMode(){
   $('passHint').style.display=(isSetup||isReg)?'block':'none';
   $('userLabel').textContent=(isSetup||isReg)?'Username':'Login (email or username)';
   $('title').textContent=isSetup?'Set up your studio':(isReg?'Create your account':'Welcome back');
-  $('sub').textContent=isSetup?'Create the first login for Charleston':(isReg?'You will need an invite code':"Sign in to Holly's studio");
+  $('sub').textContent=isSetup?'Create the first login for Charleston':(isReg?'You will need an invite code':"Sign in to your studio");
   $('submitBtn').textContent=isSetup?'Create account':(isReg?'Create account':'Sign in');
   var isForgot=mode==='forgot', isReset=mode==='reset';
   if(isForgot||isReset){
