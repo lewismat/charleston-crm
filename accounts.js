@@ -403,6 +403,20 @@ router.get('/api/students', requireAuth, async (req, res) => {
     res.json({ ok: true, students: await sb('students?' + filters) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
+
+// One-click CSV export of this studio's students + leads.
+router.get('/api/students/export.csv', requireAuth, async (req, res) => {
+  try {
+    const rows = await sb(`students?select=first_name,last_name,email,phone,status,skill_level,tags,source,notes,birthday,created_at&${oidF(ownerId(req))}&archived=eq.false&order=created_at.desc&limit=5000`);
+    const cols = ['first_name','last_name','email','phone','status','skill_level','tags','source','notes','birthday','created_at'];
+    const esc = (v) => { const t = v == null ? '' : String(v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    let out = cols.join(',') + '\r\n';
+    for (const r of (rows || [])) out += cols.map((c) => esc(r[c])).join(',') + '\r\n';
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.set('Content-Disposition', 'attachment; filename="charleston-students.csv"');
+    res.send(out);
+  } catch (e) { res.status(500).send('Could not export.'); }
+});
 router.post('/api/students', requireAuth, async (req, res) => {
   try {
     const body = stuBody(req.body);
