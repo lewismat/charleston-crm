@@ -161,16 +161,19 @@ async function saveSettings(oid, patch) {
 router.get('/api/auth/state', async (req, res) => {
   try {
     const u = currentUser(req);
-    let sub = 'none', active = false;
+    let sub = 'none', active = false, exists = true;
     if (u) {
       try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug&limit=1`);
-        sub = (rows && rows[0] && rows[0].subscription_status) || 'none';
-        active = sub === 'active' || sub === 'trialing';
-        u.slug = rows && rows[0] && rows[0].slug || null;
+        if (rows && rows[0]) {
+          sub = rows[0].subscription_status || 'none';
+          active = sub === 'active' || sub === 'trialing';
+          u.slug = rows[0].slug || null;
+        } else { exists = false; }
       } catch (e) {}
     }
-    res.json({ ok: true, authed: !!u, subscription: sub, subscribed: active,
-      user: u ? { id: u.id, role: u.role, name: u.name, slug: u.slug || null } : null });
+    const authed = !!u && exists;
+    res.json({ ok: true, authed, subscription: sub, subscribed: active,
+      user: authed ? { id: u.id, role: u.role, name: u.name, slug: u.slug || null } : null });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 

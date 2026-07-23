@@ -255,4 +255,4 @@ async function handleWebhook(req, res) {
   }
 }
 
-module.exports = { router, requireSubscription, subscriptionActive, handleWebhook, ACTIVE };
+module.exports = { router, requireSubscription, subscriptionActive, accountById, handleWebhook, ACTIVE };

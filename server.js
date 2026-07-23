@@ -242,7 +242,10 @@ const GATED_PAGES = [
 app.get(GATED_PAGES, async (req, res, next) => {
   const u = auth.currentUser(req);
   if (!u) return res.redirect('/login?next=' + encodeURIComponent(req.path));
-  if (!(await billing.subscriptionActive(u.id))) return res.redirect('/subscribe');
+  let acct = null;
+  try { acct = await billing.accountById(u.id); } catch (e) { req.account = u; return next(); }
+  if (!acct) { res.set('Set-Cookie', 'tbm_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax'); return res.redirect('/login'); }
+  if (!billing.ACTIVE.has(acct.subscription_status)) return res.redirect('/subscribe');
   req.account = u; next();
 });
 
