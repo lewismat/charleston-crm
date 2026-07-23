@@ -30,7 +30,9 @@ td a{color:var(--logo);text-decoration:none}
 .pill.past_due,.pill.canceled,.pill.cancelled{background:#F6E2D8;color:#8C3F1E}
 .muted{color:var(--stone)}.err{color:#8C3F1E;padding:20px}
 .foot{margin-top:16px;font-size:.8rem;color:var(--stone)}
-</style></head><body>
+</style><style>.tbmnav{background:#2e5d3f;color:#F7F2E4;display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap;font-family:'Karla',system-ui,sans-serif}.tbmnav .brand{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.15rem;margin-right:auto;display:flex;align-items:center}.tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.9;cursor:pointer}.tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}</style>
+</head><body>
+<div class="tbmnav"><span class="brand"><img src="/charleston-icon.svg" alt="" style="height:24px;width:24px;vertical-align:-6px;margin-right:7px">Charleston</span><a href="/dashboard">Dashboard</a><a href="/schedule">Scheduling</a><a href="/students">Students</a><a href="/inquiries">Inquiries</a><a href="/profile">Profile</a><a href="/settings">Settings</a><a href="/card" target="_blank">Public card ↗</a><a id="tbmLogout" aria-label="Log out">Log out</a></div>
 <div class="top"><h1>Charleston HQ</h1><div class="sub">Your studios, revenue, and pipeline at a glance</div></div>
 <div class="wrap">
   <div class="cards" id="cards"><div class="muted">Loading…</div></div>
@@ -80,4 +82,5 @@ fetch('/api/hq/overview',{headers:{'Accept':'application/json'}}).then(function(
   document.getElementById('tableWrap').innerHTML='<div class="err">'+esc(e.message)+'</div>';
 });
 </script>
+<script src="/appnav.js"></script>
 </body></html>
