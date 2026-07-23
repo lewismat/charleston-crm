@@ -380,6 +380,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
   }
   upsertStudentFromBooking(payload, slot);
 
+  const brand = await studioName(slot && slot.owner_id); mail.setBrand(brand);
   mail.bookingConfirmed({ ...payload, seats }, slot, result.manage_token);
   if (payload.phone) sms.sendSMS(payload.phone, `You're booked with ${brand} \u2014 ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
   tellHolly(`New booking — ${slot.title || TYPE_LABEL[slot.slot_type]} — ${fmt(slot.starts_at)}`, {
