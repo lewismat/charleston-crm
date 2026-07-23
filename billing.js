@@ -267,4 +267,4 @@ async function handleWebhook(req, res) {
 }
 
 router.inTrial = inTrial; router.acctActive = acctActive;
-module.exports = { router, requireSubscription, subscriptionActive, accountById, handleWebhook, ACTIVE };
+module.exports = { router, requireSubscription, subscriptionActive, acctActive, accountById, handleWebhook, ACTIVE };

@@ -248,7 +248,7 @@ app.get(GATED_PAGES, async (req, res, next) => {
   let acct = null;
   try { acct = await billing.accountById(u.id); } catch (e) { req.account = u; return next(); }
   if (!acct) { res.set('Set-Cookie', 'tbm_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax'); return res.redirect('/login'); }
-  if (!billing.ACTIVE.has(acct.subscription_status)) return res.redirect('/subscribe');
+  if (!billing.acctActive(acct)) return res.redirect('/subscribe');
   req.account = u; next();
 });
 
