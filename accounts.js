@@ -543,7 +543,13 @@ router.get('/api/branding', async (req, res) => {
     if (hit && Date.now() - hit.at < 20000) return res.json(hit.val);
     const rows = await sb(`settings?${oidF(oid)}&select=business_logo,business_name&limit=1`).catch(() => []);
     const s = (rows && rows[0]) || {};
-    const val = { logo: s.business_logo || '', name: s.business_name || '' };
+    let name = clean(s.business_name, 120);
+    // Never show an email address as the studio/profile name — fall back to the
+    // account holder's name.
+    if (!name || isEmail(name)) {
+      try { const a = await sb(`accounts?id=eq.${enc(oid)}&select=name&limit=1`); const nm = a && a[0] && a[0].name; name = (nm && !isEmail(nm)) ? clean(nm, 120) : ''; } catch (e) { name = ''; }
+    }
+    const val = { logo: s.business_logo || '', name };
     _brandCache[oid] = { at: Date.now(), val };
     res.json(val);
   } catch (e) { res.json({ logo: '', name: '' }); }
