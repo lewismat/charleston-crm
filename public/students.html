@@ -245,7 +245,7 @@ if($('exportBtn'))$('exportBtn').addEventListener('click',function(){
   var csv=cols.join(',')+'\n'+list.map(function(r){return cols.map(function(c){return q(r[c]);}).join(',');}).join('\n');
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download='tampa-bay-mahj-'+(curFilter||'all')+'-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='charleston-students-'+(curFilter||'all')+'-'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();a.remove();
   if(window.toast)toast('Exported '+list.length+' record'+(list.length===1?'':'s')+' to your downloads.');
 });

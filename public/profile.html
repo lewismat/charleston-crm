@@ -83,7 +83,7 @@ input:focus,textarea:focus{outline:2px solid var(--gold);border-color:var(--gold
     <div class="panel">
       <h2>The basics</h2>
       <div class="two"><div><label>Display name</label><input id="display_name" placeholder="Holly Lewis"></div>
-        <div><label>Tagline</label><input id="tagline" placeholder="Elevated mahjong, Tampa &amp; St. Pete"></div></div>
+        <div><label>Tagline</label><input id="tagline" placeholder="Elevated mahjong lessons & events"></div></div>
       <label>Photo <span style="text-transform:none;letter-spacing:0;color:var(--ink-soft);font-weight:400">(optional)</span></label>
       <div class="photorow">
         <div class="photoprev" id="photoprev"><span>No photo</span></div>
@@ -95,7 +95,7 @@ input:focus,textarea:focus{outline:2px solid var(--gold);border-color:var(--gold
         <input type="file" id="photofile" accept="image/*" style="display:none">
         <input type="hidden" id="photo_url">
       </div>
-      <label>A little about you</label><textarea id="bio" placeholder="Warm, patient, and a little competitive — Holly has taught hundreds of players across Tampa Bay…"></textarea>
+      <label>A little about you</label><textarea id="bio" placeholder="Warm, patient, and a little competitive — tell your students what makes your table special…"></textarea>
     </div>
 
     <div class="panel">
@@ -218,7 +218,7 @@ async function load(){
   details=Array.isArray(p.details)?p.details:[];
   links=Array.isArray(p.links)?p.links:[];
   // seed a friendly starter if totally empty
-  if(!details.length) details=[{icon:'pin',label:'Where',value:'Tampa & St. Pete'}];
+  if(!details.length) details=[{icon:'pin',label:'Where',value:'Your city'}];
   if(!links.length) links=[{icon:'instagram',label:'Instagram',url:''}];
   renderDetails();renderLinks();
 }
