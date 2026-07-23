@@ -489,5 +489,122 @@ async function loadHealth(){
   }catch(e){}
 }
 </script>
+
+<!-- first-run onboarding wizard -->
+<div id="ob_overlay" style="display:none;position:fixed;inset:0;background:rgba(34,48,31,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;font-family:'Karla',system-ui,sans-serif">
+  <div style="background:#FFFDF4;max-width:540px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;max-height:92vh;display:flex;flex-direction:column">
+    <div style="background:linear-gradient(135deg,#3B5C41,#2C4630);color:#F6F1E2;padding:22px 26px">
+      <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.5rem;font-weight:600">Welcome to Charleston</div>
+      <div id="ob_sub" style="opacity:.85;font-size:.92rem;margin-top:3px">Let's get your studio set up — takes about a minute.</div>
+    </div>
+    <div style="padding:24px 26px;overflow:auto">
+      <!-- step 1 -->
+      <div id="ob_step1">
+        <label style="display:block;font-weight:700;color:#3B5C41;margin-bottom:5px">Studio name</label>
+        <input id="ob_name" placeholder="e.g. Charleston Mah Jongg" style="width:100%;padding:11px 13px;border:1px solid #DED3B4;border-radius:10px;font-size:1rem;box-sizing:border-box">
+        <label style="display:block;font-weight:700;color:#3B5C41;margin:16px 0 5px">Your logo <span style="font-weight:400;color:#8a8a7a">(optional)</span></label>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div id="ob_logoprev" style="width:64px;height:64px;border-radius:12px;border:1px dashed #cbc3a6;display:flex;align-items:center;justify-content:center;color:#a8a086;font-size:.72rem;text-align:center;overflow:hidden;background:#fff">No logo</div>
+          <div>
+            <button type="button" id="ob_logopick" style="padding:9px 14px;border:1px solid #3B5C41;background:#fff;color:#3B5C41;border-radius:9px;font-weight:700;cursor:pointer">Upload logo</button>
+            <div style="font-size:.78rem;color:#8a8a7a;margin-top:5px">A square PNG or JPG works best.</div>
+          </div>
+          <input type="file" id="ob_logofile" accept="image/*" style="display:none">
+        </div>
+        <input type="hidden" id="ob_logo">
+        <div id="ob_msg" style="color:#8C3F1E;font-size:.86rem;margin-top:12px;min-height:1em"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px">
+          <a id="ob_skip" href="#" style="color:#8a8a7a;font-size:.88rem;text-decoration:none">Skip for now</a>
+          <button type="button" id="ob_next" style="padding:11px 22px;background:#3B5C41;color:#F6F1E2;border:none;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer">Save &amp; continue</button>
+        </div>
+      </div>
+      <!-- step 2 -->
+      <div id="ob_step2" style="display:none">
+        <p style="color:#3B5C41;font-weight:700;margin:0 0 4px">Your public booking page</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <code id="ob_pub" style="background:#00000010;padding:8px 11px;border-radius:8px;font-size:.86rem;word-break:break-all;flex:1">—</code>
+          <button type="button" id="ob_copy" style="padding:8px 14px;border:1px solid #3B5C41;background:#fff;color:#3B5C41;border-radius:9px;font-weight:700;cursor:pointer">Copy</button>
+        </div>
+        <p style="color:#3B5C41;font-weight:700;margin:20px 0 8px">A few things to finish</p>
+        <div id="ob_checks" style="display:flex;flex-direction:column;gap:9px"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:22px">
+          <button type="button" id="ob_done" style="padding:11px 22px;background:#3B5C41;color:#F6F1E2;border:none;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer">Go to my dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var ov=$('ob_overlay');
+  function show(){ov.style.display='flex';}
+  function hide(){ov.style.display='none'; try{localStorage.setItem('cc_onboarded','1');}catch(e){} }
+  var params=new URLSearchParams(location.search);
+  var forced=params.get('welcome')==='1';
+  // decide whether to show
+  fetch('/api/settings').then(function(r){return r.json();}).then(function(st){
+    var named = st && st.businessName;
+    var dismissed=false; try{dismissed=localStorage.getItem('cc_onboarded')==='1';}catch(e){}
+    if(named && $('ob_name')) $('ob_name').value=st.businessName;
+    if(st && st.businessLogo){ var p=$('ob_logoprev'); if(p){p.innerHTML='<img src="'+st.businessLogo+'" style="width:100%;height:100%;object-fit:cover">';} $('ob_logo').value=st.businessLogo; }
+    if(forced || (!named && !dismissed)) show();
+  }).catch(function(){ if(forced) show(); });
+
+  // logo picker -> dataURL (with size guard)
+  $('ob_logopick').addEventListener('click',function(){$('ob_logofile').click();});
+  $('ob_logofile').addEventListener('change',function(e){
+    var file=e.target.files[0]; if(!file) return;
+    if(file.size>4000000){$('ob_msg').textContent='That image is a bit large — try one under 4MB.';return;}
+    var rd=new FileReader();
+    rd.onload=function(){ $('ob_logo').value=rd.result; var p=$('ob_logoprev'); p.innerHTML='<img src="'+rd.result+'" style="width:100%;height:100%;object-fit:cover">'; };
+    rd.readAsDataURL(file);
+  });
+
+  $('ob_skip').addEventListener('click',function(e){e.preventDefault();hide();cleanUrl();});
+  function cleanUrl(){ if(forced){ history.replaceState(null,'',location.pathname); } }
+
+  $('ob_next').addEventListener('click',function(){
+    var name=($('ob_name').value||'').trim();
+    if(!name){$('ob_msg').textContent='Please enter your studio name.';return;}
+    $('ob_msg').textContent='';$('ob_next').disabled=true;$('ob_next').textContent='Saving…';
+    var body={business_name:name};
+    if($('ob_logo').value) body.business_logo=$('ob_logo').value;
+    fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d&&d.ok){ step2(); } else { throw new Error((d&&d.error)||'Could not save.'); } })
+      .catch(function(err){$('ob_msg').textContent=err.message;})
+      .finally(function(){$('ob_next').disabled=false;$('ob_next').textContent='Save & continue';});
+  });
+
+  function step2(){
+    $('ob_step1').style.display='none';$('ob_step2').style.display='block';
+    $('ob_sub').textContent='Nicely done. Here is your booking page and what is left.';
+    // public link
+    fetch('/api/auth/state').then(function(r){return r.json();}).then(function(a){
+      var slug=a&&a.user&&a.user.slug; var url= slug ? (location.origin+'/s/'+slug) : '';
+      $('ob_pub').textContent = url || 'Available shortly.';
+      $('ob_copy').addEventListener('click',function(){ if(url) navigator.clipboard.writeText(url).then(function(){$('ob_copy').textContent='Copied!';setTimeout(function(){$('ob_copy').textContent='Copy';},1500);}); });
+    }).catch(function(){});
+    // checklist from /api/health
+    fetch('/api/health').then(function(r){return r.json();}).then(function(h){
+      var checks=(h&&h.checks)||[]; var box=$('ob_checks');
+      var want={events:'Open your first date',stripe:'Connect Stripe to take payments',email:'Turn on email confirmations'};
+      var links={events:'/schedule',stripe:'/settings',email:'/settings'};
+      Object.keys(want).forEach(function(k){
+        var c=checks.filter(function(x){return x.key===k;})[0];
+        var on=c&&c.state==='on';
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E4DCC3;border-radius:10px;background:#fff';
+        row.innerHTML='<span style="width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:.72rem;'+(on?'background:#3B5C41;color:#fff':'background:#EFE7CE;color:#9A7A22')+'">'+(on?'&#10003;':'')+'</span>'+
+          '<span style="flex:1;color:#22301F;font-size:.92rem">'+want[k]+'</span>'+
+          (on?'<span style="color:#3B5C41;font-size:.82rem;font-weight:700">Done</span>':'<a href="'+links[k]+'" style="color:#3B5C41;font-weight:700;font-size:.85rem;text-decoration:none">Set up &#8594;</a>');
+        box.appendChild(row);
+      });
+    }).catch(function(){});
+  }
+  $('ob_done').addEventListener('click',function(){hide();cleanUrl();});
+})();
+</script>
 </body>
 </html>
