@@ -167,7 +167,7 @@ router.get('/api/auth/state', async (req, res) => {
       try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,created_at,stripe_customer_id&limit=1`);
         if (rows && rows[0]) {
           const st = rows[0].subscription_status || 'none';
-          const trial = (st === 'none') && !rows[0].stripe_customer_id && rows[0].created_at
+          const trial = (st === 'none') && rows[0].created_at
             && Date.now() < new Date(rows[0].created_at).getTime() + 14 * 86400000;
           active = st === 'active' || st === 'trialing' || !!trial;
           sub = (st === 'active' || st === 'trialing') ? st : (trial ? 'trialing' : st);
@@ -345,7 +345,7 @@ router.get('/api/auth/google/callback', async (req, res) => {
       await saveSettings(acct.id, { notify_email: email }).catch(() => {});
     }
     setSession(res, acct);
-    const trialing = (!acct.subscription_status || acct.subscription_status === 'none') && !acct.stripe_customer_id
+    const trialing = (!acct.subscription_status || acct.subscription_status === 'none')
       && acct.created_at && Date.now() < new Date(acct.created_at).getTime() + 14 * 86400000;
     const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing' || trialing;
     res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');

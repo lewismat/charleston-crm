@@ -75,11 +75,12 @@ router.get('/api/billing/plans', async (req, res) => {
    CRM pages/APIs require an account whose subscription is active/trialing. */
 const TRIAL_DAYS = 14;
 // Every brand-new studio gets a 14-day free trial from the moment it signs up —
-// no card required. We derive the window from accounts.created_at (a column that
-// already exists) so no migration is needed. A studio that has ever had a Stripe
-// customer (i.e. subscribed or cancelled) doesn't get a fresh free ride.
+// no card required. Window derived from accounts.created_at (existing column), so
+// no migration. Status 'none' means they never completed a subscription, so a
+// leftover Stripe customer object (from an abandoned checkout) shouldn't block the
+// trial. Once they subscribe & cancel, status becomes 'canceled' and the trial ends.
 function trialEnd(a) { return a && a.created_at ? new Date(a.created_at).getTime() + TRIAL_DAYS * 86400000 : 0; }
-function inTrial(a) { return !!(a && (!a.subscription_status || a.subscription_status === 'none') && !a.stripe_customer_id && Date.now() < trialEnd(a)); }
+function inTrial(a) { return !!(a && (!a.subscription_status || a.subscription_status === 'none') && Date.now() < trialEnd(a)); }
 function acctActive(a) { return !!(a && (ACTIVE.has(a.subscription_status) || inTrial(a))); }
 async function subscriptionActive(accountId) {
   try { const a = await accountById(accountId); return acctActive(a); }
