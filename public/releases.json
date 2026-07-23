@@ -1,16 +1,30 @@
 {
   "releases": [
     {
-      "version": "v3.0", "date": "July 23, 2026", "title": "Run your day",
+      "version": "v4.0",
+      "date": "July 23, 2026",
+      "title": "Grow & retain",
       "items": [
-        "Automated event reminders — students get an email and text before every session",
-        "Upcoming sessions on your dashboard, with one-tap attendance check-off",
-        "Export your students and leads to a spreadsheet anytime",
-        "New annual plan — two months free"
+        "Announcements \u2014 email and text all your students, a group, or one class at once",
+        "Referral program \u2014 share your link; you and a fellow teacher each get a free month",
+        "More coming: attendance insights and lesson packages"
       ]
     },
     {
-      "version": "v2.0", "date": "July 23, 2026", "title": "Made yours",
+      "version": "v3.0",
+      "date": "July 23, 2026",
+      "title": "Run your day",
+      "items": [
+        "Automated event reminders \u2014 students get an email and text before every session",
+        "Upcoming sessions on your dashboard, with one-tap attendance check-off",
+        "Export your students and leads to a spreadsheet anytime",
+        "New annual plan \u2014 two months free"
+      ]
+    },
+    {
+      "version": "v2.0",
+      "date": "July 23, 2026",
+      "title": "Made yours",
       "items": [
         "Fresh Charleston look and logo across the whole app",
         "Sign in with Google",
@@ -20,10 +34,12 @@
       ]
     },
     {
-      "version": "v1.0", "date": "July 22, 2026", "title": "Charleston launches",
+      "version": "v1.0",
+      "date": "July 22, 2026",
+      "title": "Charleston launches",
       "items": [
         "Your own booking page, inquiry form, and shareable public card",
-        "Students, leads, scheduling, waitlists and payments — all in one place",
+        "Students, leads, scheduling, waitlists and payments \u2014 all in one place",
         "A private, secure studio: your data is yours alone",
         "14-day free trial to start"
       ]
