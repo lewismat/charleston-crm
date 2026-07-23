@@ -252,6 +252,19 @@ section{padding:56px 0 88px}
 .pricing .price .cur,.pricing .price .per{font-family:'Yellowtail',cursive !important;font-weight:400 !important}
 .pricing .trial-fun{font-family:'Yellowtail',cursive !important;font-size:1.15rem !important}
 </style>
+<style>
+.consolidate{max-width:840px;margin:0 auto 42px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+.oldtiles{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;flex:1;min-width:250px}
+.oldtile{display:inline-flex;align-items:center;padding:8px 13px;border-radius:9px;background:#fff;border:1px solid #E0D6BC;color:#9a9a86;font-size:.84rem;font-weight:500;box-shadow:0 4px 10px rgba(59,72,50,.08);text-decoration:line-through;text-decoration-color:#C97A5A;transform:rotate(-2.5deg)}
+.oldtile:nth-child(even){transform:rotate(2.5deg)}
+.oldtile:nth-child(3n){transform:rotate(-1deg)}
+.cons-arrow{font-size:1.7rem;color:#C9A227;font-weight:700;flex:none}
+.onehome{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:12px;background:linear-gradient(180deg,#4A6E50,#2C4630);color:#F6F3E2;font-family:'Yellowtail',cursive;font-size:1.5rem;box-shadow:0 10px 24px rgba(46,93,63,.3);flex:none}
+.includes .bye{font-family:'Yellowtail',cursive;color:#C9A227;font-size:.95rem;margin-left:6px;opacity:.9}
+.plan-cta{display:block;text-align:center;margin:22px auto 0;padding:14px 30px;border-radius:12px;background:linear-gradient(180deg,#4A6E50,#2C4630);color:#FFFDF4 !important;font-weight:700;font-size:1.05rem;text-decoration:none;box-shadow:0 10px 24px rgba(46,93,63,.32);border:1px solid #2C4630;max-width:280px}
+.plan-cta:hover{filter:brightness(1.06)}
+@media(max-width:560px){.cons-arrow{transform:rotate(90deg)}}
+</style>
 </head>
 <body>
 
@@ -375,26 +388,40 @@ section{padding:56px 0 88px}
   <section class="pricing" id="pricing">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="eyebrow">Membership</p>
-        <h2>One plan. No fine print.</h2>
-        <p>No tiers, no seat counts, nobody to haggle with.</p>
+        <p class="eyebrow">One happy home</p>
+        <h2>Sweep your whole studio onto one table.</h2>
+        <p>Calendly for booking, JotForm for inquiries, Linktree for your links, a spreadsheet for students, a notes app for who paid&hellip; that&rsquo;s a lot of tiles to chase. Charleston gathers every one into a single, cheerful home &mdash; draw one tile, not twelve.</p>
       </div>
+
+      <div class="consolidate reveal">
+        <div class="oldtiles">
+          <span class="oldtile">Calendly</span>
+          <span class="oldtile">JotForm</span>
+          <span class="oldtile">Linktree</span>
+          <span class="oldtile">Spreadsheets</span>
+          <span class="oldtile">Sticky notes</span>
+        </div>
+        <span class="cons-arrow">&rarr;</span>
+        <span class="onehome"><svg width="26" height="26" viewBox="0 0 240 240" style="flex:none"><circle cx="120" cy="120" r="110" fill="#f6f3e2"/><circle cx="120" cy="120" r="100" fill="none" stroke="#2e5d3f" stroke-width="10"/><text x="120" y="120" text-anchor="middle" dominant-baseline="central" font-family="Yellowtail,cursive" font-size="120" fill="#2e5d3f">C</text></svg>Charleston</span>
+      </div>
+
       <div class="plan-frame reveal">
         <div class="plan">
-        <p class="tier">The Studio</p>
+        <p class="tier">The whole table</p>
         <p class="price"><span class="cur">$</span><span class="amt">9.99</span><span class="per"> / month</span></p>
-        <p class="trial-fun" style="text-align:center;color:#C9A227;font-weight:700;margin:-6px 0 4px;font-size:.95rem;font-family:'Yellowtail',cursive">Start with 14 days free</p>
-        <p class="cancel">Stay as long as it suits you. Leave in two clicks &mdash; no phone call, no guilt.</p>
+        <p class="trial-fun" style="text-align:center;color:#C9A227;font-weight:700;margin:-6px 0 4px;font-size:1rem;font-family:'Yellowtail',cursive">Start with 14 days free &mdash; on the house</p>
+        <p class="cancel">Stay as long as it&rsquo;s fun. Leave in two clicks &mdash; no phone call, no guilt.</p>
         <hr class="rack-rule">
         <ul class="includes">
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Unlimited events, students and bookings</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Online payment, waitlists and refunds</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Email and text confirmations</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your own public page and booking link</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Assistants and co-teachers included</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Booking, waitlists &amp; reminders <span class="bye">bye, Calendly</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Inquiry forms that land in your CRM <span class="bye">bye, JotForm</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your own booking page &amp; one link <span class="bye">bye, Linktree</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Every student in one tidy place <span class="bye">bye, spreadsheets</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Payments straight to your own Stripe</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Assistants &amp; co-teachers, included</li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your records, exportable, always yours</li>
         </ul>
-        <a class="btn btn-onvelvet" href="/signup">Start 14 days free</a>
+        <a class="btn plan-cta" href="/signup">Start 14 days free &rarr;</a>
         <p class="note"><b>Your students&rsquo; payments go straight to your own Stripe account.</b><br>Charleston never holds or takes a cut of your money &mdash; we charge $9.99 for the software, nothing more.</p>
         </div>
       </div>
