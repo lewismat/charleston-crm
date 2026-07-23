@@ -26,7 +26,7 @@
 </script>
 
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meet Holly — Charleston</title>
+<title>Meet your teacher — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
 :root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
@@ -92,7 +92,7 @@ function safeUrl(u){u=(u||'').trim();if(/^https?:\/\//i.test(u)||/^mailto:|^tel:
 })();
 (async function(){
   var p={}; try{ p=(await fetch('/api/profile').then(r=>r.json())).profile||{}; }catch(e){}
-  var name=p.display_name||'Holly';
+  var name=p.display_name||'your teacher';
   var mono=p.photo_url?('<div class="mono"><img src="'+esc(p.photo_url)+'" alt="'+esc(name)+'"></div>')
                       :('<div class="mono"><span class="letter">'+esc(name.charAt(0))+'</span></div>');
   var details=Array.isArray(p.details)?p.details:[];

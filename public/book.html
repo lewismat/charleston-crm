@@ -290,7 +290,7 @@ textarea{resize:vertical;min-height:78px}
     <img src="/charleston-badge.svg" alt="Charleston"
          onerror="this.outerHTML='<div class=&quot;fallback&quot;>Charleston</div>'">
     <h1>Reserve a table</h1>
-    <p class="sub">Pick a face-up tile — those are the days Holly is free.</p>
+    <p class="sub">Pick a face-up tile — those are the open days.</p>
   </header>
   <div class="flash" id="flash" style="display:none"></div>
 
@@ -328,10 +328,10 @@ let SLOTS=[],filter='all',cursor=new Date(),selDay=null,selSlot=null;
 const PAYMSG={
   cancelled:'Payment cancelled — no charge was made and your seat was released. You can pick a time again below.',
   unpaid:'That payment did not complete, so no seat was reserved. Nothing was charged.',
-  missing:'We could not match that checkout to a reservation. If you were charged, email Holly and she will sort it out right away.',
-  oversold:'Your payment went through but that seat was taken in the meantime. Holly has been alerted and will contact you today to rebook or refund you.',
-  unconfigured:'Online payment is not switched on for this event yet. Please text Holly to reserve.',
-  error:'Something went wrong finishing that reservation. If you were charged, email Holly — she has been alerted.',
+  missing:'We could not match that checkout to a reservation. If you were charged, email your teacher, who will sort it out right away.',
+  oversold:'Your payment went through but that seat was taken in the meantime. Your teacher has been alerted and will contact you today to rebook or refund you.',
+  unconfigured:'Online payment is not switched on for this event yet. Please text your teacher to reserve.',
+  error:'Something went wrong finishing that reservation. If you were charged, email your teacher — she has been alerted.',
   done:'That reservation is already confirmed.'
 };
 function showFlash(){
@@ -412,7 +412,7 @@ function render(){
   if(!visible().length){
     document.getElementById('panel').innerHTML=
       `<div class="panel"><p class="empty">No open times listed right now.<br>
-       Tell Holly what you have in mind on the <a href="/">inquiry form</a> and she will open a date for you.</p></div>`;
+       Tell your teacher what you have in mind on the <a href="/">inquiry form</a> and she will open a date for you.</p></div>`;
     return;
   }
   renderPanel(map);
@@ -483,9 +483,9 @@ function renderForm(s){
     ${(!waiting&&s.price_cents)?`<div class="paynote">
       <span class="amt">$${(s.price_cents/100).toFixed(2)} per seat</span>
       Payment holds your seat. When you press the button below you will go to <b>Stripe</b>,
-      the same secure checkout used by millions of small businesses — Holly never sees your card
+      the same secure checkout used by millions of small businesses — your teacher never sees your card
       number. You come straight back here afterwards and your seat is confirmed on the spot.
-      Need to cancel? Use the link in your confirmation email and text Holly about a refund.
+      Need to cancel? Use the link in your confirmation email and text your teacher about a refund.
       <span class="sec" id="totline"></span></div>`:''}
     <div class="grid">
       <div class="field"><label for="fn">First name <span style="color:#B3542E">*</span></label><input id="fn" autocomplete="given-name"></div>
@@ -496,13 +496,13 @@ function renderForm(s){
         <select id="seats">${seatOpts}</select></div>`:''}
       ${isParty&&!waiting?`
       <div class="field full"><p style="font-size:.8rem;color:var(--sage-soft);margin:2px 0 0">
-        Where the party is — if you are still deciding, leave these blank and tell Holly later.</p></div>
+        Where the party is — if you are still deciding, leave these blank and tell your teacher later.</p></div>
       <div class="field full"><label for="addr">Street address</label><input id="addr" autocomplete="street-address"></div>
       <div class="field"><label for="city">City</label><input id="city" autocomplete="address-level2"></div>
       <div class="field"><label for="state">State</label><input id="state" value="FL" autocomplete="address-level1"></div>
       <div class="field"><label for="zip">ZIP</label><input id="zip" inputmode="numeric" autocomplete="postal-code"></div>
       <div class="field"><label for="head">How many people are you expecting?</label><input id="head" type="number" min="1" inputmode="numeric"></div>`:''}
-      <div class="field full"><label for="notes">Anything else Holly should know?</label>
+      <div class="field full"><label for="notes">Anything else your teacher should know?</label>
         <textarea id="notes" placeholder="${isParty&&!waiting?'Occasion, ages, whether anyone has played before…':'Have you played before? Anything you want to work on?'}"></textarea></div>
     </div>
     <button class="cta" id="go">${waiting
@@ -527,7 +527,7 @@ async function submit(s){
   err.textContent='';
   if(!v('fn')||!v('ln')) return err.textContent='Add your first and last name.';
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('em'))) return err.textContent='That email address does not look right.';
-  if(v('ph').replace(/[^0-9]/g,'').length<10) return err.textContent='Add a phone number so Holly can reach you.';
+  if(v('ph').replace(/[^0-9]/g,'').length<10) return err.textContent='Add a phone number so your teacher can reach you.';
   const paid=!waiting&&s.price_cents>0;
   btn.disabled=true;btn.textContent=waiting?'Adding you…':(paid?'Taking you to checkout…':'Reserving…');
   try{
@@ -567,7 +567,7 @@ function confirmed(s,d){
     <h3>Mahjong.</h3>
     <p><strong>${LABEL[s.slot_type]}</strong> — ${longDate(selDay)} at ${time(s.starts_at)}</p>
     ${s.location?`<p>${esc(s.location)}</p>`:''}
-    <p>Holly has your details. Check your email for the confirmation.</p>
+    <p>your teacher has your details. Check your email for the confirmation.</p>
     <div class="donebtns">
       <a class="ghost" href="${d.manage_url}/google" target="_blank" rel="noopener">Add to Google Calendar</a>
       <a class="ghost" href="${d.manage_url}/calendar.ics">Apple / Outlook (.ics)</a>

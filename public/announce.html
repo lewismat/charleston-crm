@@ -66,7 +66,11 @@ $('send').addEventListener('click',function(){
     audience:$('aud').value, subject:$('subj').value, message:$('body').value,
     email:$('ch_email').checked, sms:$('ch_sms').checked
   })}).then(function(r){return r.json();}).then(function(x){
-    if(x&&x.ok){ m.className='msg ok'; m.textContent='Sent to '+x.recipients+' — '+x.emailed+' emailed'+(x.texted?(', '+x.texted+' texted'):'')+'.'; $('body').value=''; }
+    if(x&&x.ok){
+      if(x.recipients===0){ m.className='msg err'; m.textContent='No matching students to message yet.'; }
+      else if($('ch_email').checked && x.emailed===0 && !x.texted){ m.className='msg err'; m.innerHTML='Reached '+x.recipients+' people, but email isn\'t set up yet — turn it on in <a href="/settings">Settings</a> to actually send.'; }
+      else { m.className='msg ok'; m.textContent='Sent to '+x.recipients+' — '+x.emailed+' emailed'+(x.texted?(', '+x.texted+' texted'):'')+'.'; $('body').value=''; }
+    }
     else { m.className='msg err'; m.textContent=(x&&x.error)||'Could not send.'; }
   }).catch(function(){ m.className='msg err'; m.textContent='Could not send.'; })
   .finally?null:0;
