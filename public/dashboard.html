@@ -5,7 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Yellowtail&amp;display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Charleston — Holly&#39;s Dashboard</title>
+<title>Dashboard — Charleston</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -177,8 +177,8 @@
 <script>document.getElementById("tbmLogout").addEventListener("click",function(){fetch("/api/auth/logout",{method:"POST"}).then(function(){location.href="/login";});});</script>
 <div class="lock" id="lock" style="display:none">
   <div class="box">
-    <img src="/logo.png" alt="" style="width:84px;height:84px;margin-bottom:14px">
-    <div class="t1">Holly&#39;s Dashboard</div>
+    <img src="/charleston-badge.svg" alt="" style="width:84px;height:84px;margin-bottom:14px">
+    <div class="t1">Charleston</div>
     <div class="t2">Charleston</div>
     <form id="lockForm">
       <input type="password" id="lockPass" placeholder="Password" autocomplete="current-password" autofocus>
@@ -190,9 +190,9 @@
 
 <div class="wrap">
   <header>
-    <img src="/logo.png" alt="Charleston logo">
+    <img id="dashLogo" src="/charleston-badge.svg" alt="" style="object-fit:contain">
     <div class="t">
-      <h1>Holly&#39;s Dashboard</h1>
+      <h1 id="dashTitle">Dashboard</h1>
       <div class="s">Charleston</div>
     </div>
     <div class="right">Inquiry form: <a href="/" target="_blank">open ↗</a></div>
@@ -663,6 +663,13 @@ async function loadHealth(){
     }).catch(function(){});
   }
   load();
+})();
+</script><script>
+(function dashBrand(){
+  fetch('/api/branding').then(function(r){return r.json();}).then(function(b){
+    if(b&&b.name){ var t=document.getElementById('dashTitle'); if(t)t.textContent=b.name; }
+    if(b&&b.logo){ var l=document.getElementById('dashLogo'); if(l)l.src=b.logo; }
+  }).catch(function(){});
 })();
 </script></body>
 </html>
