@@ -169,15 +169,10 @@ section{padding:56px 0 88px}
 /* ---------------- pricing ----------------
    A gold frame is just a padded box behind an ivory box. No pseudo-elements,
    no z-index, nothing that can be clipped. It renders or the page is broken. */
-.pricing{position:relative;color:#F3E9D6;
-  border-top:3px solid #C9A227;border-bottom:3px solid #C9A227;
-  background:
-    radial-gradient(80% 60% at 50% -6%, rgba(255,238,196,.15), transparent 62%),
-    repeating-linear-gradient(91deg, rgba(255,255,255,.035) 0 2px, transparent 2px 30px),
-    linear-gradient(180deg,#6E4E2C 0%, #503620 55%, #3B2813 100%)}
-.pricing .section-head h2{color:#FBEFD6}
-.pricing .section-head p{color:rgba(251,240,214,.86)}
-.pricing .eyebrow{color:#ECCB78}
+.pricing{position:relative}
+.pricing .section-head h2{color:var(--velvet)}
+.pricing .section-head p{color:var(--stone)}
+.pricing .eyebrow{color:var(--gold-dp)}
 
 /* the card = a fresh ivory mahjong tile in a gilt frame */
 .plan-frame{
@@ -246,7 +241,7 @@ section{padding:56px 0 88px}
 <style>
 .consolidate{max-width:840px;margin:0 auto 42px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
 .oldtiles{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;flex:1;min-width:250px}
-.oldtile{display:inline-flex;align-items:center;padding:8px 13px;border-radius:9px;background:#F3ECDA;border:1px solid #d8c9a6;color:#8a8266;font-size:.84rem;font-weight:500;box-shadow:0 4px 10px rgba(59,72,50,.08);text-decoration:line-through;text-decoration-color:#C97A5A;transform:rotate(-2.5deg)}
+.oldtile{display:inline-flex;align-items:center;padding:8px 13px;border-radius:9px;background:#fff;border:1px solid #E0D6BC;color:#9a9a86;font-size:.84rem;font-weight:500;box-shadow:0 4px 10px rgba(59,72,50,.08);text-decoration:line-through;text-decoration-color:#C97A5A;transform:rotate(-2.5deg)}
 .oldtile:nth-child(even){transform:rotate(2.5deg)}
 .oldtile:nth-child(3n){transform:rotate(-1deg)}
 .cons-arrow{font-size:1.7rem;color:#C9A227;font-weight:700;flex:none}
@@ -256,8 +251,17 @@ section{padding:56px 0 88px}
 .plan-cta:hover{filter:brightness(1.07);transform:translateY(-1px)}
 @media(max-width:560px){.cons-arrow{transform:rotate(90deg)}}
 </style>
+<style>
+.mjsky{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.mjsky .drift{position:absolute;opacity:.4;animation:mjdrift linear infinite;filter:drop-shadow(0 6px 8px rgba(59,72,50,.14))}
+@keyframes mjdrift{0%{transform:translateY(110vh) rotate(-12deg)}100%{transform:translateY(-18vh) rotate(14deg)}}
+.mtile{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#FFFEF9,#F4EFDC 78%,#E4DBBB);border:1px solid #D8CFAF;border-radius:14%;box-shadow:inset 0 -5px 0 rgba(76,91,64,.24),0 4px 9px rgba(59,72,50,.18);font-family:'Cormorant Garamond',serif;font-weight:700;user-select:none}
+body>header,body>main,body>footer{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){.mjsky .drift{animation:none}}
+</style>
 </head>
 <body>
+<div class="mjsky" id="mjsky" aria-hidden="true"></div>
 
 <div class="scene" aria-hidden="true">
   <div class="stripes"></div>
@@ -447,4 +451,22 @@ section{padding:56px 0 88px}
   els.forEach(function(e){io.observe(e);});
 })();
 </script>
-<script>(function(){var r=new URLSearchParams(location.search).get("ref");if(r){document.cookie="cc_ref="+encodeURIComponent(r)+"; Max-Age=2592000; Path=/; SameSite=Lax";}})();</script></body></html>
+<script>(function(){var r=new URLSearchParams(location.search).get("ref");if(r){document.cookie="cc_ref="+encodeURIComponent(r)+"; Max-Age=2592000; Path=/; SameSite=Lax";}})();</script><script>
+(function(){
+  var sky=document.getElementById('mjsky'); if(!sky) return;
+  var G=['中','發','一','二','三','四','五','六','七','八','九','東','南','西','北'];
+  var N=window.innerWidth<640?9:17;
+  for(var i=0;i<N;i++){
+    var t=document.createElement('div'); t.className='mtile drift';
+    var size=26+Math.random()*34;
+    t.style.width=size+'px'; t.style.height=(size*1.35)+'px'; t.style.fontSize=(size*0.55)+'px';
+    t.style.left=(Math.random()*97)+'vw';
+    t.style.animationDuration=(28+Math.random()*32)+'s';
+    t.style.animationDelay=(-Math.random()*55)+'s';
+    t.style.color=Math.random()<0.32?'#B3402A':'#3B5C41';
+    t.textContent=G[Math.floor(Math.random()*G.length)];
+    sky.appendChild(t);
+  }
+})();
+</script>
+</body></html>
