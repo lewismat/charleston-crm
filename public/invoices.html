@@ -68,6 +68,16 @@ a.txt{color:var(--gold-dk);font-weight:700;text-decoration:none}
 
   <div class="card">
     <h2>New invoice</h2>
+    <div class="quick">
+      <label style="margin-top:2px">Describe it in plain words <span style="font-weight:400;color:var(--stone)">— or tap the mic and just say it</span></label>
+      <div style="position:relative">
+        <textarea id="qText" style="min-height:64px" placeholder="e.g. Invoice Jane Smith jane@email.com for a 1-hour private lesson $45 and a tile set $20, due Aug 1"></textarea>
+        <button type="button" id="qMic" title="Dictate" style="position:absolute;right:8px;bottom:8px;width:40px;height:40px;border-radius:50%;border:1px solid var(--edge);background:#fff;cursor:pointer;display:none;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e5d3f" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg></button>
+      </div>
+      <button type="button" class="btn ghost sm" id="qFill" style="margin-top:10px">Fill in the invoice below &darr;</button>
+      <span class="msg" id="qMsg" style="display:inline-block;margin-left:8px"></span>
+    </div>
+    <hr style="border:none;border-top:1px dashed var(--edge);margin:16px 0 4px">
     <div class="row">
       <div><label>Customer name</label><input id="cName" placeholder="Jane Smith"></div>
       <div><label>Email (for the link &amp; receipt)</label><input id="cEmail" type="email" placeholder="jane@email.com"></div>
@@ -132,6 +142,54 @@ function liRow(desc,amt){
 function addLine(desc,amt){$('items').appendChild(liRow(desc,amt));}
 addLine();
 $('addLi').onclick=function(){addLine();};
+
+// ---- quick add: free text + voice dictation ----
+function parseDate(x){x=(x||'').trim();if(!x)return '';var hasY=/\b\d{4}\b/.test(x);var d=new Date(x+(hasY?'':(' '+new Date().getFullYear())));if(isNaN(d.getTime()))return '';if(!hasY&&d.getTime()<Date.now()-864e5)d.setFullYear(d.getFullYear()+1);return d.toISOString().slice(0,10);}
+function parseInvoice(text){
+  var r={name:'',email:'',phone:'',due:'',items:[]};
+  var t=' '+text.replace(/\s+/g,' ').trim()+' ';
+  var em=t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);if(em){r.email=em[0];t=t.replace(em[0],' ');}
+  var ph=t.match(/\+?\d[\d\s().-]{7,}\d/);if(ph){r.phone=ph[0].trim();t=t.replace(ph[0],' ');}
+  var due=t.match(/\bdue\s+(?:on |by )?([A-Za-z0-9\/,.\- ]+?)(?:[.;]| for | and |$)/i);
+  if(due){var dd=parseDate(due[1]);if(dd){r.due=dd;t=t.replace(due[0],' ');}}
+  var nm=t.match(/\b(?:invoice|bill|charge|for|to)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z'’-]+)?)/);
+  if(nm){r.name=nm[1].trim();}
+  var amtRe=/\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:dollars|usd|bucks)?/i;
+  t.split(/[\n,]| and | plus | & /i).forEach(function(seg){
+    var m=seg.match(amtRe);if(!m)return;
+    var desc=seg.replace(m[0],' ').replace(/\b(for|a|an|the|of|to|charge|bill|invoice|please|is|at|each)\b/gi,' ').replace(/\s+/g,' ').trim();
+    if(r.name)desc=desc.replace(new RegExp('^'+r.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),'').trim();
+    desc=desc.replace(/^[-–:]\s*/,'').trim();
+    r.items.push({desc:desc||'Services',amount:m[1]});
+  });
+  return r;
+}
+$('qFill').onclick=function(){
+  var m=$('qMsg');m.className='msg';
+  var txt=$('qText').value.trim();
+  if(!txt){m.className='msg err';m.textContent='Type or dictate the details first.';return;}
+  var p=parseInvoice(txt);
+  if(p.name)$('cName').value=p.name;
+  if(p.email)$('cEmail').value=p.email;
+  if(p.phone)$('cPhone').value=p.phone;
+  if(p.due)$('cDue').value=p.due;
+  if(p.items.length){$('items').innerHTML='';p.items.forEach(function(it){addLine(it.desc,it.amount);});}
+  m.className='msg ok';m.textContent='Filled in '+(p.items.length||0)+' item'+(p.items.length===1?'':'s')+' — check it, then create.';
+};
+(function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;var mic=$('qMic');if(!SR||!mic)return;
+  mic.style.display='flex';
+  var rec=null,on=false,base='';
+  mic.onclick=function(){
+    if(on){try{rec.stop();}catch(e){}return;}
+    rec=new SR();rec.lang='en-US';rec.interimResults=true;rec.continuous=true;
+    base=$('qText').value?($('qText').value.trim()+' '):'';
+    rec.onresult=function(e){var sTxt='';for(var i=0;i<e.results.length;i++)sTxt+=e.results[i][0].transcript;$('qText').value=base+sTxt;};
+    rec.onerror=function(){};
+    rec.onend=function(){on=false;mic.style.background='#fff';};
+    try{rec.start();on=true;mic.style.background='#FBEEE6';}catch(e){}
+  };
+})();
 
 function collectItems(){
   var out=[];Array.prototype.forEach.call($('items').children,function(r){
