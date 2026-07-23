@@ -51,7 +51,7 @@ var $=function(id){return document.getElementById(id)};
   if(b.active){
     html+='<button class="btn" id="manage">Manage or cancel</button>';
   } else {
-    html+='<div class="row">You don’t have an active subscription.</div><button class="btn" id="start">Start subscription — $9.99/mo</button>';
+    html+='<div class="row">You don’t have an active subscription.</div><button class="btn" id="start">Start 14-day free trial — then $9.99/mo</button>';
   }
   $('subwrap').innerHTML=html+'<p class="msg" id="m"></p>';
   var mg=$('manage'); if(mg) mg.onclick=async function(){

@@ -86,6 +86,7 @@ router.post('/api/billing/checkout', auth.requireAuth, async (req, res) => {
       'line_items[0][price]': PRICE_ID,
       'line_items[0][quantity]': '1',
       'subscription_data[metadata][account_id]': acct.id,
+      'subscription_data[trial_period_days]': '14',
       client_reference_id: acct.id,
       allow_promotion_codes: 'true',
       success_url: `${SITE_URL}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
