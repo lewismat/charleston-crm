@@ -88,7 +88,7 @@ router.post('/api/billing/checkout', auth.requireAuth, async (req, res) => {
       'subscription_data[metadata][account_id]': acct.id,
       client_reference_id: acct.id,
       allow_promotion_codes: 'true',
-      success_url: `${SITE_URL}/dashboard?welcome=1`,
+      success_url: `${SITE_URL}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}/subscribe?cancelled=1`,
     });
     res.json({ ok: true, url: session.url });
@@ -119,6 +119,55 @@ router.get('/api/billing/status', auth.requireAuth, async (req, res) => {
       active: !!(a && ACTIVE.has(a.subscription_status)),
       periodEnd: (a && a.subscription_period_end) || null,
       hasCustomer: !!(a && a.stripe_customer_id) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+/* ---------------- verify-on-return + manual reconcile ----------------
+   Belt-and-suspenders for activation: rather than trust the webhook alone,
+   confirm the payment directly with Stripe the moment the buyer returns, and
+   flip the account active immediately. A slow or missing webhook can then
+   never lock a paying customer out. */
+async function syncByCustomer(customerId) {
+  const subs = await stripe('subscriptions?customer=' + enc(customerId) + '&status=all&limit=1', null, 'GET');
+  const sub = subs && subs.data && subs.data[0];
+  if (sub) await syncFromSubscription(sub);
+  return sub;
+}
+
+router.get('/api/billing/return', async (req, res) => {
+  const go = (p) => res.redirect(p);
+  try {
+    const u = auth.currentUser(req);
+    const sid = String(req.query.session_id || '');
+    if (!u) return go('/login?next=/dashboard');
+    if (!sid || !STRIPE_KEY) return go('/dashboard?welcome=1');
+    const session = await stripe('checkout/sessions/' + enc(sid), null, 'GET');
+    const belongs = session && (session.client_reference_id === u.id || (session.metadata && session.metadata.account_id === u.id));
+    if (session && session.customer && belongs) {
+      await patchAccount(u.id, { stripe_customer_id: session.customer });
+      if (session.subscription) {
+        const sub = await stripe('subscriptions/' + session.subscription, null, 'GET');
+        if (!(sub.metadata && sub.metadata.account_id)) sub.metadata = { account_id: u.id };
+        await syncFromSubscription(sub);
+      } else {
+        await syncByCustomer(session.customer);
+      }
+    }
+    if (await subscriptionActive(u.id)) return go('/dashboard?welcome=1');
+    return go('/subscribe?pending=1');
+  } catch (e) {
+    console.error('[billing] return:', e.message);
+    return go('/dashboard?welcome=1');
+  }
+});
+
+// The subscribe page can call this to self-heal if the webhook is late.
+router.post('/api/billing/sync', auth.requireAuth, async (req, res) => {
+  try {
+    const a = await accountById(req.account.id);
+    if (a && a.stripe_customer_id) await syncByCustomer(a.stripe_customer_id);
+    const b = await accountById(req.account.id);
+    res.json({ ok: true, active: !!(b && ACTIVE.has(b.subscription_status)), status: (b && b.subscription_status) || 'none' });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 

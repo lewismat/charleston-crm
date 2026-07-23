@@ -47,6 +47,7 @@ background:linear-gradient(180deg,var(--logo-2),var(--logo) 46%,var(--logo-dk));
   </ul>
   <button class="btn" id="go">Start subscription</button>
   <p class="msg" id="msg"></p>
+  <p style="font-size:.78rem;color:#5f6b58;margin-top:10px">By subscribing you agree to our <a href="/terms.html">Terms</a> and <a href="/privacy.html">Privacy Policy</a>. &#36;9.99/month, cancel anytime.</p>
   <p class="note">Secure checkout by Stripe. You can cancel from your account any time.</p>
   <a class="signout" href="#" id="out">Sign out</a>
 </div></div>
@@ -58,6 +59,15 @@ var $=function(id){return document.getElementById(id)};
   if(st.subscribed){location.href='/dashboard';return;}
   var q=new URLSearchParams(location.search);
   if(q.get('cancelled')) $('banner').innerHTML='<p class="msg">Checkout cancelled — you can start whenever you’re ready.</p>';
+  if(q.get('pending')){
+    $('banner').innerHTML='<p class="msg">Confirming your payment…</p>';
+    for(var i=0;i<5;i++){
+      var syncRes=await fetch('/api/billing/sync',{method:'POST'}).then(function(r){return r.json()}).catch(function(){return{};});
+      if(syncRes&&syncRes.active){location.href='/dashboard?welcome=1';return;}
+      await new Promise(function(r){setTimeout(r,1500);});
+    }
+    $('banner').innerHTML='<p class="msg">Your payment is still processing. If you were charged, refresh this page in a moment.</p>';
+  }
 })();
 $('go').addEventListener('click',async function(){
   var m=$('msg');m.className='msg';m.textContent='Taking you to secure checkout…';$('go').disabled=true;
