@@ -164,10 +164,12 @@ router.get('/api/auth/state', async (req, res) => {
     const u = currentUser(req);
     let sub = 'none', active = false, exists = true;
     if (u) {
-      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug&limit=1`);
+      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,trial_ends_at&limit=1`);
         if (rows && rows[0]) {
-          sub = rows[0].subscription_status || 'none';
-          active = sub === 'active' || sub === 'trialing';
+          const st = rows[0].subscription_status || 'none';
+          const trial = rows[0].trial_ends_at && Date.now() < new Date(rows[0].trial_ends_at).getTime();
+          active = st === 'active' || st === 'trialing' || !!trial;
+          sub = (st === 'active' || st === 'trialing') ? st : (trial ? 'trialing' : st);
           u.slug = rows[0].slug || null;
         } else { exists = false; }
       } catch (e) {}
@@ -250,13 +252,14 @@ router.post('/api/auth/register', async (req, res) => {
     const slug = await uniqueSlug(name || username);
     const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
       name, email, username, slug, role: 'owner',
-      subscription_status: 'none', password_hash: hashPassword(password) }) });
+      subscription_status: 'none', trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
+      password_hash: hashPassword(password) }) });
     const acct = created[0];
     if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
     const refSlug = clean(req.body.ref, 60).toLowerCase();
     if (refSlug) { try { const rr = await sb(`accounts?slug=eq.${enc(refSlug)}&role=eq.owner&select=id&limit=1`); if (rr && rr[0] && rr[0].id !== acct.id) await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ referred_by: rr[0].id }) }); } catch (e) {} }
     setSession(res, acct);
-    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/subscribe' });
+    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/dashboard?welcome=1' });
   } catch (e) {
     console.error('[accounts] register:', e.message);
     res.status(400).json({ ok: false, error: 'Could not create that account. Please try again.' });
@@ -335,6 +338,7 @@ router.get('/api/auth/google/callback', async (req, res) => {
       const slug = await uniqueSlug(name || uname);
       const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
         name, email, username: uname, slug, role: 'owner', subscription_status: 'none',
+        trial_ends_at: new Date(Date.now() + 14 * 86400000).toISOString(),
         password_hash: 'google:' + crypto.randomBytes(18).toString('hex') }) });
       acct = created[0];
       if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
@@ -342,7 +346,8 @@ router.get('/api/auth/google/callback', async (req, res) => {
       await saveSettings(acct.id, { notify_email: email }).catch(() => {});
     }
     setSession(res, acct);
-    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing';
+    const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing'
+      || (acct.trial_ends_at && Date.now() < new Date(acct.trial_ends_at).getTime());
     res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');
   } catch (e) {
     console.error('[auth] google:', e.message);
