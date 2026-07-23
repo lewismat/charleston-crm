@@ -121,7 +121,7 @@ Selectors I have: body, .wrap, .card, h1, .script, .tagline, .grid, .field, labe
     </div>
     <button type="button" class="copybtn" id="copyForm"><span>🔗</span> Copy your inquiry form link</button>
     <div class="copymsg" id="copyMsg"></div>
-    <iframe id="formPv" src="/" title="Form preview"></iframe>
+    <iframe id="formPv" src="/inquire" title="Form preview"></iframe>
   </aside>
 </div>
 <script src="/toast.js"></script>
@@ -194,7 +194,7 @@ function renderPresets(){
     },{onUndo:function(){PRESETS=keep;renderPresets();}});
   };});
 }
-async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if(!s.authed){location.href='/login';return false;}return true;}
+async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if(!s.authed){location.href='/login';return false;}window.__mySlug=(s.user&&s.user.slug)||'';return true;}
 async function loadConfig(){
   var c=(await fetch('/api/inquiry-config').then(function(r){return r.json();})).config||{};
   $('c_heading').value=c.heading||'';$('c_script').value=c.script||'';$('c_tagline').value=c.tagline||'';
@@ -209,7 +209,7 @@ async function saveConfig(msgId){
   var body={heading:$('c_heading').value.trim(),script:$('c_script').value.trim(),tagline:$('c_tagline').value.trim(),submit_label:$('c_submit').value.trim(),submit_note:$('c_note').value.trim(),event_types:$('c_types').value.split('\n').map(function(x){return x.trim();}).filter(Boolean),
     custom_css:$('c_css')?$('c_css').value:'',presets:PRESETS};
   var d=await fetch('/api/inquiry-config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();});
-  if(d.ok){m.style.color='var(--sage)';m.textContent='Saved ✓';$('formPv').src='/?t='+Date.now();loadConfig();}
+  if(d.ok){m.style.color='var(--sage)';m.textContent='Saved ✓';$('formPv').src='/inquire?t='+Date.now();loadConfig();}
   else{m.style.color='#B3542E';m.textContent=d.error||'Error';}
 }
 $('c_save').addEventListener('click',function(){saveConfig('c_msg');});
@@ -250,7 +250,7 @@ if($('copyPrompt'))$('copyPrompt').addEventListener('click',function(){
   this.textContent='Copied ✓';var b=this;setTimeout(function(){b.textContent='Copy this prompt';},1600);
 });
 $('copyForm').addEventListener('click',function(){
-  var url=location.origin+'/';
+  var url=location.origin+(window.__mySlug?('/s/'+window.__mySlug+'/inquire'):'/inquire');
   if(navigator.clipboard){navigator.clipboard.writeText(url);}else{var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
   var m=$('copyMsg');m.textContent='Copied '+url;setTimeout(function(){m.textContent='';},2500);
 });
