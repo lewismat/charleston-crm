@@ -180,7 +180,9 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <div id="stripeStatus"></div>
     <label>Stripe secret or restricted key</label>
     <input id="stripe_key" type="password" placeholder="sk_live_…  or  rk_live_…" autocomplete="off">
-    <div class="btnrow"><button class="save" id="save">Save key</button><button class="test" id="test">Test connection</button><span class="msg" id="msg"></span></div>
+    <label style="margin-top:12px">Stripe publishable key <span style="font-weight:400;color:#5D6656">— powers the on-page card form (Apple/Google Pay)</span></label>
+    <input id="stripe_pk" placeholder="pk_live_…  or  pk_test_…" autocomplete="off">
+    <div class="btnrow"><button class="save" id="save">Save keys</button><button class="test" id="test">Test connection</button><span class="msg" id="msg"></span></div>
     <ol class="steps">
       <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener">Stripe → Developers → API keys</a> and create a <b>restricted key</b>.</li>
       <li>Set these three permissions exactly:
@@ -233,7 +235,7 @@ async function guard(){var s=await fetch('/api/auth/state').then(r=>r.json());if
 async function loadStatus(){
   var s=await fetch('/api/settings').then(r=>r.json());
   var el=$('stripeStatus');
-  if(s.stripeConnected){el.innerHTML='<span class="status on">✓ Connected · '+(s.mode==='restricted'?'restricted key':'secret key')+' '+s.stripeHint+'</span>';}
+  if(s.stripeConnected){el.innerHTML='<span class="status on">✓ Connected · '+(s.mode==='restricted'?'restricted key':'secret key')+' '+s.stripeHint+(s.stripePkSet?' · on-page card form ready':' · add a publishable key for the on-page card form')+'</span>';}
   else{el.innerHTML='<span class="status off">Not connected yet</span>';}
   var tw=$('twStatus');
   if(s.twilioConnected){tw.innerHTML='<span class="status on">✓ Connected · texts from '+s.twilioFrom+'</span>';}
@@ -263,8 +265,11 @@ async function loadStatus(){
 async function saveSettings(obj,msgId,okText){var m=$(msgId);m.className='msg';m.textContent='Saving…';var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}).then(r=>r.json());if(d.ok){m.className='msg ok';m.textContent=okText||'Saved ✓';loadStatus();}else{m.className='msg err';m.textContent=d.error||'Error';}}
 $('save').addEventListener('click',async function(){
   var msg=$('msg');msg.className='msg';msg.textContent='Saving…';
-  var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({stripe_secret_key:$('stripe_key').value.trim()})}).then(r=>r.json());
-  if(d.ok){msg.className='msg ok';msg.textContent='Saved ✓';$('stripe_key').value='';loadStatus();}
+  var body={};var sk=$('stripe_key').value.trim();var pk=$('stripe_pk')?$('stripe_pk').value.trim():'';
+  if(sk)body.stripe_secret_key=sk; if(pk)body.stripe_publishable_key=pk;
+  if(!sk&&!pk){msg.className='msg err';msg.textContent='Paste a key first.';return;}
+  var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+  if(d.ok){msg.className='msg ok';msg.textContent='Saved ✓';$('stripe_key').value='';if($('stripe_pk'))$('stripe_pk').value='';loadStatus();}
   else{msg.className='msg err';msg.textContent=d.error||'Error';}
 });
 $('test').addEventListener('click',async function(){

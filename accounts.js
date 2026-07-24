@@ -573,6 +573,7 @@ router.get('/api/settings', requireAuth, async (req, res) => {
       resendHint: s.resend_api_key ? ('•••• ' + String(s.resend_api_key).slice(-4)) : '',
       emailFrom: process.env.FROM_EMAIL || s.from_email || '',
       stripeConnected: !!k, stripeHint: k ? ('•••• ' + k.slice(-4)) : '', mode: k.startsWith('rk_') ? 'restricted' : (k.startsWith('sk_') ? 'secret' : ''),
+      stripePkSet: !!s.stripe_publishable_key, stripePkHint: s.stripe_publishable_key ? ('•••• ' + String(s.stripe_publishable_key).slice(-4)) : '',
       twilioConnected: !!(s.twilio_account_sid && s.twilio_auth_token && s.twilio_from), twilioFrom: s.twilio_from || '',
       twilioSidHint: s.twilio_account_sid ? ('•••• ' + String(s.twilio_account_sid).slice(-4)) : '',
       calendarUrl: s.calendar_token ? (base + '/api/cal/' + s.calendar_token + '.ics') : '',
@@ -614,6 +615,11 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
       const key = clean(b.stripe_secret_key, 220);
       if (key && !/^(sk|rk)_/.test(key)) return res.status(400).json({ ok: false, error: 'Stripe key should start with sk_ or rk_.' });
       patch.stripe_secret_key = key || null;
+    }
+    if ('stripe_publishable_key' in b) {
+      const pk = clean(b.stripe_publishable_key, 220);
+      if (pk && !/^pk_/.test(pk)) return res.status(400).json({ ok: false, error: 'Publishable key should start with pk_.' });
+      patch.stripe_publishable_key = pk || null;
     }
     ['twilio_account_sid','twilio_auth_token','twilio_from','google_client_id','google_client_secret','ms_client_id','ms_client_secret','ms_tenant'].forEach(function(f){
       if (f in b) patch[f] = clean(b[f], 300) || null;

@@ -43,7 +43,7 @@ background:linear-gradient(180deg,#C24E32,#98371F);color:#FFF7EE;font-weight:700
 @media print{body{background:#fff;padding:0}.scene,#tiles,.dlbtn,.paybtn,.secure,.pay,.manual{display:none!important}.paper{box-shadow:none;border:none;max-width:100%;border-radius:0}}
 .dlbtn{display:block;width:100%;margin-top:12px;padding:12px;border:1px solid var(--edge);border-radius:12px;background:#fff;color:var(--logo);font-weight:600;font-size:.95rem;cursor:pointer;font-family:inherit}
 .dlbtn:hover{background:#FCFAF2;border-color:var(--gold)}
-</style><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+</style><script src="https://js.stripe.com/v3/"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 </head><body>
 <div class="scene"><div class="st"></div><div class="wash"></div></div>
 <div class="paper" id="paper"><div class="loading" id="loading">Loading your invoice…</div></div>
@@ -54,6 +54,8 @@ var esc=function(s){return (s||'').replace(/[&<>"]/g,function(m){return{'&':'&am
 var paidJustNow=new URLSearchParams(location.search).get('paid');
 
 async function render(){
+  var pmi=new URLSearchParams(location.search).get('payment_intent');
+  if(pmi){ try{ await fetch('/api/pi/'+encodeURIComponent(token)+'/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentIntentId:pmi})}); }catch(e){} }
   var r,d;
   try{ r=await fetch('/api/pi/'+encodeURIComponent(token)); d=await r.json(); }catch(e){ d={ok:false}; }
   var P=document.getElementById('paper');
@@ -77,7 +79,13 @@ async function render(){
   } else {
     if(d.paidTotal>0) html+='<div class="due" style="margin-top:10px">'+fmt(d.paidTotal)+' paid · <b>'+fmt(due)+' remaining</b></div>';
     if(d.canPay){
-      html+='<div class="pay"><button class="paybtn" id="pay">Pay '+fmt(due)+' by card</button><div class="secure">Secure payment powered by Stripe</div></div>';
+      html+='<div class="pay"><button class="paybtn" id="pay">Pay '+fmt(due)+' by card</button>'+
+        '<div id="payArea" style="display:none;margin-top:14px;text-align:left">'+
+        '<div id="paymentElement"></div>'+
+        '<button class="paybtn" id="payNow" style="margin-top:14px">Pay '+fmt(due)+'</button>'+
+        '<button class="dlbtn" id="payCancel" style="margin-top:8px">Cancel</button>'+
+        '<div id="payMsg" class="secure" style="min-height:1.1em;margin-top:8px"></div></div>'+
+        '<div class="secure" id="secureLine">Secure payment powered by Stripe</div></div>';
     } else {
       html+='<div class="manual">Please contact '+biz+' to arrange payment.</div>';
     }
@@ -87,14 +95,38 @@ async function render(){
   P.innerHTML=html;
   var dl=document.getElementById('dl'); if(dl) dl.onclick=function(){ makePDF(d); };
   var pb=document.getElementById('pay');
-  if(pb) pb.onclick=async function(){
-    pb.disabled=true;pb.textContent='Redirecting to secure checkout…';
-    try{
-      var rr=await fetch('/api/pi/'+encodeURIComponent(token)+'/checkout',{method:'POST'});
-      var dd=await rr.json();
-      if(dd.ok&&dd.url){ location.href=dd.url; return; }
-      throw new Error(dd.error||'Could not start payment.');
-    }catch(e){ pb.disabled=false;pb.textContent='Pay '+fmt(due)+' by card'; alert(e.message); }
+  if(pb) pb.onclick=function(){ startPayment(d); };
+}
+function ensureStripe(){ return new Promise(function(res){ if(window.Stripe){res(true);return;} var sc=document.createElement('script'); sc.src='https://js.stripe.com/v3/'; sc.onload=function(){res(!!window.Stripe);}; sc.onerror=function(){res(false);}; document.head.appendChild(sc); }); }
+async function hostedFallback(){ try{ var rr=await fetch('/api/pi/'+encodeURIComponent(token)+'/checkout',{method:'POST'}); var dd=await rr.json(); if(dd.ok&&dd.url){ location.href=dd.url; return true; } }catch(e){} return false; }
+async function startPayment(d){
+  var due=d.amount-(d.paidTotal||0);
+  var pb=document.getElementById('pay'); pb.disabled=true; pb.textContent='Loading secure form…';
+  var r=await fetch('/api/pi/'+encodeURIComponent(token)+'/intent',{method:'POST'}).then(function(x){return x.json();}).catch(function(){return {};});
+  if(!r||!r.ok){ pb.disabled=false; pb.textContent='Pay '+fmt(due)+' by card'; alert((r&&r.error)||'Could not start payment.'); return; }
+  if(r.fallback){ if(!(await hostedFallback())){ pb.disabled=false; pb.textContent='Pay '+fmt(due)+' by card'; alert('Could not start payment.'); } return; }
+  if(!(await ensureStripe())){ if(!(await hostedFallback())){ pb.disabled=false; pb.textContent='Pay '+fmt(due)+' by card'; } return; }
+  var stripe=Stripe(r.publishableKey);
+  var appearance={theme:'flat',variables:{colorPrimary:'#3B5C41',colorText:'#22301F',colorTextSecondary:'#5D6656',colorBackground:'#FFFDF6',fontFamily:'Inter, system-ui, sans-serif',borderRadius:'10px',colorDanger:'#B3542E',spacingUnit:'4px'},
+    rules:{'.Input':{border:'1px solid #E3D6B4',boxShadow:'none',padding:'11px 12px'},'.Input:focus':{border:'1px solid #C9A227',boxShadow:'0 0 0 3px rgba(201,162,39,.16)'},'.Label':{color:'#6f8a6a',fontWeight:'600'},'.Tab':{border:'1px solid #E3D6B4'},'.Tab--selected':{borderColor:'#3B5C41',boxShadow:'0 0 0 1px #3B5C41'}}};
+  var elements=stripe.elements({clientSecret:r.clientSecret, appearance:appearance});
+  var pe=elements.create('payment',{layout:'tabs'}); pe.mount('#paymentElement');
+  pb.style.display='none';
+  var sl=document.getElementById('secureLine'); if(sl) sl.style.display='none';
+  var area=document.getElementById('payArea'); area.style.display='block';
+  var payNow=document.getElementById('payNow'); payNow.textContent='Pay '+fmt(due);
+  document.getElementById('payCancel').onclick=function(){ location.href='/i/'+token; };
+  payNow.onclick=async function(){
+    var pm=document.getElementById('payMsg'); pm.style.color='var(--stone)'; pm.textContent='';
+    payNow.disabled=true; payNow.textContent='Processing…';
+    var resx=await stripe.confirmPayment({elements:elements, confirmParams:{return_url:location.origin+'/i/'+token+'?paid=1'}, redirect:'if_required'});
+    if(resx.error){ pm.style.color='#B3542E'; pm.textContent=resx.error.message||'Payment could not be completed.'; payNow.disabled=false; payNow.textContent='Pay '+fmt(due); return; }
+    var pi=resx.paymentIntent;
+    if(pi && (pi.status==='succeeded'||pi.status==='processing')){
+      try{ await fetch('/api/pi/'+encodeURIComponent(token)+'/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentIntentId:pi.id})}); }catch(e){}
+      pm.style.color='var(--logo)'; pm.textContent='Payment received — thank you!';
+      setTimeout(function(){ location.href='/i/'+token+'?paid=1'; },900);
+    } else { payNow.disabled=false; payNow.textContent='Pay '+fmt(due); pm.textContent='Payment status: '+((pi&&pi.status)||'unknown'); }
   };
 }
 function logoToPng(url){

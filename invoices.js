@@ -44,6 +44,7 @@ async function loadInv(owner, id) { const v = await cfgGet(`inv:${owner}:${id}`)
 async function saveInv(inv) { await cfgSet(`inv:${inv.owner}:${inv.id}`, JSON.stringify(inv)); }
 async function resolveToken(token) { const v = await cfgGet(`invref:${token}`); if (!v) return null; const i = v.indexOf(':'); return { owner: v.slice(0, i), id: v.slice(i + 1) }; }
 async function ownerStripeKey(owner) { try { const s = await sb(`settings?owner_id=eq.${enc(owner)}&select=stripe_secret_key&limit=1`); if (s && s[0] && s[0].stripe_secret_key) return s[0].stripe_secret_key; } catch (e) {} return PLATFORM_STRIPE; }
+async function ownerStripePk(owner) { try { const s = await sb(`settings?owner_id=eq.${enc(owner)}&select=stripe_publishable_key&limit=1`); return (s && s[0] && s[0].stripe_publishable_key) || ''; } catch (e) { return ''; } }
 
 function recompute(inv) {
   const paid = (inv.payments || []).reduce((s, p) => s + (p.amount || 0), 0);
@@ -181,6 +182,45 @@ router.get('/api/pi/:token/return', async (req, res) => {
     }
     res.redirect('/i/' + req.params.token + '?paid=1');
   } catch (e) { res.redirect('/i/' + req.params.token); }
+});
+
+// Custom on-page card form (Stripe Payment Element): create a PaymentIntent for
+// the amount due, using the studio's own Stripe keys. If no publishable key is
+// set, tell the client to fall back to hosted Checkout.
+router.post('/api/pi/:token/intent', async (req, res) => {
+  try {
+    const ref = await resolveToken(req.params.token); if (!ref) return res.status(404).json({ ok: false });
+    const inv = await loadInv(ref.owner, ref.id); if (!inv) return res.status(404).json({ ok: false });
+    if (inv.status === 'paid') return res.status(400).json({ ok: false, error: 'This invoice is already paid.' });
+    const sk = await ownerStripeKey(ref.owner); const pk = await ownerStripePk(ref.owner);
+    if (!sk) return res.status(503).json({ ok: false, error: 'Card payments are not set up yet.' });
+    if (!pk) return res.json({ ok: true, fallback: true });
+    const due = inv.amount - (inv.paidTotal || 0);
+    const pi = await stripe(sk, 'payment_intents', {
+      amount: String(due > 0 ? due : inv.amount), currency: inv.currency || 'usd',
+      'automatic_payment_methods[enabled]': 'true', 'metadata[token]': inv.token,
+      description: inv.number, ...(inv.customer.email ? { receipt_email: inv.customer.email } : {}),
+    });
+    res.json({ ok: true, clientSecret: pi.client_secret, publishableKey: pk, amount: due, currency: inv.currency || 'usd' });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+router.post('/api/pi/:token/confirm', async (req, res) => {
+  try {
+    const ref = await resolveToken(req.params.token); if (!ref) return res.status(404).json({ ok: false });
+    const inv = await loadInv(ref.owner, ref.id); if (!inv) return res.status(404).json({ ok: false });
+    const pid = String((req.body && req.body.paymentIntentId) || ''); if (!pid) return res.status(400).json({ ok: false });
+    const sk = await ownerStripeKey(ref.owner);
+    const pi = await stripe(sk, 'payment_intents/' + enc(pid), null, 'GET');
+    if (pi && pi.status === 'succeeded' && (!pi.metadata || pi.metadata.token === inv.token)) {
+      if (!(inv.payments || []).some((p) => p.stripeRef === pi.id)) {
+        inv.payments = inv.payments || [];
+        inv.payments.push({ id: rid(4), method: 'stripe', amount: pi.amount_received || pi.amount || inv.amount, date: new Date().toISOString().slice(0, 10), note: 'Paid online by card', stripeRef: pi.id, image: '' });
+        recompute(inv); await saveInv(inv);
+      }
+      return res.json({ ok: true, status: 'paid' });
+    }
+    res.json({ ok: true, status: (pi && pi.status) || 'unknown' });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 /* page routes */
