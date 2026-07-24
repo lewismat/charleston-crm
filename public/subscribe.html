@@ -27,7 +27,7 @@ font-family:'Cormorant Garamond',serif;font-weight:700;user-select:none;opacity:
 /* airy content — no card */
 .content{position:relative;z-index:1;width:100%;max-width:540px;text-align:center}
 .eyebrow{font-size:.68rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-dp);font-weight:600}
-h1{font-family:var(--display);font-style:italic;font-weight:600;font-size:2.5rem;line-height:1.08;color:var(--velvet);margin:10px 0 6px}
+h1{font-family:var(--display);font-style:italic;font-weight:600;font-size:2.2rem;line-height:1.1;color:var(--velvet);margin:10px 0 6px}
 .lede{color:var(--stone);font-size:1rem;max-width:30rem;margin:0 auto 18px}
 .toggle{display:inline-flex;gap:8px;justify-content:center;margin:6px 0 12px}
 .pt{padding:8px 16px;border-radius:999px;border:1px solid var(--logo);background:rgba(255,255,255,.7);color:var(--logo);font-weight:600;cursor:pointer;font-size:.85rem;font-family:inherit;backdrop-filter:blur(2px)}
@@ -51,9 +51,10 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
 <div id="tiles" aria-hidden="true"></div>
 <div class="content">
   <p class="eyebrow">One happy home</p>
-  <h1>Everything in one place.</h1>
-  <p class="lede">Bookings, payments, students and reminders — one calm home for your whole mah jong studio.</p>
+  <h1>Sweep your whole studio onto one table.</h1>
+  <p class="lede">Calendly, JotForm, Linktree, a spreadsheet for students… that’s a lot of tiles to chase. Charleston gathers every one into a single, cheerful home.</p>
   <div id="banner"></div>
+  <p class="note" id="whoami" style="display:none;color:var(--gold-dp);font-weight:600;margin-bottom:6px"></p>
   <div class="toggle" id="planToggle">
     <button type="button" class="pt pt-on" data-plan="monthly">Monthly</button>
     <button type="button" class="pt" data-plan="annual">Annual &middot; 2 months free</button>
@@ -86,7 +87,7 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
     var t=document.createElement('div'); t.className='mtile drift';
     var size=26+Math.random()*34;
     t.style.width=size+'px'; t.style.height=(size*1.35)+'px'; t.style.fontSize=(size*0.55)+'px';
-    t.style.left=(Math.random()*96)+'vw';
+    t.style.left=(Math.random()*32)+'vw';
     t.style.animationDuration=(30+Math.random()*30)+'s';
     t.style.animationDelay=(-Math.random()*55)+'s';
     t.style.color=Math.random()<0.32?'#B3402A':'#3B5C41';
@@ -111,6 +112,7 @@ window.__plan='monthly';
   var st=await fetch('/api/auth/state').then(function(r){return r.json()});
   if(!st.authed){location.href='/login';return;}
   if(st.subscribed){location.href='/dashboard';return;}
+  if(st.user&&st.user.name){var w=$('whoami');if(w){w.textContent='Signed in as '+st.user.name+' — just finish setting up below.';w.style.display='block';}}
   var q=new URLSearchParams(location.search);
   var siParam=q.get('setup_intent');
   if(q.get('trial') && siParam){ $('banner').innerHTML='<p class="msg">Starting your trial…</p>'; await completeTrial(siParam); return; }

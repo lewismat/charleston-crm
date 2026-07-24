@@ -243,9 +243,19 @@ router.post('/api/auth/register', async (req, res) => {
     if (!name || !isEmail(email) || password.length < 8)
       return res.status(400).json({ ok: false, error: 'Your name, a valid email, and an 8+ character password are required.' });
 
-    // email/username must be unused
-    const dupe = await sb(`accounts?or=(email.eq.${enc(email)},username.eq.${enc(username)})&select=id&limit=1`);
-    if (dupe && dupe.length) return res.status(409).json({ ok: false, error: 'An account with that email or username already exists. Try signing in.' });
+    // email/username already taken? If it's the same person re-signing-up (same
+    // password) and they haven't finished paying, just log them back in and resume
+    // — an account created at signup shouldn't lock them out.
+    const dupe = await sb(`accounts?or=(email.eq.${enc(email)},username.eq.${enc(username)})&select=id,email,name,role,active,password_hash,subscription_status&limit=1`);
+    if (dupe && dupe.length) {
+      const ex = dupe[0];
+      if (ex.email === email && ex.active !== false && verifyPassword(password, ex.password_hash)) {
+        setSession(res, ex);
+        const active = ex.subscription_status === 'active' || ex.subscription_status === 'trialing';
+        return res.json({ ok: true, user: { id: ex.id, role: ex.role, name: ex.name }, next: active ? '/dashboard' : '/subscribe', resumed: true });
+      }
+      return res.status(409).json({ ok: false, error: 'An account with that email already exists — please sign in instead.' });
+    }
 
     const slug = await uniqueSlug(name || username);
     const created = await sb('accounts', { method: 'POST', body: JSON.stringify({
