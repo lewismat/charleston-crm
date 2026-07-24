@@ -195,6 +195,10 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
       <li>Paste the key above and press <b>Test connection</b>.</li>
     </ol>
     <div class="note">A restricted key cannot move your money even if it leaked. Your key is stored on the server and never shown on this page again.</div>
+    <hr style="border:none;border-top:1px dashed var(--edge);margin:18px 0 4px">
+    <label>Publishable key for client sign-ups <span style="font-weight:400;color:#5D6656">— makes the $9.99 signup checkout match your site (no Stripe redirect)</span></label>
+    <input id="platform_pk" placeholder="pk_test_… (your platform Stripe account)" autocomplete="off">
+    <div class="btnrow"><button class="save" id="savePlatformPk">Save</button><span class="msg" id="platformPkMsg"></span></div>
   </div>
 
   <div class="panel" data-cat="texts">
@@ -271,6 +275,12 @@ $('save').addEventListener('click',async function(){
   var d=await fetch('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
   if(d.ok){msg.className='msg ok';msg.textContent='Saved ✓';$('stripe_key').value='';if($('stripe_pk'))$('stripe_pk').value='';loadStatus();}
   else{msg.className='msg err';msg.textContent=d.error||'Error';}
+});
+if($('savePlatformPk'))$('savePlatformPk').addEventListener('click',async function(){
+  var m=$('platformPkMsg');m.className='msg';m.textContent='Saving…';
+  var pk=$('platform_pk').value.trim();
+  var d=await fetch('/api/billing/platform-pk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({publishableKey:pk})}).then(function(r){return r.json();});
+  if(d.ok){m.className='msg ok';m.textContent='Saved ✓ — signup checkout now on-page';$('platform_pk').value='';}else{m.className='msg err';m.textContent=d.error||'Error';}
 });
 $('test').addEventListener('click',async function(){
   var msg=$('msg');msg.className='msg';msg.textContent='Testing…';

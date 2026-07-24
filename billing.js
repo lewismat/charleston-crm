@@ -18,6 +18,7 @@ const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
 const PRICE_ID = process.env.STRIPE_PRICE_ID || '';
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const PUBLISHABLE = process.env.STRIPE_PUBLISHABLE_KEY || '';
+async function platformPk() { return process.env.STRIPE_PUBLISHABLE_KEY || (await appConfig('stripe_platform_pk')) || ''; }
 const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 
 const ACTIVE = new Set(['active', 'trialing']);
@@ -140,15 +141,25 @@ async function ensureCustomer(acct) {
   acct.stripe_customer_id = c.id;
   return c.id;
 }
-router.get('/api/billing/pk', (req, res) => res.json({ publishableKey: PUBLISHABLE, available: !!PUBLISHABLE }));
+router.get('/api/billing/pk', async (req, res) => { const pk = await platformPk(); res.json({ publishableKey: pk, available: !!pk }); });
+// Owner sets the platform publishable key here (no Render redeploy needed).
+router.post('/api/billing/platform-pk', auth.requireAuth, async (req, res) => {
+  try {
+    const pk = String((req.body && req.body.publishableKey) || '').trim();
+    if (pk && !/^pk_/.test(pk)) return res.status(400).json({ ok: false, error: 'Publishable key should start with pk_.' });
+    await setAppConfig('stripe_platform_pk', pk);
+    res.json({ ok: true, set: !!pk });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
 router.post('/api/billing/setup-intent', auth.requireAuth, async (req, res) => {
   try {
     if (!STRIPE_KEY || !PRICE_ID) return res.status(503).json({ ok: false, error: 'Billing is not configured yet.' });
-    if (!PUBLISHABLE) return res.json({ ok: true, fallback: true });
+    const PUB = await platformPk();
+    if (!PUB) return res.json({ ok: true, fallback: true });
     const acct = await accountById(req.account.id); if (!acct) return res.status(404).json({ ok: false });
     const customer = await ensureCustomer(acct);
     const si = await stripe('setup_intents', { customer, 'automatic_payment_methods[enabled]': 'true', usage: 'off_session', 'metadata[account_id]': acct.id });
-    res.json({ ok: true, clientSecret: si.client_secret, publishableKey: PUBLISHABLE });
+    res.json({ ok: true, clientSecret: si.client_secret, publishableKey: PUB });
   } catch (e) { console.error('[billing] setup-intent:', e.message); res.status(500).json({ ok: false, error: 'Could not start. Please try again.' }); }
 });
 router.post('/api/billing/complete', auth.requireAuth, async (req, res) => {
