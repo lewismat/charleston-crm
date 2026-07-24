@@ -97,6 +97,16 @@ async function render(){
     }catch(e){ pb.disabled=false;pb.textContent='Pay '+fmt(due)+' by card'; alert(e.message); }
   };
 }
+function logoToPng(url){
+  return new Promise(function(res){
+    if(!url){res(null);return;}
+    var im=new Image(); im.crossOrigin='anonymous';
+    im.onload=function(){ try{ var sz=180; var cv=document.createElement('canvas');cv.width=sz;cv.height=sz;
+      var cx=cv.getContext('2d'); cx.drawImage(im,0,0,sz,sz); res(cv.toDataURL('image/png')); }catch(e){res(null);} };
+    im.onerror=function(){res(null);};
+    im.src=url;
+  });
+}
 async function ensureJsPDF(){
   if(window.jspdf&&window.jspdf.jsPDF)return true;
   var urls=['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];
@@ -114,8 +124,12 @@ async function makePDF(d){
   var jsPDF=window.jspdf.jsPDF; var doc=new jsPDF({unit:'pt',format:'letter'});
   var M=54, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), y=68;
   var green=[46,93,63], stone=[93,102,86], ink=[34,48,31];
-  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(green[0],green[1],green[2]);
-  doc.text((d.studio&&d.studio.name)||'Charleston', M, y);
+  // business logo (studio's own, else the Charleston badge) — rasterized to PNG
+  var logoData=await logoToPng((d.studio&&d.studio.logo)||'/charleston-badge.svg');
+  var nameX=M;
+  if(logoData){ try{ doc.addImage(logoData,'PNG',M,y-30,42,42); nameX=M+54; }catch(e){} }
+  doc.setFont('helvetica','bold');doc.setFontSize(21);doc.setTextColor(green[0],green[1],green[2]);
+  doc.text((d.studio&&d.studio.name)||'Charleston', nameX, y);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(stone[0],stone[1],stone[2]);
   doc.text('INVOICE', W-M, y-13, {align:'right'});
   doc.setFontSize(14);doc.setTextColor(ink[0],ink[1],ink[2]);

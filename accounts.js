@@ -935,6 +935,24 @@ router.get('/api/testimonial-photo', async (req, res) => {
   } catch (e) { res.json({ photo: '' }); }
 });
 
+// Import a testimonial/owner photo from a public image URL (server-side fetch,
+// avoids CORS/base64 issues), cache it in app_config.
+router.post('/api/testimonial-photo/import', async (req, res) => {
+  try {
+    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
+    const url = String((req.body && req.body.url) || '').replace(/&amp;/g, '&').trim();
+    if (!/^https:\/\//.test(url)) return res.status(400).json({ ok: false, error: 'bad url' });
+    const r = await fetch(url);
+    if (!r.ok) return res.status(502).json({ ok: false, error: 'source ' + r.status });
+    const ct = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length < 800) return res.status(502).json({ ok: false, error: 'too small' });
+    const dataUrl = 'data:' + ct + ';base64,' + buf.toString('base64');
+    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'testimonial_photo', value: dataUrl, updated_at: new Date().toISOString() }) });
+    res.json({ ok: true, bytes: buf.length, type: ct });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // Superadmin: pull Holly's headshot from her Tampa Bay Mahj profile (server-side,
 // so no CORS and no need to move the image bytes by hand) and cache it.
 router.post('/api/hq/import-holly-photo', requireSuperadmin, async (req, res) => {
