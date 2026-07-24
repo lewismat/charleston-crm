@@ -32,27 +32,28 @@ td a{color:var(--logo);text-decoration:none}
 .foot{margin-top:16px;font-size:.8rem;color:var(--stone)}
 </style><style>.tbmnav{background:#2e5d3f;color:#F7F2E4;display:flex;align-items:center;gap:16px;padding:11px 20px;flex-wrap:wrap;font-family:'Karla',system-ui,sans-serif}.tbmnav .brand{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:1.15rem;margin-right:auto;display:flex;align-items:center}.tbmnav a{color:#F7F2E4;text-decoration:none;font-size:.85rem;font-weight:500;opacity:.9;cursor:pointer}.tbmnav a:hover{opacity:1}.tbmnav a.active{color:#C9A24B;opacity:1;font-weight:700}</style>
 <style id="spyCss">
-body.spy{background:linear-gradient(135deg,#ffd6ec,#c86dd7 50%,#7b2ff7)!important;padding-top:58px}
-body.spy .top{background:linear-gradient(120deg,#ff4fa3,#a020f0)!important;box-shadow:0 8px 26px rgba(160,32,240,.45)}
-body.spy .wrap .card{background:rgba(255,255,255,.95)!important;border:1.5px solid #ff4fa3!important;box-shadow:0 12px 28px rgba(160,32,240,.28)!important}
-body.spy .card .n{color:#a020f0!important}
-body.spy .card .l{color:#ff4fa3!important}
-body.spy .card.g{background:linear-gradient(135deg,#ff4fa3,#a020f0)!important;border-color:#a020f0!important}
-body.spy .card.g .n{color:#fff!important}body.spy .card.g .l{color:#ffe0f4!important}
-body.spy h1,body.spy h2{color:#fff!important;text-shadow:0 2px 10px rgba(120,20,160,.6)}
-body.spy .tbmsb{background:linear-gradient(180deg,#a020f0,#7b2ff7)!important}
-body.spy table th{color:#a020f0!important}
-#spyBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:3000;text-align:center;padding:9px 52px 9px 16px;
-  background:linear-gradient(90deg,#ff4fa3,#a020f0,#7b2ff7);color:#fff;box-shadow:0 4px 22px rgba(160,32,240,.5)}
+body.spy{background:linear-gradient(135deg,#ffe6cc,#ff8200 55%,#e56a00)!important;padding-top:64px}
+body.spy .top{background:linear-gradient(120deg,#ff8200,#e56a00)!important;box-shadow:0 8px 26px rgba(255,130,0,.5)}
+body.spy .wrap .card{background:#fff!important;border:2px solid #ff8200!important;box-shadow:0 12px 28px rgba(255,130,0,.26)!important}
+body.spy .card .n{color:#ff8200!important}
+body.spy .card .l{color:#4b4b4b!important}
+body.spy .card.g{background:linear-gradient(135deg,#ff8200,#e56a00)!important;border-color:#e56a00!important}
+body.spy .card.g .n{color:#fff!important}body.spy .card.g .l{color:#ffe6cc!important}
+body.spy h1,body.spy h2{color:#fff!important;text-shadow:0 2px 8px rgba(170,75,0,.6)}
+body.spy .tbmsb{background:linear-gradient(180deg,#ff8200,#cc6600)!important}
+body.spy table th{color:#ff8200!important}
+#spyBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:3000;text-align:center;padding:9px 54px 16px 16px;color:#fff;
+  background:#ff8200;box-shadow:0 4px 22px rgba(255,130,0,.5);
+  border-bottom:9px solid;border-image:repeating-linear-gradient(90deg,#ff8200 0 18px,#fff 18px 36px) 9}
 #spyBanner .l1{font-family:"Playfair Display",serif;font-weight:600;font-size:1.12rem;letter-spacing:.05em}
-#spyBanner .l2{font-size:.8rem;opacity:.95;margin-top:1px}
-#spyExit{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.25);border:1px solid #fff;color:#fff;border-radius:999px;padding:5px 12px;font-size:.72rem;cursor:pointer;font-weight:700}
+#spyBanner .l2{font-size:.8rem;opacity:.97;margin-top:1px}
+#spyExit{position:absolute;right:12px;top:12px;background:rgba(255,255,255,.25);border:1px solid #fff;color:#fff;border-radius:999px;padding:5px 12px;font-size:.72rem;cursor:pointer;font-weight:700}
 #spySky{position:fixed;inset:0;pointer-events:none;z-index:2999;overflow:hidden}
-.spk{position:absolute;top:-8vh;animation:spkfall linear infinite;opacity:.92;user-select:none}
+.spk{position:absolute;top:-8vh;animation:spkfall linear infinite;opacity:.95;user-select:none}
 @keyframes spkfall{0%{transform:translateY(-12vh) rotate(0)}100%{transform:translateY(114vh) rotate(360deg)}}
-.spy-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:3001;background:#fff;color:#a020f0;
-  border:2px solid #ff4fa3;border-radius:999px;padding:12px 24px;font-weight:800;letter-spacing:.02em;
-  box-shadow:0 12px 30px rgba(160,32,240,.4);animation:pop .4s ease}
+.spy-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:3001;background:#fff;color:#ff8200;
+  border:2px solid #ff8200;border-radius:999px;padding:12px 24px;font-weight:800;letter-spacing:.02em;
+  box-shadow:0 12px 30px rgba(255,130,0,.4);animation:pop .4s ease}
 @keyframes pop{0%{transform:translateX(-50%) scale(.6);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 </style>
 </head><body>
@@ -113,10 +114,10 @@ fetch('/api/hq/overview',{headers:{'Accept':'application/json'}}).then(function(
 (function(){
   var title=document.querySelector('.top h1'); if(!title) return;
   var banner=document.createElement('div'); banner.id='spyBanner';
-  banner.innerHTML='<div class="l1">&#10022; HOLLY&rsquo;S TOP-SECRET SPY CLUB &#10022;</div><div class="l2">Trenchcoat Twins Detective Agency &middot; <em>&ldquo;We solve any mahjong mystery by dinner time!&rdquo;</em></div><button id="spyExit">back to HQ &times;</button>';
+  banner.innerHTML='<div class="l1">🍊 HOLLY&rsquo;S VOL NATION HQ 🍊</div><div class="l2">Rocky Top Command Center &middot; <em>&ldquo;It&rsquo;s Football Time in Tennessee &mdash; Go Vols!&rdquo;</em> 🐾</div><button id="spyExit">back to HQ &times;</button>';
   document.body.appendChild(banner);
   document.getElementById('spyExit').addEventListener('click',function(e){e.stopPropagation();setSpy(false);});
-  var em=['✦','✧','💖','⭐','🎀','💜','🦋','🕵️'];
+  var em=['🍊','🐾','🏈','🧡','⭐','✓','〽️'];
   function sky(on){
     var sk=document.getElementById('spySky');
     if(on){ if(sk)return; sk=document.createElement('div'); sk.id='spySky'; document.body.appendChild(sk);
@@ -130,7 +131,7 @@ fetch('/api/hq/overview',{headers:{'Accept':'application/json'}}).then(function(
     document.body.classList.toggle('spy',on);
     banner.style.display=on?'block':'none';
     sky(on);
-    if(on) toast('🔓 ACCESS GRANTED — welcome, Agent Holly');
+    if(on) toast('🍊 ROCKY TOP — welcome, Vol Holly!');
   }
   var clicks=0,timer=null;
   title.addEventListener('click',function(){
