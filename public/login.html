@@ -110,8 +110,12 @@ function applyMode(){
 async function init(){
   try{
     var s=await fetch('/api/auth/state').then(function(r){return r.json();});
-    if(s.authed && s.subscribed){ location.href='/dashboard'; return; }
-    if(s.authed && !s.subscribed){ var rw=document.getElementById('resumeWrap'); if(rw) rw.style.display='block'; }
+    // Never auto-forward — always show the sign-in form. If already signed in,
+    // offer an optional link through instead of jumping there automatically.
+    if(s.authed){ var rw=document.getElementById('resumeWrap'); if(rw){ var a=rw.querySelector('a');
+      if(a){ if(s.subscribed){ a.href='/dashboard'; a.innerHTML='You&rsquo;re already signed in &mdash; continue to your dashboard &rarr;'; }
+        else { a.href='/subscribe'; a.innerHTML='You&rsquo;re signed in &mdash; finish setting up &rarr;'; } }
+      rw.style.display='block'; } }
     if(s.needsSetup){ mode='setup'; }
     else {
       var qp=new URLSearchParams(location.search);
