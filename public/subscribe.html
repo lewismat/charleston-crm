@@ -2,22 +2,20 @@
 <link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Start your subscription — Charleston</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--logo:#3B5C41;--logo-2:#4A6E50;--logo-dk:#2C4630;--gold:#C9A227;--gold-dp:#9A7A22;
---stripe-a:#FDF6D8;--stripe-b:#FCE44D;--ivory:#FFFDF4;--parchment:#FBF6E4;--ink:#22301F;--stone:#6A7566;--velvet:#3B5C41;
+--stripe-a:#FDF6D8;--stripe-b:#FCE44D;--ivory:#FFFDF4;--ink:#22301F;--stone:#6A7566;--velvet:#3B5C41;
 --display:'Playfair Display',Georgia,serif;--body:'Inter',system-ui,sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--body);font-weight:300;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;
-padding:34px 18px;background:var(--stripe-a);overflow-x:hidden}
-/* soft striped table + ivory wash — matches the landing page exactly */
+padding:44px 18px;background:var(--stripe-a);overflow-x:hidden}
+/* soft striped table + ivory wash + a centred glow so text reads without a card */
 .scene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.scene .stripes{position:absolute;inset:0;background:repeating-linear-gradient(90deg,var(--stripe-a) 0 30px,var(--stripe-b) 30px 60px);opacity:.9}
+.scene .stripes{position:absolute;inset:0;background:repeating-linear-gradient(90deg,var(--stripe-a) 0 30px,var(--stripe-b) 30px 60px);opacity:.85}
 .scene .wash{position:absolute;inset:0;background:
-linear-gradient(180deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.16) 22%),
-linear-gradient(180deg,rgba(255,253,244,.6),rgba(255,253,244,.5) 40%,rgba(255,253,244,.66))}
+radial-gradient(120% 80% at 50% 42%,rgba(255,253,244,.86) 0%,rgba(255,253,244,.55) 45%,rgba(255,253,244,.32) 100%)}
 @media(max-width:520px){.scene .stripes{background:repeating-linear-gradient(90deg,var(--stripe-a) 0 20px,var(--stripe-b) 20px 40px)}}
-/* floating mah jong tiles */
 #tiles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .mtile{position:absolute;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#FFFEF9,#F4EFDC 78%,#E4DBBB);
 border:1px solid #D8CFAF;border-radius:14%;box-shadow:inset 0 -5px 0 rgba(76,91,64,.24),0 4px 9px rgba(59,72,50,.18);
@@ -25,59 +23,55 @@ font-family:'Cormorant Garamond',serif;font-weight:700;user-select:none;opacity:
 .drift{animation:mjdrift linear infinite}
 @keyframes mjdrift{0%{transform:translateY(112vh) rotate(-12deg)}100%{transform:translateY(-20vh) rotate(14deg)}}
 @media(prefers-reduced-motion:reduce){.drift{animation:none}}
-/* airy panel (no heavy gold frame) */
-.panel{position:relative;z-index:1;width:100%;max-width:460px;text-align:center;
-background:linear-gradient(168deg,rgba(255,255,255,.94),rgba(255,253,244,.92) 30%,rgba(251,246,228,.92));
-border:1px solid rgba(201,162,39,.42);border-radius:22px;padding:40px 36px 32px;
-box-shadow:0 2px 0 rgba(255,255,255,.8) inset,0 26px 60px rgba(59,92,65,.20);backdrop-filter:blur(2px)}
-.brand{font-family:'Cormorant Garamond',serif;font-weight:700;letter-spacing:.03em;font-size:2rem;color:var(--logo)}
-.eyebrow{font-size:.66rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-dp);font-weight:600;margin-top:14px}
-.toggle{display:flex;gap:8px;justify-content:center;margin:14px 0 14px}
-.pt{padding:8px 16px;border-radius:999px;border:1px solid var(--logo);background:#fff;color:var(--logo);font-weight:600;cursor:pointer;font-size:.85rem;font-family:inherit}
+/* airy content — no card */
+.content{position:relative;z-index:1;width:100%;max-width:540px;text-align:center}
+.eyebrow{font-size:.68rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-dp);font-weight:600}
+h1{font-family:var(--display);font-style:italic;font-weight:600;font-size:2.5rem;line-height:1.08;color:var(--velvet);margin:10px 0 6px}
+.lede{color:var(--stone);font-size:1rem;max-width:30rem;margin:0 auto 18px}
+.toggle{display:inline-flex;gap:8px;justify-content:center;margin:6px 0 12px}
+.pt{padding:8px 16px;border-radius:999px;border:1px solid var(--logo);background:rgba(255,255,255,.7);color:var(--logo);font-weight:600;cursor:pointer;font-size:.85rem;font-family:inherit;backdrop-filter:blur(2px)}
 .pt-on{background:var(--logo);color:#f6f3e2}
-.price{font-family:var(--display);font-style:italic;color:var(--logo);line-height:1;margin:6px 0 2px}
-.price .cur{font-size:1.6rem;vertical-align:super;color:var(--gold-dp)}.price .amt{font-size:3.9rem;font-weight:600}
-.price .per{font-family:var(--body);font-size:.85rem;font-weight:300;color:var(--stone);font-style:normal}
-.cancel{font-size:.86rem;color:var(--stone);margin-bottom:18px}.cancel b{color:var(--ink);font-weight:600}
-.rule{height:5px;border:none;width:120px;margin:18px auto;border-radius:3px;background:linear-gradient(90deg,transparent,#C9A227 20%,#E8D08A 50%,#C9A227 80%,transparent)}
-ul{list-style:none;text-align:left;margin:0 auto 24px;max-width:330px}
-li{display:flex;gap:11px;padding:7px 0;font-size:.93rem;color:var(--ink)}
-li svg{flex:none;margin-top:4px;color:var(--gold-dp)}
-.btn{width:100%;padding:15px;border:none;border-radius:12px;cursor:pointer;font-size:1.02rem;font-weight:700;letter-spacing:.01em;color:#FFF7EE;
-background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 10px 24px rgba(152,55,31,.32);border:1px solid #7d2c17}
+.price{font-family:var(--display);font-style:italic;color:var(--logo);line-height:1;margin:4px 0 2px}
+.price .cur{font-size:1.7rem;vertical-align:super;color:var(--gold-dp)}.price .amt{font-size:4.4rem;font-weight:600}
+.price .per{font-family:var(--body);font-size:.9rem;font-weight:300;color:var(--stone);font-style:normal}
+.cancel{font-size:.9rem;color:var(--stone);margin-bottom:16px}.cancel b{color:var(--ink);font-weight:600}
+.feat{list-style:none;display:inline-flex;flex-direction:column;gap:2px;text-align:left;margin:6px auto 22px}
+.feat li{display:flex;gap:11px;padding:6px 0;font-size:.96rem;color:var(--ink)}
+.feat svg{flex:none;margin-top:4px;color:var(--gold-dp)}
+.btn{display:inline-block;min-width:280px;padding:16px 30px;border:none;border-radius:14px;cursor:pointer;font-size:1.06rem;font-weight:700;color:#FFF7EE;
+background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(152,55,31,.34);border:1px solid #7d2c17}
 .btn:hover{filter:brightness(1.06)}.btn:disabled{opacity:.6;cursor:default}
 .msg{margin-top:12px;font-size:.86rem;min-height:1.1em}.msg.err{color:#8C3F1E}
-.fine{font-size:.76rem;color:#5f6b58;margin-top:12px;line-height:1.5}.fine a{color:var(--gold-dp)}
-.note{margin-top:8px;font-size:.76rem;color:var(--stone)}
+.fine{font-size:.78rem;color:#5f6b58;margin-top:14px;line-height:1.55;max-width:30rem;margin-left:auto;margin-right:auto}.fine a{color:var(--gold-dp)}
+.note{margin-top:8px;font-size:.78rem;color:var(--stone)}
 .signout{display:inline-block;margin-top:14px;font-size:.82rem;color:var(--stone)}
 </style></head><body>
 <div class="scene"><div class="stripes"></div><div class="wash"></div></div>
 <div id="tiles" aria-hidden="true"></div>
-<div class="panel">
-  <div class="brand">Charleston</div>
+<div class="content">
+  <p class="eyebrow">One happy home</p>
+  <h1>Everything in one place.</h1>
+  <p class="lede">Bookings, payments, students and reminders — one calm home for your whole mah jong studio.</p>
   <div id="banner"></div>
-  <p class="eyebrow">Your studio membership</p>
   <div class="toggle" id="planToggle">
     <button type="button" class="pt pt-on" data-plan="monthly">Monthly</button>
     <button type="button" class="pt" data-plan="annual">Annual &middot; 2 months free</button>
   </div>
   <p class="price"><span class="cur">$</span><span class="amt">9.99</span><span class="per"> / month</span></p>
   <p class="cancel"><b>14 days free</b>, then $9.99/month. Cancel anytime — no phone call, no guilt.</p>
-  <hr class="rule">
-  <ul id="feat">
+  <ul class="feat">
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Unlimited events, students and bookings</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Invoices, online payments, waitlists &amp; reminders</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Your own booking page and public card</li>
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Everything stays yours, always</li>
   </ul>
-  <button class="btn" id="go">Start 14-day free trial</button>
+  <div><button class="btn" id="go">Start 14-day free trial</button></div>
   <p class="msg" id="msg"></p>
   <p class="fine">Your card won’t be charged until the trial ends. By continuing you agree to our <a href="/terms.html">Terms</a> and <a href="/privacy.html">Privacy Policy</a>. $9.99/month after the free trial, cancel anytime.</p>
   <p class="note">Secure checkout by Stripe.</p>
   <a class="signout" href="#" id="out">Sign out</a>
 </div>
 <script>
-// floating tiles confined to this page
 (function(){
   var sky=document.getElementById('tiles'); if(!sky) return;
   var G=['中','發','一','二','三','四','五','六','七','八','九','東','南','西','北'];
