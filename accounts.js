@@ -921,6 +921,16 @@ router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirn
 // --- Social share image (og.png) rendered in-browser with the real Yellowtail script,
 // then cached in app_config so link previews show the correct logo/type. ---
 const OG_SECRET = process.env.OG_SECRET || 'cs_og_7Kq2Xr9v';
+// Apple Pay domain verification file — served from app_config so it can be set
+// without a redeploy once the domain is registered in Stripe.
+router.get('/.well-known/apple-developer-merchantid-domain-association', async (req, res) => {
+  try { const rows = await sb('app_config?key=eq.apple_pay_assoc&select=value&limit=1').catch(() => []); const v = rows && rows[0] && rows[0].value; if (!v) return res.status(404).send(''); res.set('Content-Type', 'text/plain'); res.send(v); }
+  catch (e) { res.status(404).send(''); }
+});
+router.post('/api/applepay/assoc', async (req, res) => {
+  try { if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false }); const val = String((req.body && req.body.content) || '').trim(); if (val.length < 20) return res.status(400).json({ ok: false }); await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'apple_pay_assoc', value: val, updated_at: new Date().toISOString() }) }); res.json({ ok: true }); }
+  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
 router.get('/og.png', async (req, res) => {
   try {
     const rows = await sb(`app_config?key=eq.og_png&select=value&limit=1`).catch(() => []);

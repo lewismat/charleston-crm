@@ -17,6 +17,7 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY |
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
 const PRICE_ID = process.env.STRIPE_PRICE_ID || '';
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const PUBLISHABLE = process.env.STRIPE_PUBLISHABLE_KEY || '';
 const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 
 const ACTIVE = new Set(['active', 'trialing']);
@@ -126,6 +127,45 @@ router.post('/api/billing/checkout', auth.requireAuth, async (req, res) => {
     console.error('[billing] checkout:', e.message);
     res.status(500).json({ ok: false, error: 'Could not start checkout. Please try again.' });
   }
+});
+
+/* ---------------- on-page card form (Stripe Payment Element) ----------------
+   Collect the card with a SetupIntent (no charge during the 14-day trial), then
+   create the trialing subscription with that card as default. Falls back to
+   hosted Checkout when the platform publishable key isn't configured. */
+async function ensureCustomer(acct) {
+  if (acct.stripe_customer_id) return acct.stripe_customer_id;
+  const c = await stripe('customers', { email: acct.email || '', name: acct.name || '', 'metadata[account_id]': acct.id });
+  await patchAccount(acct.id, { stripe_customer_id: c.id });
+  acct.stripe_customer_id = c.id;
+  return c.id;
+}
+router.get('/api/billing/pk', (req, res) => res.json({ publishableKey: PUBLISHABLE, available: !!PUBLISHABLE }));
+router.post('/api/billing/setup-intent', auth.requireAuth, async (req, res) => {
+  try {
+    if (!STRIPE_KEY || !PRICE_ID) return res.status(503).json({ ok: false, error: 'Billing is not configured yet.' });
+    if (!PUBLISHABLE) return res.json({ ok: true, fallback: true });
+    const acct = await accountById(req.account.id); if (!acct) return res.status(404).json({ ok: false });
+    const customer = await ensureCustomer(acct);
+    const si = await stripe('setup_intents', { customer, 'automatic_payment_methods[enabled]': 'true', usage: 'off_session', 'metadata[account_id]': acct.id });
+    res.json({ ok: true, clientSecret: si.client_secret, publishableKey: PUBLISHABLE });
+  } catch (e) { console.error('[billing] setup-intent:', e.message); res.status(500).json({ ok: false, error: 'Could not start. Please try again.' }); }
+});
+router.post('/api/billing/complete', auth.requireAuth, async (req, res) => {
+  try {
+    const acct = await accountById(req.account.id); if (!acct) return res.status(404).json({ ok: false });
+    const sid = String((req.body && req.body.setupIntentId) || '');
+    let pm = '';
+    if (sid) { const si = await stripe('setup_intents/' + enc(sid), null, 'GET'); pm = (si && si.payment_method) || ''; if (si && si.customer && !acct.stripe_customer_id) { await patchAccount(acct.id, { stripe_customer_id: si.customer }); acct.stripe_customer_id = si.customer; } }
+    if (!pm) return res.status(400).json({ ok: false, error: 'Card was not saved. Please try again.' });
+    const customer = acct.stripe_customer_id || await ensureCustomer(acct);
+    await stripe('customers/' + enc(customer), { 'invoice_settings[default_payment_method]': pm });
+    const plan = (req.body && req.body.plan) === 'annual' ? 'annual' : 'monthly';
+    let priceId = PRICE_ID; if (plan === 'annual') { const ap = await ensureAnnualPrice(); if (ap) priceId = ap; }
+    const sub = await stripe('subscriptions', { customer, 'items[0][price]': priceId, trial_period_days: '14', default_payment_method: pm, 'metadata[account_id]': acct.id });
+    await syncFromSubscription(sub);
+    res.json({ ok: true, active: ACTIVE.has(sub.status) });
+  } catch (e) { console.error('[billing] complete:', e.message); res.status(500).json({ ok: false, error: 'Could not start your trial. Please try again.' }); }
 });
 
 /* ---------------- billing portal: manage / cancel ---------------- */

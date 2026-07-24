@@ -2,6 +2,7 @@
 <link rel="icon" type="image/svg+xml" href="/charleston-favicon.svg">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Start your subscription — Charleston</title>
+<script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--logo:#3B5C41;--logo-2:#4A6E50;--logo-dk:#2C4630;--gold:#C9A227;--gold-dp:#9A7A22;
@@ -66,6 +67,11 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
     <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m20 6-11 11-5-5"/></svg>Everything stays yours, always</li>
   </ul>
   <div><button class="btn" id="go">Start 14-day free trial</button></div>
+  <div id="payArea" style="display:none;max-width:420px;margin:16px auto 0;text-align:left;background:rgba(255,253,246,.93);border:1px solid rgba(201,162,39,.4);border-radius:16px;padding:18px;box-shadow:0 18px 40px rgba(59,92,65,.18)">
+    <div id="paymentElement"></div>
+    <button class="btn" id="payNow" style="width:100%;min-width:0;margin-top:14px">Start free trial</button>
+    <div id="payMsg" class="note" style="min-height:1.1em;margin-top:8px"></div>
+  </div>
   <p class="msg" id="msg"></p>
   <p class="fine">Your card won’t be charged until the trial ends. By continuing you agree to our <a href="/terms.html">Terms</a> and <a href="/privacy.html">Privacy Policy</a>. $9.99/month after the free trial, cancel anytime.</p>
   <p class="note">Secure checkout by Stripe.</p>
@@ -106,6 +112,8 @@ window.__plan='monthly';
   if(!st.authed){location.href='/login';return;}
   if(st.subscribed){location.href='/dashboard';return;}
   var q=new URLSearchParams(location.search);
+  var siParam=q.get('setup_intent');
+  if(q.get('trial') && siParam){ $('banner').innerHTML='<p class="msg">Starting your trial…</p>'; await completeTrial(siParam); return; }
   if(q.get('cancelled')) $('banner').innerHTML='<p class="msg">Checkout cancelled — you can start whenever you’re ready.</p>';
   if(q.get('pending')){
     $('banner').innerHTML='<p class="msg">Confirming your payment…</p>';
@@ -117,13 +125,38 @@ window.__plan='monthly';
     $('banner').innerHTML='<p class="msg">Your payment is still processing. If you were charged, refresh this page in a moment.</p>';
   }
 })();
+function ensureStripe(){return new Promise(function(res){if(window.Stripe){res(true);return;}var sc=document.createElement('script');sc.src='https://js.stripe.com/v3/';sc.onload=function(){res(!!window.Stripe);};sc.onerror=function(){res(false);};document.head.appendChild(sc);});}
+function hostedCheckout(){var m=$('msg');m.className='msg';m.textContent='Taking you to secure checkout…';$('go').disabled=true;
+  fetch('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:window.__plan||'monthly'})}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&d.url){location.href=d.url;return;} m.className='msg err';m.textContent=(d&&d.error)||'Could not start checkout.';$('go').disabled=false;
+  }).catch(function(){m.className='msg err';m.textContent='Could not start checkout.';$('go').disabled=false;});}
+async function completeTrial(setupIntentId){
+  var pm=$('payMsg'); if(pm){pm.style.color='var(--stone)';pm.textContent='Starting your trial…';}
+  var comp=await fetch('/api/billing/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:window.__plan||'monthly',setupIntentId:setupIntentId})}).then(function(r){return r.json();}).catch(function(){return{};});
+  if(comp.ok){location.href='/dashboard?welcome=1';return true;}
+  if(pm){pm.style.color='#8C3F1E';pm.textContent=(comp&&comp.error)||'Could not start your trial.';}
+  return false;
+}
 $('go').addEventListener('click',async function(){
-  var m=$('msg');m.className='msg';m.textContent='Taking you to secure checkout…';$('go').disabled=true;
-  try{
-    var d=await fetch('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:window.__plan||'monthly'})}).then(function(r){return r.json()});
-    if(!d.ok||!d.url)throw new Error(d.error||'Could not start checkout.');
-    location.href=d.url;
-  }catch(e){m.className='msg err';m.textContent=e.message;$('go').disabled=false;}
+  var m=$('msg');m.className='msg';m.textContent='Loading secure form…';$('go').disabled=true;
+  var r=await fetch('/api/billing/setup-intent',{method:'POST'}).then(function(x){return x.json();}).catch(function(){return{};});
+  if(!r||!r.ok||r.fallback){ hostedCheckout(); return; }
+  if(!(await ensureStripe())){ hostedCheckout(); return; }
+  var stripe=Stripe(r.publishableKey);
+  var appearance={theme:'flat',variables:{colorPrimary:'#3B5C41',colorText:'#22301F',colorTextSecondary:'#5D6656',colorBackground:'#FFFDF6',fontFamily:'Inter, system-ui, sans-serif',borderRadius:'10px',colorDanger:'#8C3F1E',spacingUnit:'4px'},
+    rules:{'.Input':{border:'1px solid #E3D6B4',boxShadow:'none',padding:'11px 12px'},'.Input:focus':{border:'1px solid #C9A227',boxShadow:'0 0 0 3px rgba(201,162,39,.16)'},'.Label':{color:'#6f8a6a',fontWeight:'600'},'.Tab--selected':{borderColor:'#3B5C41',boxShadow:'0 0 0 1px #3B5C41'}}};
+  window.__elements=stripe.elements({clientSecret:r.clientSecret,appearance:appearance});
+  var pe=window.__elements.create('payment',{layout:'tabs'}); pe.mount('#paymentElement');
+  window.__stripe=stripe;
+  m.textContent=''; $('go').style.display='none'; $('payArea').style.display='block';
+  $('payNow').onclick=async function(){
+    var pm=$('payMsg');pm.style.color='var(--stone)';pm.textContent='';$('payNow').disabled=true;$('payNow').textContent='Processing…';
+    var resx=await window.__stripe.confirmSetup({elements:window.__elements,confirmParams:{return_url:location.origin+'/subscribe?trial=1'},redirect:'if_required'});
+    if(resx.error){pm.style.color='#8C3F1E';pm.textContent=resx.error.message||'Could not save your card.';$('payNow').disabled=false;$('payNow').textContent='Start free trial';return;}
+    var si=resx.setupIntent;
+    if(si&&si.status==='succeeded'){ await completeTrial(si.id); }
+    else { pm.style.color='#8C3F1E';pm.textContent='Card status: '+((si&&si.status)||'unknown');$('payNow').disabled=false;$('payNow').textContent='Start free trial'; }
+  };
 });
 $('out').addEventListener('click',function(e){e.preventDefault();fetch('/api/auth/logout',{method:'POST'}).then(function(){location.href='/login';});});
 </script></body></html>
