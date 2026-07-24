@@ -11,6 +11,7 @@
     logout:'<path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9"/><path d="M14 12h7M18 8l3 4-3 4"/>',
     announce:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 3.5v-11L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14.5 8.5a4.5 4.5 0 0 1 0 7"/>',
     invoices:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+    hq:'<path d="M12 3 4 6v5c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>'
   };
   function svg(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>';}
@@ -90,5 +91,8 @@
   Array.prototype.forEach.call(sb.querySelectorAll('a'),function(a){a.addEventListener('click',function(){document.body.classList.remove('sb-open');});});
   fetch('/api/profile').then(function(r){return r.json();}).then(function(d){
     var url=d&&d.profile&&d.profile.photo_url; if(url){var im=document.getElementById('sbMonoImg'); if(im) im.src=url;}
+  }).catch(function(){});
+  fetch('/api/auth/state').then(function(r){return r.json();}).then(function(st){
+    if(st&&st.superadmin){ var nav=sb.querySelector('.sb-nav'); if(nav){ var a=document.createElement('a'); a.href='/hq'; if(path==='/hq')a.className='active'; a.innerHTML='<span class="sb-ico">'+svg('hq')+'</span><span class="lbl">HQ</span>'; a.addEventListener('click',function(){document.body.classList.remove('sb-open');}); nav.appendChild(a); } }
   }).catch(function(){});
 })();

@@ -143,8 +143,14 @@ async function ensureCustomer(acct) {
 }
 router.get('/api/billing/pk', async (req, res) => { const pk = await platformPk(); res.json({ publishableKey: pk, available: !!pk }); });
 // Owner sets the platform publishable key here (no Render redeploy needed).
+async function acctIsSuper(accountId) {
+  try { const a = await accountById(accountId); if (!a || !a.email) return false;
+    const list = ((await appConfig('superadmin_emails')) || '').toLowerCase().split(/[,\s]+/).filter(Boolean);
+    return list.includes(String(a.email).toLowerCase()); } catch (e) { return false; }
+}
 router.post('/api/billing/platform-pk', auth.requireAuth, async (req, res) => {
   try {
+    if (!(await acctIsSuper(req.account.id))) return res.status(403).json({ ok: false, error: 'Only the platform owner can set this.' });
     const pk = String((req.body && req.body.publishableKey) || '').trim();
     if (pk && !/^pk_/.test(pk)) return res.status(400).json({ ok: false, error: 'Publishable key should start with pk_.' });
     await setAppConfig('stripe_platform_pk', pk);

@@ -195,10 +195,12 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
       <li>Paste the key above and press <b>Test connection</b>.</li>
     </ol>
     <div class="note">A restricted key cannot move your money even if it leaked. Your key is stored on the server and never shown on this page again.</div>
-    <hr style="border:none;border-top:1px dashed var(--edge);margin:18px 0 4px">
-    <label>Publishable key for client sign-ups <span style="font-weight:400;color:#5D6656">— makes the $9.99 signup checkout match your site (no Stripe redirect)</span></label>
-    <input id="platform_pk" placeholder="pk_test_… (your platform Stripe account)" autocomplete="off">
-    <div class="btnrow"><button class="save" id="savePlatformPk">Save</button><span class="msg" id="platformPkMsg"></span></div>
+    <div id="platformPkWrap" style="display:none">
+      <hr style="border:none;border-top:1px dashed var(--edge);margin:18px 0 4px">
+      <label>Publishable key for client sign-ups <span style="font-weight:400;color:#5D6656">— platform owner only; makes the $9.99 signup checkout match the site</span></label>
+      <input id="platform_pk" placeholder="pk_test_… (your platform Stripe account)" autocomplete="off">
+      <div class="btnrow"><button class="save" id="savePlatformPk">Save</button><span class="msg" id="platformPkMsg"></span></div>
+    </div>
   </div>
 
   <div class="panel" data-cat="texts">
@@ -353,7 +355,9 @@ $('inv_new').addEventListener('click',async function(){
   if(d.ok){m.className='msg ok';m.textContent='New code: '+d.invite.code;loadInvites();}
   else{m.className='msg err';m.textContent=d.error||'Error';}
 });
-(async function(){if(await guard()){loadStatus();loadInvites();}})();
+(async function(){if(await guard()){loadStatus();loadInvites();
+  try{var st=await fetch('/api/auth/state').then(function(r){return r.json();});if(st&&st.superadmin){var w=document.getElementById('platformPkWrap');if(w)w.style.display='block';}}catch(e){}
+}})();
 </script>
 <script src="/toast.js"></script>
 <script src="/sidebar.js"></script>

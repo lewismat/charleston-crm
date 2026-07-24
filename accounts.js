@@ -173,7 +173,8 @@ router.get('/api/auth/state', async (req, res) => {
       } catch (e) {}
     }
     const authed = !!u && exists;
-    res.json({ ok: true, authed, subscription: sub, subscribed: active,
+    const superadmin = authed ? await superadminByAccount(u.id) : false;
+    res.json({ ok: true, authed, subscription: sub, subscribed: active, superadmin,
       user: authed ? { id: u.id, role: u.role, name: u.name, slug: u.slug || null } : null });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
@@ -910,13 +911,18 @@ router.post('/api/auth/reset', async (req, res) => {
    Private to the SaaS operator (is_superadmin). Shows every studio, MRR,
    trials and churn. Distinct from the per-studio /api/admin/* scheduling
    routes, which are for individual studio owners. */
-async function isSuperadmin(req) {
-  if (!req.account) return false;
+async function superadminByAccount(accountId) {
+  if (!accountId) return false;
   try {
-    const rows = await sb(`accounts?id=eq.${enc(req.account.id)}&select=is_superadmin&limit=1`);
-    return !!(rows && rows[0] && rows[0].is_superadmin);
+    const rows = await sb(`accounts?id=eq.${enc(accountId)}&select=email&limit=1`).catch(() => []);
+    const email = rows && rows[0] && rows[0].email;
+    if (!email) return false;
+    const cfg = await sb(`app_config?key=eq.superadmin_emails&select=value&limit=1`).catch(() => []);
+    const list = (((cfg && cfg[0] && cfg[0].value) || '')).toLowerCase().split(/[,\s]+/).filter(Boolean);
+    return list.includes(String(email).toLowerCase());
   } catch (e) { return false; }
 }
+async function isSuperadmin(req) { return req.account ? superadminByAccount(req.account.id) : false; }
 async function requireSuperadmin(req, res, next) {
   const wantsHtml = (req.headers.accept || '').includes('text/html');
   const u = currentUser(req);
@@ -927,6 +933,18 @@ async function requireSuperadmin(req, res, next) {
 }
 
 router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'hq.html')));
+router.post('/api/hq/grant-superadmin', async (req, res) => {
+  try {
+    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
+    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+    if (!isEmail(email)) return res.status(400).json({ ok: false, error: 'valid email required' });
+    const cfg = await sb(`app_config?key=eq.superadmin_emails&select=value&limit=1`).catch(() => []);
+    const set = new Set((((cfg && cfg[0] && cfg[0].value) || '')).toLowerCase().split(/[,\s]+/).filter(Boolean));
+    set.add(email);
+    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'superadmin_emails', value: [...set].join(','), updated_at: new Date().toISOString() }) });
+    res.json({ ok: true, emails: [...set] });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
 
 // --- Social share image (og.png) rendered in-browser with the real Yellowtail script,
 // then cached in app_config so link previews show the correct logo/type. ---
