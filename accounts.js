@@ -933,18 +933,6 @@ async function requireSuperadmin(req, res, next) {
 }
 
 router.get('/hq', requireSuperadmin, (req, res) => res.sendFile(path.join(__dirname, 'public', 'hq.html')));
-router.post('/api/hq/grant-superadmin', async (req, res) => {
-  try {
-    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
-    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
-    if (!isEmail(email)) return res.status(400).json({ ok: false, error: 'valid email required' });
-    const cfg = await sb(`app_config?key=eq.superadmin_emails&select=value&limit=1`).catch(() => []);
-    const set = new Set((((cfg && cfg[0] && cfg[0].value) || '')).toLowerCase().split(/[,\s]+/).filter(Boolean));
-    set.add(email);
-    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'superadmin_emails', value: [...set].join(','), updated_at: new Date().toISOString() }) });
-    res.json({ ok: true, emails: [...set] });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
-});
 
 // --- Social share image (og.png) rendered in-browser with the real Yellowtail script,
 // then cached in app_config so link previews show the correct logo/type. ---
