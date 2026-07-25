@@ -95,7 +95,8 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
   </ul>
   <div><button class="btn" id="go">Start 14-day free trial</button></div>
   <div id="payArea" style="display:none;max-width:420px;margin:16px auto 0;text-align:left;background:rgba(255,253,246,.93);border:1px solid rgba(201,162,39,.4);border-radius:16px;padding:18px;box-shadow:0 18px 40px rgba(59,92,65,.18)">
-    <div id="paymentElement"></div>
+    <label style="display:block;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#6f8a6a;font-weight:700;margin:0 0 6px">Card details</label>
+    <div id="paymentElement" style="border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff"></div>
     <button class="btn" id="payNow" style="width:100%;min-width:0;margin-top:14px">Start free trial</button>
     <div id="payMsg" class="note" style="min-height:1.1em;margin-top:8px"></div>
   </div>
@@ -171,15 +172,14 @@ $('go').addEventListener('click',async function(){
   if(!r||!r.ok||r.fallback){ hostedCheckout(); return; }
   if(!(await ensureStripe())){ hostedCheckout(); return; }
   var stripe=Stripe(r.publishableKey);
-  var appearance={theme:'flat',variables:{colorPrimary:'#3B5C41',colorText:'#22301F',colorTextSecondary:'#5D6656',colorBackground:'#FFFDF6',fontFamily:'Inter, system-ui, sans-serif',borderRadius:'10px',colorDanger:'#8C3F1E',spacingUnit:'4px'},
-    rules:{'.Input':{border:'1px solid #E3D6B4',boxShadow:'none',padding:'11px 12px'},'.Input:focus':{border:'1px solid #C9A227',boxShadow:'0 0 0 3px rgba(201,162,39,.16)'},'.Label':{color:'#6f8a6a',fontWeight:'600'},'.Tab--selected':{borderColor:'#3B5C41',boxShadow:'0 0 0 1px #3B5C41'}}};
-  window.__elements=stripe.elements({clientSecret:r.clientSecret,appearance:appearance});
-  var pe=window.__elements.create('payment',{layout:'tabs'}); pe.mount('#paymentElement');
-  window.__stripe=stripe;
+  var cardStyle={base:{fontFamily:'Inter, system-ui, sans-serif',fontSize:'16px',color:'#22301F','::placeholder':{color:'#9aa08e'}},invalid:{color:'#8C3F1E'}};
+  window.__elements=stripe.elements();
+  var card=window.__elements.create('card',{style:cardStyle}); card.mount('#paymentElement');
+  window.__stripe=stripe; window.__card=card; window.__cs=r.clientSecret;
   m.textContent=''; $('go').style.display='none'; $('payArea').style.display='block';
   $('payNow').onclick=async function(){
     var pm=$('payMsg');pm.style.color='var(--stone)';pm.textContent='';$('payNow').disabled=true;$('payNow').textContent='Processing…';
-    var resx=await window.__stripe.confirmSetup({elements:window.__elements,confirmParams:{return_url:location.origin+'/subscribe?trial=1'},redirect:'if_required'});
+    var resx=await window.__stripe.confirmCardSetup(window.__cs,{payment_method:{card:window.__card}});
     if(resx.error){pm.style.color='#8C3F1E';pm.textContent=resx.error.message||'Could not save your card.';$('payNow').disabled=false;$('payNow').textContent='Start free trial';return;}
     var si=resx.setupIntent;
     if(si&&si.status==='succeeded'){ await completeTrial(si.id); }

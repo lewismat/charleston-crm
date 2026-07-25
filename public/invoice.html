@@ -81,7 +81,7 @@ async function render(){
     if(d.canPay){
       html+='<div class="pay"><button class="paybtn" id="pay">Pay '+fmt(due)+' by card</button>'+
         '<div id="payArea" style="display:none;margin-top:14px;text-align:left">'+
-        '<div id="paymentElement"></div>'+
+        '<label style="display:block;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#6f8a6a;font-weight:700;margin:0 0 6px">Card details</label>'+'<div id="paymentElement" style="border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff"></div>'+
         '<button class="paybtn" id="payNow" style="margin-top:14px">Pay '+fmt(due)+'</button>'+
         '<button class="dlbtn" id="payCancel" style="margin-top:8px">Cancel</button>'+
         '<div id="payMsg" class="secure" style="min-height:1.1em;margin-top:8px"></div></div>'+
@@ -107,10 +107,9 @@ async function startPayment(d){
   if(r.fallback){ if(!(await hostedFallback())){ pb.disabled=false; pb.textContent='Pay '+fmt(due)+' by card'; alert('Could not start payment.'); } return; }
   if(!(await ensureStripe())){ if(!(await hostedFallback())){ pb.disabled=false; pb.textContent='Pay '+fmt(due)+' by card'; } return; }
   var stripe=Stripe(r.publishableKey);
-  var appearance={theme:'flat',variables:{colorPrimary:'#3B5C41',colorText:'#22301F',colorTextSecondary:'#5D6656',colorBackground:'#FFFDF6',fontFamily:'Inter, system-ui, sans-serif',borderRadius:'10px',colorDanger:'#B3542E',spacingUnit:'4px'},
-    rules:{'.Input':{border:'1px solid #E3D6B4',boxShadow:'none',padding:'11px 12px'},'.Input:focus':{border:'1px solid #C9A227',boxShadow:'0 0 0 3px rgba(201,162,39,.16)'},'.Label':{color:'#6f8a6a',fontWeight:'600'},'.Tab':{border:'1px solid #E3D6B4'},'.Tab--selected':{borderColor:'#3B5C41',boxShadow:'0 0 0 1px #3B5C41'}}};
-  var elements=stripe.elements({clientSecret:r.clientSecret, appearance:appearance});
-  var pe=elements.create('payment',{layout:'tabs'}); pe.mount('#paymentElement');
+  var cardStyle={base:{fontFamily:'Inter, system-ui, sans-serif',fontSize:'16px',color:'#22301F','::placeholder':{color:'#9aa08e'}},invalid:{color:'#B3542E'}};
+  var elements=stripe.elements();
+  var card=elements.create('card',{style:cardStyle}); card.mount('#paymentElement');
   pb.style.display='none';
   var sl=document.getElementById('secureLine'); if(sl) sl.style.display='none';
   var area=document.getElementById('payArea'); area.style.display='block';
@@ -119,7 +118,7 @@ async function startPayment(d){
   payNow.onclick=async function(){
     var pm=document.getElementById('payMsg'); pm.style.color='var(--stone)'; pm.textContent='';
     payNow.disabled=true; payNow.textContent='Processing…';
-    var resx=await stripe.confirmPayment({elements:elements, confirmParams:{return_url:location.origin+'/i/'+token+'?paid=1'}, redirect:'if_required'});
+    var resx=await stripe.confirmCardPayment(r.clientSecret,{payment_method:{card:card}});
     if(resx.error){ pm.style.color='#B3542E'; pm.textContent=resx.error.message||'Payment could not be completed.'; payNow.disabled=false; payNow.textContent='Pay '+fmt(due); return; }
     var pi=resx.paymentIntent;
     if(pi && (pi.status==='succeeded'||pi.status==='processing')){
