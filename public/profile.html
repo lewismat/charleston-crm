@@ -5,6 +5,7 @@
 <title>Your card — Charleston</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Karla:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
+.tbmnav,.nav{display:none!important}
 :root{--cream:#F7F2E4;--cream-2:#EFE7CC;--sage:#4C5B40;--sage-soft:#6B7A5C;--sage-dk:#3B4832;--gold:#C9A24B;--gold-soft:#E3CD96;--gold-dk:#8A6D14;--red:#B3542E;--ink:#2C3327;--ink-soft:#5D6656;--tile:#FBF8EF;--tile-edge:#DED3B4;--display:'Cormorant Garamond',Georgia,serif;--script:'Great Vibes',cursive;--body:'Karla',system-ui,sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--cream);color:var(--ink);min-height:100vh;background-image:repeating-linear-gradient(90deg,rgba(222,211,180,.18) 0 3px,transparent 3px 30px)}
@@ -82,7 +83,7 @@ input:focus,textarea:focus{outline:2px solid var(--gold);border-color:var(--gold
 
     <div class="panel">
       <h2>The basics</h2>
-      <div class="two"><div><label>Display name</label><input id="display_name" placeholder="Holly Lewis"></div>
+      <div class="two"><div><label>Display name</label><input id="display_name" placeholder="Jane Smith"></div>
         <div><label>Tagline</label><input id="tagline" placeholder="Elevated mahjong lessons & events"></div></div>
       <label>Photo <span style="text-transform:none;letter-spacing:0;color:var(--ink-soft);font-weight:400">(optional)</span></label>
       <div class="photorow">
@@ -155,7 +156,7 @@ function renderLinks(){
   $('linkRows').innerHTML=links.map(function(l,i){
     return '<div class="row"><button class="iconbtn" data-t="l" data-i="'+i+'">'+(window.tbmIcon(l.icon)||window.tbmIcon('sparkle'))+'</button>'+
       '<div class="fields"><input placeholder="Label (e.g. Instagram)" data-t="l" data-k="label" data-i="'+i+'" value="'+esc(l.label)+'">'+
-      '<input placeholder="Link (e.g. instagram.com/tampabaymahj)" data-t="l" data-k="url" data-i="'+i+'" value="'+esc(l.url)+'"></div>'+
+      '<input placeholder="Link (e.g. instagram.com/yourstudio)" data-t="l" data-k="url" data-i="'+i+'" value="'+esc(l.url)+'"></div>'+
       '<button class="del" data-t="l" data-i="'+i+'" title="Remove">×</button></div>';
   }).join('');
   wire('linkRows');

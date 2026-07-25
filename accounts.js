@@ -45,7 +45,7 @@ async function sb(pathname, opts = {}) {
 const enc = (v) => encodeURIComponent(v);
 const clean = (v, max = 500) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
 
 // Fire-and-forget note to Holly (same FormSubmit path the booking side uses).
 async function tellHolly(subject, fields, oid) {
@@ -579,7 +579,7 @@ router.get('/api/settings', requireAuth, async (req, res) => {
       remindersEnabled: s.reminders_enabled !== false,
       reminderHours: s.reminder_hours || 24,
       notifyEmail: s.notify_email || '',
-      notifyDefault: process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com',
+      notifyDefault: process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com',
       emailConfigured: await mail.configured(),
       resendHint: s.resend_api_key ? ('•••• ' + String(s.resend_api_key).slice(-4)) : '',
       emailFrom: process.env.FROM_EMAIL || s.from_email || '',
@@ -687,7 +687,7 @@ router.get('/api/cal/:file', async (req, res) => {
 router.post('/api/settings/email/test', requireAuth, async (req, res) => {
   try {
     const rows = await sb(`settings?${oidF(ownerId(req))}&select=notify_email&limit=1`).catch(() => []);
-    const to = (rows && rows[0] && rows[0].notify_email) || process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
+    const to = (rows && rows[0] && rows[0].notify_email) || process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
     const out = await mail.ownerAlert(to, 'Test email from Charleston', {
       Status: 'Email delivery is working.',
       'Sent to': to,

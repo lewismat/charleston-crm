@@ -34,7 +34,7 @@ async function cfg() {
   const val = {
     key: process.env.RESEND_API_KEY || row.resend_api_key || '',
     from: process.env.FROM_EMAIL || row.from_email || '',
-    replyTo: process.env.REPLY_TO || row.notify_email || process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com',
+    replyTo: process.env.REPLY_TO || row.notify_email || process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com',
   };
   _cache = { at: Date.now(), val };
   return val;

@@ -23,7 +23,7 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SB_KEY = process.env.SUPABASE_KEY || '';
 const USE_SB = !!(SB_URL && SB_KEY);
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
 
 // ---------- local JSON fallback ----------
 function loadDB() {
