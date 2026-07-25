@@ -146,6 +146,11 @@ button{padding:12px 22px;border:none;border-radius:11px;font-family:var(--body);
     <div class="btnrow"><button class="save" id="pw_save">Update password</button><span class="msg" id="pw_msg"></span></div>
   </div>
 
+  <div class="panel" data-cat="subscription">
+    <h2>My subscription</h2>
+    <div id="subWrap" style="font-size:.95rem">Loading…</div>
+  </div>
+
   <div class="panel" data-cat="team">
     <h2>Team &amp; invites</h2>
     <p style="color:var(--ink-soft);font-size:.86rem;font-weight:300;margin:2px 0 8px">Sign-up is invite-only. Share a code and that person can create their own account — each code works once.</p>
@@ -366,7 +371,7 @@ $('inv_new').addEventListener('click',async function(){
 <script>
 (function(){
   var CATS=[
-    ['business','Business'],['appearance','Appearance'],['account','Account'],
+    ['business','Business'],['appearance','Appearance'],['account','Account'],['subscription','My subscription'],
     ['payments','Payments'],['email','Email'],['texts','Texts'],
     ['calendar','Calendar'],['team','Team'],['whatsnew','Releases']
   ];
@@ -480,4 +485,26 @@ $('inv_new').addEventListener('click',async function(){
     }).join('');
   }).catch(function(){ box.textContent='Could not load releases.'; });
 })();
-</script></body></html>
+</script><script>
+(async function(){
+  var w=document.getElementById('subWrap'); if(!w) return;
+  try{
+    var b=await fetch('/api/billing/status').then(function(r){return r.json();});
+    var s=b.status||'none';
+    var end=b.periodEnd?new Date(b.periodEnd).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'';
+    var badge='<span style="display:inline-block;padding:5px 13px;border-radius:999px;font-weight:700;font-size:.8rem;'+(b.active?'background:#E6EDE5;color:#2e5d3f':'background:#F6E2D8;color:#8C3F1E')+'">'+(b.active?(s==='trialing'?'Free trial':'Active'):'No active subscription')+'</span>';
+    var meta=(b.active&&end)?'<div style="margin-top:8px;color:var(--ink-soft);font-size:.9rem">'+(s==='trialing'?'Trial ends ':'Renews ')+end+'</div>':'';
+    var body=b.active
+      ? '<div class="btnrow" style="margin-top:16px"><button class="save" id="subManage">Manage or cancel</button><span class="msg" id="subMsg"></span></div><p style="color:var(--ink-soft);font-size:.82rem;font-weight:300;margin-top:8px">Opens your secure Stripe billing page — update your card, download invoices, or cancel anytime.</p>'
+      : '<div class="btnrow" style="margin-top:16px"><a class="save" href="/subscribe" style="text-decoration:none;display:inline-block">Start your subscription</a></div>';
+    w.innerHTML=badge+meta+body;
+    var mg=document.getElementById('subManage');
+    if(mg) mg.addEventListener('click',async function(){
+      var m=document.getElementById('subMsg'); m.className='msg'; m.textContent='Opening billing…';
+      var d=await fetch('/api/billing/portal',{method:'POST'}).then(function(r){return r.json();}).catch(function(){return {};});
+      if(d.ok&&d.url){ location.href=d.url; } else { m.className='msg err'; m.textContent=(d&&d.error)||'Could not open billing.'; }
+    });
+  }catch(e){ w.textContent='Could not load your subscription.'; }
+})();
+</script>
+</body></html>
