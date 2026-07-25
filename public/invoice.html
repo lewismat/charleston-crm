@@ -89,7 +89,7 @@ async function render(){
         '<label class="spf-lbl">Name on card</label><input id="cardName" class="cardname" placeholder="Full name" autocomplete="cc-name">'+'<label class="spf-lbl" style="margin-top:12px">Card number</label><div id="cardNumber" class="spf"></div>'+'<div class="spf-row"><div><label class="spf-lbl">Expiration</label><div id="cardExpiry" class="spf"></div></div><div><label class="spf-lbl">CVC</label><div id="cardCvc" class="spf"></div></div></div>'+
         '<button class="paybtn" id="payNow" style="margin-top:14px">Pay '+fmt(due)+'</button>'+
         '<button class="dlbtn" id="payCancel" style="margin-top:8px">Cancel</button>'+
-        '<div id="payMsg" class="secure" style="min-height:1.1em;margin-top:8px"></div></div>'+
+        '<div id="payMsg" class="secure" style="min-height:1.1em;margin-top:8px"></div>'+'<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;color:#8a9384;font-size:.78rem;font-weight:500"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Secured &amp; powered by <span style="color:#635BFF;font-weight:700;letter-spacing:-.02em">stripe</span></div>'+'</div>'+
         '<div class="secure" id="secureLine">Secure payment powered by Stripe</div></div>';
     } else {
       html+='<div class="manual">Please contact '+biz+' to arrange payment.</div>';
