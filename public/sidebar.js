@@ -62,7 +62,7 @@
   var sb=document.createElement('aside');
   sb.className='tbmsb';
   sb.innerHTML=
-    '<div class="sb-top"><span class="sb-mono" id="sbMono"><img src="/charleston-badge.svg" alt="" id="sbMonoImg"></span><span class="sb-name">Charleston</span><button class="sb-toggle" id="sbToggle" title="Collapse">&#171;</button></div>'+
+    '<div class="sb-top"><span class="sb-mono" id="sbMono"><img src="/logo.png" alt="" id="sbMonoImg"></span><span class="sb-name">Charleston</span><button class="sb-toggle" id="sbToggle" title="Collapse">&#171;</button></div>'+
     '<nav class="sb-nav">'+
       item('/dashboard','dashboard','Dashboard')+
       item('/students','students','Students')+
@@ -111,7 +111,7 @@
       +'#pwOverlay .pwf{font-size:.78rem;color:#8a9384;margin-top:12px}#pwOverlay .pwout{display:inline-block;margin-top:14px;font-size:.82rem;color:#8a9384;cursor:pointer;text-decoration:underline}';
     document.head.appendChild(css);
     var ov=document.createElement('div'); ov.id='pwOverlay';
-    ov.innerHTML='<div class="pwc"><img src="/charleston-badge.svg" width="78" height="78" alt="" style="display:block;margin:0 auto">'
+    ov.innerHTML='<div class="pwc"><img src="/logo.png" width="78" height="78" alt="" style="display:block;margin:0 auto">'
       +'<div class="pwpill">14 days free \u00b7 then $9.99/mo \u00b7 cancel anytime</div>'
       +'<h2>Finish your setup</h2>'
       +'<p>Your studio is ready \u2014 add your card to unlock your dashboard. You won\u2019t be charged until your 14-day free trial ends.</p>'
