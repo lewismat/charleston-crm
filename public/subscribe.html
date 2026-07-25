@@ -83,7 +83,6 @@ input.cardname:focus{outline:none;border-color:#C9A227;box-shadow:0 0 0 3px rgba
     </div>
   </div>
   <div id="banner"></div>
-  <p class="note" id="whoami" style="display:none;color:var(--gold-dp);font-weight:600;margin-bottom:6px"></p>
   <div class="toggle" id="planToggle">
     <button type="button" class="pt pt-on" data-plan="monthly">Monthly</button>
     <button type="button" class="pt" data-plan="annual">Annual &middot; 2 months free</button>
@@ -148,7 +147,6 @@ window.__plan='monthly';
   var st=await fetch('/api/auth/state').then(function(r){return r.json()});
   if(!st.authed){location.href='/login';return;}
   if(st.subscribed){location.href='/dashboard';return;}
-  if(st.user&&st.user.name){var w=$('whoami');if(w){w.textContent='Signed in as '+st.user.name+' — just finish setting up below.';w.style.display='block';}}
   var q=new URLSearchParams(location.search);
   var siParam=q.get('setup_intent');
   if(q.get('trial') && siParam){ $('banner').innerHTML='<p class="msg">Starting your trial…</p>'; await completeTrial(siParam); return; }
