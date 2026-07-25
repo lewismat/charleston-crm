@@ -207,6 +207,13 @@ const app = express();
 const auth = require('./auth');
 const billing = require('./billing');
 
+// Revalidate HTML + JS + CSS on every request so new deploys show up without a
+// hard refresh (assets carry an ETag; browsers get 304 when unchanged).
+app.use(function (req, res, next) {
+  if (/\.(js|css|html)$/i.test(req.path) || !/\.[a-z0-9]+$/i.test(req.path)) res.setHeader('Cache-Control', 'no-cache');
+  next();
+});
+
 // ---------- tenant scoping ----------
 function ownerId(req) { const a = req.account || {}; return a.oid || a.owner_id || a.id || null; }
 let _primaryOwner = { at: 0, id: null };
