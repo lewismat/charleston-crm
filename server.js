@@ -248,7 +248,16 @@ app.get(GATED_PAGES, async (req, res, next) => {
   let acct = null;
   try { acct = await billing.accountById(u.id); } catch (e) { req.account = u; return next(); }
   if (!acct) { res.set('Set-Cookie', 'tbm_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax'); return res.redirect('/login'); }
-  if (!billing.acctActive(acct)) return res.redirect('/subscribe');
+  if (!billing.acctActive(acct)) {
+    // The platform operator (superadmin) is never paywalled out of the app.
+    let isSuper = false;
+    try {
+      const rows = await sb('GET', 'app_config?key=eq.superadmin_emails&select=value&limit=1');
+      const list = (((rows && rows[0] && rows[0].value) || '')).toLowerCase().split(/[,\s]+/).filter(Boolean);
+      isSuper = acct.email && list.includes(String(acct.email).toLowerCase());
+    } catch (e) {}
+    if (!isSuper) return res.redirect('/subscribe');
+  }
   req.account = u; next();
 });
 
