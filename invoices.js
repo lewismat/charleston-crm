@@ -150,6 +150,7 @@ router.post('/api/pi/:token/checkout', async (req, res) => {
     const due = inv.amount - (inv.paidTotal || 0);
     const session = await stripe(key, 'checkout/sessions', {
       mode: 'payment',
+      'payment_method_types[0]': 'card',
       'line_items[0][price_data][currency]': inv.currency || 'usd',
       'line_items[0][price_data][product_data][name]': inv.number + (inv.customer.name ? (' · ' + inv.customer.name) : ''),
       'line_items[0][price_data][unit_amount]': String(due > 0 ? due : inv.amount),
@@ -198,7 +199,7 @@ router.post('/api/pi/:token/intent', async (req, res) => {
     const due = inv.amount - (inv.paidTotal || 0);
     const pi = await stripe(sk, 'payment_intents', {
       amount: String(due > 0 ? due : inv.amount), currency: inv.currency || 'usd',
-      'automatic_payment_methods[enabled]': 'true', 'metadata[token]': inv.token,
+      'payment_method_types[0]': 'card', 'metadata[token]': inv.token,
       description: inv.number, ...(inv.customer.email ? { receipt_email: inv.customer.email } : {}),
     });
     res.json({ ok: true, clientSecret: pi.client_secret, publishableKey: pk, amount: due, currency: inv.currency || 'usd' });

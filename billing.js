@@ -113,6 +113,7 @@ router.post('/api/billing/checkout', auth.requireAuth, async (req, res) => {
     if (plan === 'annual') { const ap = await ensureAnnualPrice(); if (ap) priceId = ap; }
     const session = await stripe('checkout/sessions', {
       mode: 'subscription',
+      'payment_method_types[0]': 'card',
       customer,
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
@@ -164,7 +165,7 @@ router.post('/api/billing/setup-intent', auth.requireAuth, async (req, res) => {
     if (!PUB) return res.json({ ok: true, fallback: true });
     const acct = await accountById(req.account.id); if (!acct) return res.status(404).json({ ok: false });
     const customer = await ensureCustomer(acct);
-    const si = await stripe('setup_intents', { customer, 'automatic_payment_methods[enabled]': 'true', usage: 'off_session', 'metadata[account_id]': acct.id });
+    const si = await stripe('setup_intents', { customer, 'payment_method_types[0]': 'card', usage: 'off_session', 'metadata[account_id]': acct.id });
     res.json({ ok: true, clientSecret: si.client_secret, publishableKey: PUB });
   } catch (e) { console.error('[billing] setup-intent:', e.message); res.status(500).json({ ok: false, error: 'Could not start. Please try again.' }); }
 });
