@@ -40,6 +40,9 @@ background:linear-gradient(180deg,#C24E32,#98371F);color:#FFF7EE;font-weight:700
 .foot{text-align:center;color:var(--stone);font-size:.74rem;margin-top:22px;opacity:.8}
 .secure{text-align:center;color:var(--stone);font-size:.76rem;margin-top:10px}
 .loading{text-align:center;color:var(--stone);padding:40px}
+.spf{border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff}
+.spf-lbl{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#6f8a6a;font-weight:700;margin:2px 0 6px}
+.spf-row{display:flex;gap:10px;margin-top:12px}.spf-row>div{flex:1}
 @media print{body{background:#fff;padding:0}.scene,#tiles,.dlbtn,.paybtn,.secure,.pay,.manual{display:none!important}.paper{box-shadow:none;border:none;max-width:100%;border-radius:0}}
 .dlbtn{display:block;width:100%;margin-top:12px;padding:12px;border:1px solid var(--edge);border-radius:12px;background:#fff;color:var(--logo);font-weight:600;font-size:.95rem;cursor:pointer;font-family:inherit}
 .dlbtn:hover{background:#FCFAF2;border-color:var(--gold)}
@@ -81,7 +84,7 @@ async function render(){
     if(d.canPay){
       html+='<div class="pay"><button class="paybtn" id="pay">Pay '+fmt(due)+' by card</button>'+
         '<div id="payArea" style="display:none;margin-top:14px;text-align:left">'+
-        '<label style="display:block;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#6f8a6a;font-weight:700;margin:0 0 6px">Card details</label>'+'<div id="paymentElement" style="border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff"></div>'+
+        '<label class="spf-lbl">Card number</label><div id="cardNumber" class="spf"></div>'+'<div class="spf-row"><div><label class="spf-lbl">Expiration</label><div id="cardExpiry" class="spf"></div></div><div><label class="spf-lbl">CVC</label><div id="cardCvc" class="spf"></div></div></div>'+
         '<button class="paybtn" id="payNow" style="margin-top:14px">Pay '+fmt(due)+'</button>'+
         '<button class="dlbtn" id="payCancel" style="margin-top:8px">Cancel</button>'+
         '<div id="payMsg" class="secure" style="min-height:1.1em;margin-top:8px"></div></div>'+
@@ -109,7 +112,10 @@ async function startPayment(d){
   var stripe=Stripe(r.publishableKey);
   var cardStyle={base:{fontFamily:'Inter, system-ui, sans-serif',fontSize:'16px',color:'#22301F','::placeholder':{color:'#9aa08e'}},invalid:{color:'#B3542E'}};
   var elements=stripe.elements();
-  var card=elements.create('card',{style:cardStyle}); card.mount('#paymentElement');
+  var cardNumber=elements.create('cardNumber',{style:cardStyle,showIcon:true});
+  var cardExpiry=elements.create('cardExpiry',{style:cardStyle});
+  var cardCvc=elements.create('cardCvc',{style:cardStyle});
+  cardNumber.mount('#cardNumber'); cardExpiry.mount('#cardExpiry'); cardCvc.mount('#cardCvc');
   pb.style.display='none';
   var sl=document.getElementById('secureLine'); if(sl) sl.style.display='none';
   var area=document.getElementById('payArea'); area.style.display='block';
@@ -118,7 +124,7 @@ async function startPayment(d){
   payNow.onclick=async function(){
     var pm=document.getElementById('payMsg'); pm.style.color='var(--stone)'; pm.textContent='';
     payNow.disabled=true; payNow.textContent='Processing…';
-    var resx=await stripe.confirmCardPayment(r.clientSecret,{payment_method:{card:card}});
+    var resx=await stripe.confirmCardPayment(r.clientSecret,{payment_method:{card:cardNumber}});
     if(resx.error){ pm.style.color='#B3542E'; pm.textContent=resx.error.message||'Payment could not be completed.'; payNow.disabled=false; payNow.textContent='Pay '+fmt(due); return; }
     var pi=resx.paymentIntent;
     if(pi && (pi.status==='succeeded'||pi.status==='processing')){
