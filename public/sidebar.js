@@ -95,5 +95,36 @@
   }).catch(function(){});
   fetch('/api/auth/state').then(function(r){return r.json();}).then(function(st){
     if(st&&st.superadmin){ var nav=sb.querySelector('.sb-nav'); if(nav){ var a=document.createElement('a'); a.href='/hq'; if(path==='/hq')a.className='active'; a.innerHTML='<span class="sb-ico">'+svg('hq')+'</span><span class="lbl">HQ</span>'; a.addEventListener('click',function(){document.body.classList.remove('sb-open');}); nav.appendChild(a); } }
+    if(st && st.authed && !st.subscribed && !st.superadmin){ showPaywall(); }
   }).catch(function(){});
+
+  function showPaywall(){
+    if(document.getElementById('pwOverlay')) return;
+    var css=document.createElement('style');
+    css.textContent='#pwOverlay{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(34,48,31,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}'
+      +'#pwOverlay .pwc{background:linear-gradient(168deg,#fff,#FFFDF4 26%,#FBF6E4);border:1px solid rgba(201,162,39,.45);border-radius:22px;max-width:440px;width:100%;padding:32px 30px 26px;text-align:center;box-shadow:0 34px 80px rgba(0,0,0,.4);font-family:Inter,system-ui,sans-serif}'
+      +'#pwOverlay h2{font-family:"Cormorant Garamond",Georgia,serif;color:#2e5d3f;font-size:1.75rem;font-weight:700;margin:14px 0 6px;letter-spacing:.01em}'
+      +'#pwOverlay p{color:#5D6656;font-size:.96rem;font-weight:300;margin:0 auto 20px;max-width:32ch;line-height:1.5}'
+      +'#pwOverlay .pwpill{display:inline-block;margin-bottom:16px;padding:5px 14px;border-radius:999px;background:#FDFBF2;border:1px solid rgba(201,162,39,.5);color:#9A7A22;font-size:.72rem;font-weight:700;letter-spacing:.05em}'
+      +'#pwStart{display:block;width:100%;padding:16px;border:none;border-radius:13px;cursor:pointer;font-weight:700;font-size:1.06rem;color:#FFF7EE;background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 26px rgba(152,55,31,.34)}'
+      +'#pwStart:hover{filter:brightness(1.06)}#pwStart:disabled{opacity:.6;cursor:default}'
+      +'#pwOverlay .pwf{font-size:.78rem;color:#8a9384;margin-top:12px}#pwOverlay .pwout{display:inline-block;margin-top:14px;font-size:.82rem;color:#8a9384;cursor:pointer;text-decoration:underline}';
+    document.head.appendChild(css);
+    var ov=document.createElement('div'); ov.id='pwOverlay';
+    ov.innerHTML='<div class="pwc"><img src="/charleston-badge.svg" width="78" height="78" alt="" style="display:block;margin:0 auto">'
+      +'<div class="pwpill">14 days free \u00b7 then $9.99/mo \u00b7 cancel anytime</div>'
+      +'<h2>Finish your setup</h2>'
+      +'<p>Your studio is ready \u2014 add your card to unlock your dashboard. You won\u2019t be charged until your 14-day free trial ends.</p>'
+      +'<button id="pwStart">Complete sign-up \u2192</button>'
+      +'<div class="pwf">\ud83d\udd12 Secure checkout by Stripe</div>'
+      +'<a class="pwout" id="pwOut">Sign out</a></div>';
+    document.body.appendChild(ov);
+    document.getElementById('pwStart').onclick=function(){
+      var b=this; b.disabled=true; b.textContent='Opening secure checkout\u2026';
+      fetch('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:'monthly'})}).then(function(r){return r.json();}).then(function(d){
+        if(d.ok&&d.url){ location.href=d.url; return; } b.disabled=false; b.textContent='Complete sign-up \u2192'; alert((d&&d.error)||'Could not start checkout. Please try again.');
+      }).catch(function(){ b.disabled=false; b.textContent='Complete sign-up \u2192'; });
+    };
+    document.getElementById('pwOut').onclick=function(){ fetch('/api/auth/logout',{method:'POST'}).then(function(){location.href='/login';}); };
+  }
 })();

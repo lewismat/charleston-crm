@@ -253,7 +253,7 @@ router.post('/api/auth/register', async (req, res) => {
       if (ex.email === email && ex.active !== false && verifyPassword(password, ex.password_hash)) {
         setSession(res, ex);
         const active = ex.subscription_status === 'active' || ex.subscription_status === 'trialing';
-        return res.json({ ok: true, user: { id: ex.id, role: ex.role, name: ex.name }, next: active ? '/dashboard' : '/subscribe', resumed: true });
+        return res.json({ ok: true, user: { id: ex.id, role: ex.role, name: ex.name }, next: '/dashboard', resumed: true });
       }
       return res.status(409).json({ ok: false, error: 'An account with that email already exists — please sign in instead.' });
     }
@@ -267,7 +267,7 @@ router.post('/api/auth/register', async (req, res) => {
     const refSlug = clean(req.body.ref, 60).toLowerCase();
     if (refSlug) { try { const rr = await sb(`accounts?slug=eq.${enc(refSlug)}&role=eq.owner&select=id&limit=1`); if (rr && rr[0] && rr[0].id !== acct.id) await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ referred_by: rr[0].id }) }); } catch (e) {} }
     setSession(res, acct);
-    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/subscribe' });
+    res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name }, next: '/dashboard' });
   } catch (e) {
     console.error('[accounts] register:', e.message);
     res.status(400).json({ ok: false, error: 'Could not create that account. Please try again.' });
@@ -357,7 +357,7 @@ router.get('/api/auth/google/callback', async (req, res) => {
     }
     setSession(res, acct);
     const active = acct.subscription_status === 'active' || acct.subscription_status === 'trialing';
-    res.redirect(active ? '/dashboard?welcome=1' : '/subscribe');
+    res.redirect('/dashboard?welcome=1');
   } catch (e) {
     console.error('[auth] google:', e.message);
     res.redirect('/login?error=google');
