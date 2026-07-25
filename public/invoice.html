@@ -164,7 +164,7 @@ async function makePDF(d){
   var M=54, W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), y=68;
   var green=[46,93,63], stone=[93,102,86], ink=[34,48,31];
   // business logo (studio's own, else the Charleston badge) — rasterized to PNG
-  var logoData=await logoToPng((d.studio&&d.studio.logo)||'/logo.png');
+  var logoData=await logoToPng((d.studio&&d.studio.logo)||'/logo.png?v=2');
   var nameX=M;
   if(logoData){ try{ doc.addImage(logoData,'PNG',M,y-30,42,42); nameX=M+54; }catch(e){} }
   doc.setFont('helvetica','bold');doc.setFontSize(21);doc.setTextColor(green[0],green[1],green[2]);

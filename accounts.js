@@ -968,7 +968,7 @@ router.get('/logo.png', async (req, res) => {
     const b64 = rows && rows[0] && rows[0].value;
     if (!b64) return res.redirect('/charleston-badge.svg');
     res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cache-Control', 'no-cache');
     return res.send(Buffer.from(b64, 'base64'));
   } catch (e) { return res.redirect('/charleston-badge.svg'); }
 });
