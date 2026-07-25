@@ -959,6 +959,29 @@ router.get('/og.png', async (req, res) => {
   } catch (e) { return res.redirect('/charleston-og.png'); }
 });
 
+// Canonical Charleston logo as a font-independent PNG (rendered once in-browser
+// with the real Yellowtail script, cached in app_config). Serve at /logo.png so
+// the logo renders identically everywhere without depending on webfonts.
+router.get('/logo.png', async (req, res) => {
+  try {
+    const rows = await sb(`app_config?key=eq.logo_png&select=value&limit=1`).catch(() => []);
+    const b64 = rows && rows[0] && rows[0].value;
+    if (!b64) return res.redirect('/charleston-badge.svg');
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(Buffer.from(b64, 'base64'));
+  } catch (e) { return res.redirect('/charleston-badge.svg'); }
+});
+router.post('/api/logo/save', express.text({ type: '*/*', limit: '6mb' }), async (req, res) => {
+  try {
+    if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false });
+    let d = String(req.body || '').replace(/^data:image\/png;base64,/, '');
+    if (d.length < 1000) return res.status(400).json({ ok: false, error: 'image too small' });
+    await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'logo_png', value: d, updated_at: new Date().toISOString() }) });
+    res.json({ ok: true, bytes: d.length });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // Public: the testimonial photo (stored in app_config), if imported.
 router.get('/api/testimonial-photo', async (req, res) => {
   try {
