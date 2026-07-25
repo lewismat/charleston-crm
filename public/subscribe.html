@@ -58,6 +58,8 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
 .spf{border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff}
 .spf-lbl{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#6f8a6a;font-weight:700;margin:2px 0 6px}
 .spf-row{display:flex;gap:10px;margin-top:12px}.spf-row>div{flex:1}
+input.cardname{border:1px solid #E3D6B4;border-radius:10px;padding:13px 12px;background:#fff;width:100%;font-family:inherit;font-size:16px;color:#22301F;box-sizing:border-box}
+input.cardname:focus{outline:none;border-color:#C9A227;box-shadow:0 0 0 3px rgba(201,162,39,.16)}
 </style></head><body>
 <div class="scene"><div class="stripes"></div><div class="wash"></div></div>
 <div id="tiles" aria-hidden="true"></div>
@@ -98,7 +100,9 @@ background:linear-gradient(180deg,#C24E32,#98371F);box-shadow:0 12px 28px rgba(1
   </ul>
   <div><button class="btn" id="go">Start 14-day free trial</button></div>
   <div id="payArea" style="display:none;max-width:420px;margin:16px auto 0;text-align:left;background:rgba(255,253,246,.93);border:1px solid rgba(201,162,39,.4);border-radius:16px;padding:18px;box-shadow:0 18px 40px rgba(59,92,65,.18)">
-    <label class="spf-lbl">Card number</label>
+    <label class="spf-lbl">Name on card</label>
+    <input id="cardName" class="cardname" placeholder="Full name" autocomplete="cc-name">
+    <label class="spf-lbl" style="margin-top:12px">Card number</label>
     <div id="cardNumber" class="spf"></div>
     <div class="spf-row">
       <div><label class="spf-lbl">Expiration</label><div id="cardExpiry" class="spf"></div></div>
@@ -189,7 +193,7 @@ $('go').addEventListener('click',async function(){
   m.textContent=''; $('go').style.display='none'; $('payArea').style.display='block';
   $('payNow').onclick=async function(){
     var pm=$('payMsg');pm.style.color='var(--stone)';pm.textContent='';$('payNow').disabled=true;$('payNow').textContent='Processing…';
-    var resx=await window.__stripe.confirmCardSetup(window.__cs,{payment_method:{card:window.__card}});
+    var resx=await window.__stripe.confirmCardSetup(window.__cs,{payment_method:{card:window.__card,billing_details:{name:((document.getElementById('cardName')||{}).value||'').trim()}}});
     if(resx.error){pm.style.color='#8C3F1E';pm.textContent=resx.error.message||'Could not save your card.';$('payNow').disabled=false;$('payNow').textContent='Start free trial';return;}
     var si=resx.setupIntent;
     if(si&&si.status==='succeeded'){ await completeTrial(si.id); }
