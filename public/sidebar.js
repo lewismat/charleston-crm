@@ -12,6 +12,7 @@
     announce:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 3.5v-11L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14.5 8.5a4.5 4.5 0 0 1 0 7"/>',
     invoices:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
     hq:'<path d="M12 3 4 6v5c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
+    account:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
     menu:'<path d="M4 6h16M4 12h16M4 18h16"/>'
   };
   function svg(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>';}
@@ -72,7 +73,7 @@
       item('/profile','profile','Profile')+
     '</nav>'+
     '<div class="sb-bottom">'+
-      '<a href="/settings"'+(path==='/settings'?' class="active"':'')+'><span class="sb-ico">'+svg('settings')+'</span><span class="lbl">Settings</span></a>'+
+      '<a href="/account"'+(path==='/account'?' class="active"':'')+'><span class="sb-ico">'+svg('account')+'</span><span class="lbl">Billing</span></a>'+'<a href="/settings"'+(path==='/settings'?' class="active"':'')+'><span class="sb-ico">'+svg('settings')+'</span><span class="lbl">Settings</span></a>'+
       '<a id="sbLogout"><span class="sb-ico">'+svg('logout')+'</span><span class="lbl">Log out</span></a>'+
     '</div>';
   document.body.insertBefore(sb,document.body.firstChild);
