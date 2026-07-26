@@ -147,7 +147,7 @@ function renderDetails(){
   $('detailRows').innerHTML=details.map(function(d,i){
     return '<div class="row"><button class="iconbtn" data-t="d" data-i="'+i+'">'+(window.tbmIcon(d.icon)||window.tbmIcon('flower'))+'</button>'+
       '<div class="fields"><input placeholder="Label (e.g. Where)" data-t="d" data-k="label" data-i="'+i+'" value="'+esc(d.label)+'">'+
-      '<input placeholder="Value (e.g. Tampa &amp; St. Pete)" data-t="d" data-k="value" data-i="'+i+'" value="'+esc(d.value)+'"></div>'+
+      '<input placeholder="Value (e.g. Charleston &amp; Mt. Pleasant)" data-t="d" data-k="value" data-i="'+i+'" value="'+esc(d.value)+'"></div>'+
       '<button class="del" data-t="d" data-i="'+i+'" title="Remove">×</button></div>';
   }).join('');
   wire('detailRows');
