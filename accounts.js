@@ -142,7 +142,7 @@ async function resolveOwner(req) {
     const rows = await sb(`accounts?slug=eq.${enc(slug)}&role=eq.owner&select=id&limit=1`).catch(() => []);
     if (rows && rows[0]) return rows[0].id;
   }
-  return primaryOwnerId();
+  return null; // multi-tenant: no session + no studio slug = no default studio
 }
 const oidF = (oid) => `owner_id=eq.${enc(oid)}`;
 const _snCache = {};
@@ -390,6 +390,7 @@ const PROFILE_FIELDS = ['display_name','tagline','bio','credentials','offerings'
 router.get('/api/profile', async (req, res) => {
   try {
     const oid = await resolveOwner(req);
+    if (!oid) return res.json({ ok: true, profile: null });
     const rows = await sb(`profile?${oidF(oid)}&limit=1`);
     res.json({ ok: true, profile: (rows && rows[0]) || { id: oid } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
@@ -550,6 +551,7 @@ let _brandCache = {};
 router.get('/api/branding', async (req, res) => {
   try {
     const oid = await resolveOwner(req);
+    if (!oid) return res.json({ logo: '', name: '' });
     const hit = _brandCache[oid];
     if (hit && Date.now() - hit.at < 20000) return res.json(hit.val);
     const rows = await sb(`settings?${oidF(oid)}&select=business_logo,business_name&limit=1`).catch(() => []);
@@ -746,6 +748,7 @@ router.get('/api/revenue', requireAuth, async (req, res) => {
 router.post('/api/lead', async (req, res) => {
   try {
     const oid = await resolveOwner(req);
+    if (!oid) return res.status(400).json({ ok: false, error: 'Please use the full booking link from your instructor.' });
     const brandName = await studioName(oid); mail.setBrand(brandName);
     const first = clean(req.body.first_name, 120);
     const last = clean(req.body.last_name, 120);
@@ -811,7 +814,7 @@ function sanitizeCSS(raw) {
 }
 
 router.get('/api/inquiry-config', async (req, res) => {
-  try { const oid = await resolveOwner(req); const rows = await sb(`settings?${oidF(oid)}&select=inquiry_config&limit=1`);
+  try { const oid = await resolveOwner(req); if (!oid) return res.json({ ok: true, config: {} }); const rows = await sb(`settings?${oidF(oid)}&select=inquiry_config&limit=1`);
     res.json({ ok: true, config: (rows && rows[0] && rows[0].inquiry_config) || {} });
   } catch (e) { res.json({ ok: true, config: {} }); }
 });

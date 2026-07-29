@@ -237,7 +237,7 @@ async function resolveOwner(req) {
       if (rows && rows[0]) return rows[0].id;
     } catch {}
   }
-  return primaryOwnerId();
+  return null; // multi-tenant: no session + no studio slug = no default studio
 }
 
 // Stripe webhook needs the RAW body for signature verification — register it
@@ -271,6 +271,7 @@ app.post('/api/track', async (req, res) => {
     if (!visitorId) visitorId = crypto.randomUUID();
 
     const oid = await resolveOwner(req);
+    if (!oid) { send(res, 200, JSON.stringify({ ok: true }), { 'Content-Type': 'application/json' }); return; }
     await store.addVisit({
       id: crypto.randomUUID(),
       ownerId: oid,
@@ -321,6 +322,7 @@ app.post('/api/inquiries', async (req, res) => {
       status: 'new',
     };
     inquiry.ownerId = await resolveOwner(req);
+    if (!inquiry.ownerId) return sendJSON(res, 400, { ok: false, error: 'Please use the full booking link from your instructor.' });
     const id = await store.addInquiry(inquiry);
     notifyEmail(inquiry);
     // Every inquiry is a lead. This was defined but never called, so eight
