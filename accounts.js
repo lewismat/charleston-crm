@@ -17,6 +17,7 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY |
 const SECRET = process.env.SESSION_SECRET || process.env.DASHBOARD_PASSWORD || 'tbm-session-fallback-2026';
 const COOKIE = 'tbm_session';
 const SESSION_DAYS = 14;
+const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.warn('[accounts] SUPABASE_URL / SUPABASE_KEY not set — account routes will error.');
@@ -309,7 +310,7 @@ router.get('/api/referrals', requireAuth, async (req, res) => {
    until those are set the button stays hidden. */
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const GOOGLE_REDIRECT = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '') + '/api/auth/google/callback';
+const GOOGLE_REDIRECT = SITE_URL + '/api/auth/google/callback';
 const googleConfigured = () => !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
 
 router.get('/api/auth/google/config', (req, res) => res.json({ enabled: googleConfigured() }));
