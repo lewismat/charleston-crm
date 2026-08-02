@@ -59,17 +59,23 @@ border:1px solid #DED3B4;border-radius:10px;background:#fff;color:#3c4a34;text-d
   <button class="btn" id="go" type="submit">Start free trial</button>
   <p class="msg" id="msg"></p>
 
+  <div id="googleWrap" style="display:none">
   <div class="divider">or</div>
   <a class="gbtn" href="/api/auth/google">
     <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.1-3.8 6.5-9.4 6.5-16.9z"/><path fill="#FBBC05" d="M10.4 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C.9 16.1 0 19.9 0 24s.9 7.9 2.5 11.3l7.9-6.7z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.3-4.6 2.1-7.9 2.1-6.3 0-11.7-3.7-13.6-9.1l-7.9 6.7C6.4 42.6 14.6 48 24 48z"/></svg>
     Continue with Google
   </a>
+  </div>
 
   <p class="fine">By creating an account you agree to our <a href="/terms.html">Terms</a> and <a href="/privacy.html">Privacy Policy</a>.</p>
   <p class="foot">Already have an account? <a href="/login">Sign in</a></p>
 </form>
 <script>
 var $=function(id){return document.getElementById(id)};
+// Only show "Continue with Google" if it's actually configured on the server.
+fetch('/api/auth/google/config').then(function(r){return r.json();}).then(function(c){
+  if(c&&c.enabled){var w=$('googleWrap');if(w)w.style.display='';}
+}).catch(function(){});
 if(new URLSearchParams(location.search).get('googleoff')){
   var m0=$('msg');m0.className='msg info';m0.textContent='Google sign-in isn’t switched on yet — please use email and password for now.';
 }
