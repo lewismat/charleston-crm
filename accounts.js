@@ -177,7 +177,7 @@ router.get('/api/auth/state', async (req, res) => {
     const superadmin = authed ? await superadminByAccount(u.id) : false;
     res.json({ ok: true, authed, subscription: sub, subscribed: active, superadmin,
       user: authed ? { id: u.id, role: u.role, name: u.name, slug: u.slug || null } : null });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // First-run: create the first owner account (only allowed while zero accounts exist).
@@ -194,7 +194,7 @@ router.post('/api/auth/setup', async (req, res) => {
     if (!acct.owner_id) { await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: acct.id }) }).catch(() => {}); acct.owner_id = acct.id; }
     setSession(res, acct);
     res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name } });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 router.post('/api/auth/login', async (req, res) => {
@@ -208,7 +208,7 @@ router.post('/api/auth/login', async (req, res) => {
     setSession(res, acct);
     sb(`accounts?id=eq.${acct.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ last_login: new Date().toISOString() }) }).catch(() => {});
     res.json({ ok: true, user: { id: acct.id, role: acct.role, name: acct.name } });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Change the signed-in user's password.
@@ -221,7 +221,7 @@ router.post('/api/auth/password', requireAuth, async (req, res) => {
     if (!acct || !verifyPassword(cur, acct.password_hash)) return res.status(401).json({ ok: false, error: 'Current password is incorrect.' });
     await sb(`accounts?id=eq.${enc(acct.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ password_hash: hashPassword(nw) }) });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 // Open self-serve sign-up: anyone can create their own studio account.
@@ -278,7 +278,7 @@ router.post('/api/auth/register', async (req, res) => {
 // Invite codes (owner generates; team can view).
 router.get('/api/invites', requireAuth, async (req, res) => {
   try { res.json({ ok: true, invites: await sb(`invites?${oidF(ownerId(req))}&select=*&order=created_at.desc&limit=100`) }); }
-  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.post('/api/invites', requireAuth, requireOwner, async (req, res) => {
   try {
@@ -286,7 +286,7 @@ router.post('/api/invites', requireAuth, requireOwner, async (req, res) => {
     const rows = await sb('invites', { method: 'POST', body: JSON.stringify({
       code, created_by: req.account.id, owner_id: ownerId(req), note: clean(req.body.note, 120) || null }) });
     res.json({ ok: true, invite: rows[0] });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 router.post('/api/auth/logout', (req, res) => {
@@ -300,7 +300,7 @@ router.get('/api/referrals', requireAuth, async (req, res) => {
     const slug = rows && rows[0] && rows[0].slug;
     const refs = await sb(`accounts?referred_by=eq.${enc(req.account.id)}&select=id`).catch(() => []);
     res.json({ ok: true, slug, count: (refs || []).length });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 /* ================= GOOGLE SIGN-IN =================
@@ -370,7 +370,7 @@ router.get('/api/staff', requireAuth, async (req, res) => {
   try {
     const rows = await sb(`accounts?${oidF(ownerId(req))}&select=id,name,email,username,role,active,last_login,created_at&order=created_at.asc`);
     res.json({ ok: true, staff: rows });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.post('/api/staff', requireAuth, requireOwner, async (req, res) => {
   try {
@@ -383,7 +383,7 @@ router.post('/api/staff', requireAuth, requireOwner, async (req, res) => {
       name, email, username, role, owner_id: ownerId(req), password_hash: hashPassword(password) }) });
     const a = rows[0];
     res.json({ ok: true, staff: { id: a.id, name: a.name, email: a.email, username: a.username, role: a.role } });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 /* ================= PROFILE CARD ================= */
@@ -394,7 +394,7 @@ router.get('/api/profile', async (req, res) => {
     if (!oid) return res.json({ ok: true, profile: null });
     const rows = await sb(`profile?${oidF(oid)}&limit=1`);
     res.json({ ok: true, profile: (rows && rows[0]) || { id: oid } });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.put('/api/profile', requireAuth, async (req, res) => {
   try {
@@ -409,7 +409,7 @@ router.put('/api/profile', requireAuth, async (req, res) => {
     const oid = ownerId(req); patch.id = oid; patch.owner_id = oid;
     await sb('profile?on_conflict=owner_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(patch) });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 /* ================= STUDENT CRM ================= */
@@ -432,7 +432,7 @@ router.get('/api/students', requireAuth, async (req, res) => {
     if (status) filters += `&status=eq.${status}`;
     filters += `&${oidF(ownerId(req))}&archived=eq.false&order=updated_at.desc&limit=500`;
     res.json({ ok: true, students: await sb('students?' + filters) });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // One-click CSV export of this studio's students + leads.
@@ -455,7 +455,7 @@ router.post('/api/students', requireAuth, async (req, res) => {
     body.owner_id = ownerId(req);
     const rows = await sb('students', { method: 'POST', body: JSON.stringify(body) });
     res.json({ ok: true, student: rows[0] });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 router.get('/api/students/:id', requireAuth, async (req, res) => {
   try {
@@ -472,14 +472,14 @@ router.get('/api/students/:id', requireAuth, async (req, res) => {
       ]);
     }
     res.json({ ok: true, student, history: { bookings, inquiries } });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.put('/api/students/:id', requireAuth, async (req, res) => {
   try {
     const body = stuBody(req.body); body.updated_at = new Date().toISOString();
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(body) });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 /* ================= STRIPE / SETTINGS ================= */
@@ -543,7 +543,7 @@ router.get('/api/health', requireAuth, async (req, res) => {
         bad: 'Your booking page is empty, so there is nothing for anyone to sign up for.',
         fix: '/schedule', fixLabel: 'Open a date' },
     ] });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Public: the studio's own logo + name, shown on every page. No auth — it's
@@ -593,7 +593,7 @@ router.get('/api/settings', requireAuth, async (req, res) => {
       calendarUrl: s.calendar_token ? (base + '/api/cal/' + s.calendar_token + '.ics') : '',
       googleConnected: !!(s.google_client_id && s.google_client_secret), googleClientId: s.google_client_id || '',
       msConnected: !!(s.ms_client_id && s.ms_client_secret), msClientId: s.ms_client_id || '', msTenant: s.ms_tenant || '' });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
   try {
@@ -643,7 +643,7 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
     await saveSettings(ownerId(req), patch);
     mail.clearCache(); _brandCache = {};
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 // Validate Twilio creds (no message sent).
@@ -657,7 +657,7 @@ router.post('/api/settings/twilio/test', requireAuth, async (req, res) => {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return res.json({ ok: false, error: j.message || ('Twilio ' + r.status) });
     res.json({ ok: true, status: j.status });
-  } catch (e) { res.json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Public, token-gated ICS calendar feed — subscribe in Google/Apple/Outlook.
@@ -699,7 +699,7 @@ router.post('/api/settings/email/test', requireAuth, async (req, res) => {
     if (out && out.ok) return res.json({ ok: true, to });
     if (out && out.skipped) return res.status(400).json({ ok: false, error: out.reason });
     return res.status(400).json({ ok: false, error: (out && out.error) || 'Could not send.' });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
@@ -708,7 +708,7 @@ router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
     if (!key) return res.json({ ok: false, error: 'No key saved yet.' });
     const bal = await stripeGet(key, 'balance');
     res.json({ ok: true, livemode: !!bal.livemode });
-  } catch (e) { res.json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Revenue for the dashboard, computed from Stripe charges (best-effort, recent pages).
@@ -778,7 +778,7 @@ router.post('/api/lead', async (req, res) => {
       html: '<div style="font-family:Georgia,serif;color:#2C3327;max-width:460px"><h2 style="color:#3B4832">Thank you, ' + (first || 'friend') + '!</h2><p>We have your mahjong lesson request and will be in touch soon to set up your first game.</p><p style="color:#8A6D14">— ' + brandName + '</p></div>' }).catch(() => {});
     if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your ' + brandName + ' lesson request — we will reach out soon. \u2014 ' + brandName + '').catch(() => {});
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 // Archive (soft-remove) or restore a student/lead.
@@ -788,7 +788,7 @@ router.post('/api/students/:id/archive', requireAuth, async (req, res) => {
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ archived, updated_at: new Date().toISOString() }) });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 // Turn a lead into a student. Called manually now; the Stripe payment
@@ -798,7 +798,7 @@ router.post('/api/students/:id/convert', requireAuth, async (req, res) => {
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'student', updated_at: new Date().toISOString() }) });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 // Public inquiry-form config (homepage reads this).
@@ -835,7 +835,7 @@ router.put('/api/inquiry-config', requireAuth, async (req, res) => {
     };
     await saveSettings(ownerId(req), { inquiry_config: cfg, updated_at: new Date().toISOString() });
     res.json({ ok: true });
-  } catch (e) { res.status(400).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
 
 /* ================= PAGES ================= */
@@ -949,7 +949,7 @@ router.get('/.well-known/apple-developer-merchantid-domain-association', async (
 });
 router.post('/api/applepay/assoc', async (req, res) => {
   try { if (String(req.query.secret || '') !== OG_SECRET) return res.status(403).json({ ok: false }); const val = String((req.body && req.body.content) || '').trim(); if (val.length < 20) return res.status(400).json({ ok: false }); await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'apple_pay_assoc', value: val, updated_at: new Date().toISOString() }) }); res.json({ ok: true }); }
-  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.get('/og.png', async (req, res) => {
   try {
@@ -983,7 +983,7 @@ router.post('/api/logo/save', express.text({ type: '*/*', limit: '6mb' }), async
     if (d.length < 1000) return res.status(400).json({ ok: false, error: 'image too small' });
     await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'logo_png', value: d, updated_at: new Date().toISOString() }) });
     res.json({ ok: true, bytes: d.length });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Public: the testimonial photo (stored in app_config), if imported.
@@ -1009,7 +1009,7 @@ router.post('/api/testimonial-photo/import', async (req, res) => {
     const dataUrl = 'data:' + ct + ';base64,' + buf.toString('base64');
     await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'testimonial_photo', value: dataUrl, updated_at: new Date().toISOString() }) });
     res.json({ ok: true, bytes: buf.length, type: ct });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Superadmin: pull Holly's headshot from her Tampa Bay Mahj profile (server-side,
@@ -1021,7 +1021,7 @@ router.post('/api/hq/import-holly-photo', requireSuperadmin, async (req, res) =>
     if (!photo || photo.indexOf('data:image') !== 0) return res.status(404).json({ ok: false, error: 'No photo found on the source profile.' });
     await sb('app_config?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ key: 'testimonial_photo', value: photo, updated_at: new Date().toISOString() }) });
     res.json({ ok: true, bytes: photo.length });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/api/hq/overview', requireSuperadmin, async (req, res) => {
@@ -1049,7 +1049,7 @@ router.get('/api/hq/overview', requireSuperadmin, async (req, res) => {
       mrr: +(active * PRICE).toFixed(2), arr: +(active * PRICE * 12).toFixed(2),
       trialPipeline: +(trialing * PRICE).toFixed(2), newLast30: new30, price: PRICE,
     }, studios });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/request',  (req, res) => res.redirect('/'));

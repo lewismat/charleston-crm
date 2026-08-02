@@ -785,7 +785,7 @@ router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, async (req, res)
       }),
     });
     res.json(copy);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Holly adds someone who paid cash, Venmo'd her, or just texted.
@@ -853,7 +853,7 @@ router.post('/api/admin/bookings/:id/cancel', auth.requireAuth, async (req, res)
     doSweep().catch(() => {});
     res.json({ ok: true, emailed });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' }));
   }
 });
 
@@ -896,7 +896,7 @@ router.post('/api/admin/announce', auth.requireAuth, async (req, res) => {
       if (doSms && r.phone) { sms.sendSMS(r.phone, `${brand}: ${message}`.slice(0, 600)).catch(() => {}); texted++; }
     }
     res.json({ ok: true, recipients: recips.length, emailed, texted });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Next few sessions for the dashboard, with attendees.
@@ -906,7 +906,7 @@ router.get('/api/admin/upcoming', auth.requireAuth, async (req, res) => {
     const now = new Date().toISOString();
     const rows = await sb(`slots?select=*,bookings(id,first_name,last_name,email,phone,seats,status,attended)&${oidF(ownerId(req))}&published=eq.true&starts_at=gte.${now}&order=starts_at.asc&limit=8`);
     res.json({ ok: true, slots: (rows || []).map((s) => ({ ...s, seats_free: Math.max(0, free(s)) })) });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 // Mark whether a booked guest showed up.
@@ -916,7 +916,7 @@ router.post('/api/admin/bookings/:id/attended', auth.requireAuth, async (req, re
     const [updated] = await sb(`bookings?id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ attended }) });
     if (!updated) return res.status(404).json({ ok: false, error: 'That booking is no longer here.' });
     res.json({ ok: true, attended: updated.attended });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
@@ -926,7 +926,7 @@ router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
     const rows = await sb(`slots?select=*,bookings(*),waitlist(*)&${oidF(ownerId(req))}&order=starts_at.asc`);
     res.json(rows.map((s) => ({ ...s, seats_free: Math.max(0, free(s)) })));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' }));
   }
 });
 
@@ -967,7 +967,7 @@ router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
     const created = await sb('slots', { method: 'POST', body: JSON.stringify(rows) });
     res.json({ ...(created[0] || {}), created_count: created.length });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' }));
   }
 });
 
@@ -1051,7 +1051,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
     doSweep().catch(() => {});
     res.json({ ...updated, changed: changes, notified });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' }));
   }
 });
 
@@ -1065,7 +1065,7 @@ router.delete('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
     await sb(`slots?id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`, { method: 'DELETE' });
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    (console.error('[booking.js]', e && e.message), res.status(500).json({ error: 'Something went wrong on our end. Please try again.' }));
   }
 });
 

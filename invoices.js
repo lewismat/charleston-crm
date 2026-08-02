@@ -75,7 +75,7 @@ router.post('/api/invoices', auth.requireAuth, async (req, res) => {
     await saveInv(inv);
     await cfgSet(`invref:${token}`, `${owner}:${id}`);
     res.json({ ok: true, invoice: adminView(inv), link: `${SITE_URL}/i/${token}` });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/api/invoices', auth.requireAuth, async (req, res) => {
@@ -86,7 +86,7 @@ router.get('/api/invoices', auth.requireAuth, async (req, res) => {
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).map(adminView);
     const totals = invoices.reduce((t, i) => { t.outstanding += (i.amount - i.paidTotal); t.collected += i.paidTotal; return t; }, { outstanding: 0, collected: 0 });
     res.json({ ok: true, invoices, totals });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.post('/api/invoices/:id/pay', auth.requireAuth, async (req, res) => {
@@ -100,7 +100,7 @@ router.post('/api/invoices/:id/pay', auth.requireAuth, async (req, res) => {
     inv.payments = inv.payments || []; inv.payments.push(p);
     recompute(inv); await saveInv(inv);
     res.json({ ok: true, invoice: adminView(inv) });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.delete('/api/invoices/:id/payment/:pid', auth.requireAuth, async (req, res) => {
@@ -110,7 +110,7 @@ router.delete('/api/invoices/:id/payment/:pid', auth.requireAuth, async (req, re
     inv.payments = (inv.payments || []).filter((p) => p.id !== req.params.pid);
     recompute(inv); await saveInv(inv);
     res.json({ ok: true, invoice: adminView(inv) });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/api/invoices/:id/proof/:pid', auth.requireAuth, async (req, res) => {
@@ -161,7 +161,7 @@ router.post('/api/pi/:token/checkout', async (req, res) => {
       cancel_url: `${SITE_URL}/i/${inv.token}`,
     });
     res.json({ ok: true, url: session.url });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 router.get('/api/pi/:token/return', async (req, res) => {
@@ -203,7 +203,7 @@ router.post('/api/pi/:token/intent', async (req, res) => {
       description: inv.number, ...(inv.customer.email ? { receipt_email: inv.customer.email } : {}),
     });
     res.json({ ok: true, clientSecret: pi.client_secret, publishableKey: pk, amount: due, currency: inv.currency || 'usd' });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 router.post('/api/pi/:token/confirm', async (req, res) => {
   try {
@@ -221,7 +221,7 @@ router.post('/api/pi/:token/confirm', async (req, res) => {
       return res.json({ ok: true, status: 'paid' });
     }
     res.json({ ok: true, status: (pi && pi.status) || 'unknown' });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
 /* page routes */
