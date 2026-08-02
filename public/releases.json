@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "v4.1",
+      "date": "August 2, 2026",
+      "title": "Polish & reliability",
+      "items": [
+        "Recurring classes now keep the right time, even across daylight-saving changes",
+        "Password reset emails now send reliably",
+        "Your public card's “Request a lesson” and “Event Calendar” buttons always take visitors to your studio",
+        "A smoother inquiry form — the tile counter keeps up no matter how you fill it out",
+        "Friendlier, clearer messages when something doesn't go through"
+      ]
+    },
+    {
       "version": "v4.0",
       "date": "July 23, 2026",
       "title": "Grow & retain",
