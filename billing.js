@@ -85,10 +85,29 @@ async function subscriptionActive(accountId) {
   try { const a = await accountById(accountId); return acctActive(a); }
   catch { return false; }
 }
+// Cache the superadmin allow-list briefly so the gate doesn't hit the DB twice
+// on every request.
+let _superCache = { at: 0, set: null };
+async function superEmails() {
+  if (_superCache.set && Date.now() - _superCache.at < 60000) return _superCache.set;
+  let set = new Set();
+  try { const raw = (await appConfig('superadmin_emails')) || ''; set = new Set(raw.toLowerCase().split(/[,\s]+/).filter(Boolean)); } catch (e) {}
+  _superCache = { at: Date.now(), set };
+  return set;
+}
 async function requireSubscription(req, res, next) {
   if (!req.account) return res.status(401).json({ ok: false, error: 'Please sign in.' });
-  if (await subscriptionActive(req.account.id)) return next();
-  // page requests get redirected to the paywall; API requests get 402
+  try {
+    // Check the STUDIO OWNER's subscription (not the individual staff member's),
+    // so staff of a paying studio are never locked out.
+    const oid = req.account.oid || req.account.owner_id || req.account.id;
+    const acct = await accountById(oid);
+    if (acct) {
+      const supers = await superEmails();
+      if (acct.email && supers.has(String(acct.email).toLowerCase())) return next(); // platform owner bypass
+      if (acctActive(acct)) return next();
+    }
+  } catch (e) { return next(); } // fail-open on a transient DB error — never lock a paying user out over a hiccup
   if ((req.headers.accept || '').includes('text/html')) return res.redirect('/subscribe');
   return res.status(402).json({ ok: false, error: 'A subscription is required.', needsSubscription: true });
 }

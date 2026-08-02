@@ -29,6 +29,7 @@ const path = require('path');
 const mail = require('./email');
 const sms = require('./sms');
 const auth = require('./auth');
+const requireSub = require('./billing').requireSubscription;
 const router = express.Router();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -768,7 +769,7 @@ router.get('/booking/:token/google', async (req, res) => {
 });
 
 // Copy an event to a new date, without its guests.
-router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const [src] = await sb(`slots?select=*&id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`);
     if (!src) return res.status(404).json({ error: 'That event is no longer here.' });
@@ -789,7 +790,7 @@ router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, async (req, res)
 });
 
 // Holly adds someone who paid cash, Venmo'd her, or just texted.
-router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/slots/:id/attendee', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const id = encodeURIComponent(req.params.id);
     const b = req.body || {};
@@ -830,7 +831,7 @@ router.post('/api/admin/slots/:id/attendee', auth.requireAuth, async (req, res) 
 });
 
 // Holly cancels a seat from her end — someone called, or could not make it.
-router.post('/api/admin/bookings/:id/cancel', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/bookings/:id/cancel', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const id = encodeURIComponent(req.params.id);
     const [bk] = await sb(`bookings?select=*,slots(*)&id=eq.${id}&${oidF(ownerId(req))}`);
@@ -864,7 +865,7 @@ router.get('/schedule', (req, res) =>
 );
 
 // Bulk announcement: email/text this studio's students, a segment, or one class.
-router.post('/api/admin/announce', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/announce', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const oid = ownerId(req);
     const b = req.body || {};
@@ -900,7 +901,7 @@ router.post('/api/admin/announce', auth.requireAuth, async (req, res) => {
 });
 
 // Next few sessions for the dashboard, with attendees.
-router.get('/api/admin/upcoming', auth.requireAuth, async (req, res) => {
+router.get('/api/admin/upcoming', auth.requireAuth, requireSub, async (req, res) => {
   try {
     maybeRemind();
     const now = new Date().toISOString();
@@ -910,7 +911,7 @@ router.get('/api/admin/upcoming', auth.requireAuth, async (req, res) => {
 });
 
 // Mark whether a booked guest showed up.
-router.post('/api/admin/bookings/:id/attended', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/bookings/:id/attended', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const attended = !!(req.body && req.body.attended);
     const [updated] = await sb(`bookings?id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ attended }) });
@@ -919,7 +920,7 @@ router.post('/api/admin/bookings/:id/attended', auth.requireAuth, async (req, re
   } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
+router.get('/api/admin/slots', auth.requireAuth, requireSub, async (req, res) => {
   try {
     await doSweep();
     maybeRemind();
@@ -930,7 +931,7 @@ router.get('/api/admin/slots', auth.requireAuth, async (req, res) => {
   }
 });
 
-router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
+router.post('/api/admin/slots', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const b = req.body || {};
     if (!TYPE_LABEL[b.slot_type]) return res.status(400).json({ error: 'Pick what kind of session this is.' });
@@ -971,7 +972,7 @@ router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
+router.patch('/api/admin/slots/:id', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const id = encodeURIComponent(req.params.id);
     const [before] = await sb(`slots?select=*&id=eq.${id}&${oidF(ownerId(req))}`);
@@ -1056,7 +1057,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
 });
 
 
-router.delete('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
+router.delete('/api/admin/slots/:id', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const [slot] = await sb(`slots?select=seats_taken,seats_held&id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`);
     if (slot?.seats_taken > 0 || slot?.seats_held > 0) {

@@ -11,6 +11,7 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const auth = require('./auth');
+const requireSub = require('./billing').requireSubscription;
 const router = express.Router();
 router.use(express.json({ limit: '12mb' }));
 
@@ -65,7 +66,7 @@ function adminView(inv) {
 }
 
 /* ---------------- admin API ---------------- */
-router.post('/api/invoices', auth.requireAuth, async (req, res) => {
+router.post('/api/invoices', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const owner = ownerId(req); if (!owner) return res.status(401).json({ ok: false });
     const b = req.body || {};
@@ -83,7 +84,7 @@ router.post('/api/invoices', auth.requireAuth, async (req, res) => {
   } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.get('/api/invoices', auth.requireAuth, async (req, res) => {
+router.get('/api/invoices', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const owner = ownerId(req);
     const rows = await cfgList(`inv:${owner}:`);
@@ -94,7 +95,7 @@ router.get('/api/invoices', auth.requireAuth, async (req, res) => {
   } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.post('/api/invoices/:id/pay', auth.requireAuth, async (req, res) => {
+router.post('/api/invoices/:id/pay', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const owner = ownerId(req); const inv = await loadInv(owner, req.params.id);
     if (!inv) return res.status(404).json({ ok: false });
@@ -108,7 +109,7 @@ router.post('/api/invoices/:id/pay', auth.requireAuth, async (req, res) => {
   } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.delete('/api/invoices/:id/payment/:pid', auth.requireAuth, async (req, res) => {
+router.delete('/api/invoices/:id/payment/:pid', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const owner = ownerId(req); const inv = await loadInv(owner, req.params.id);
     if (!inv) return res.status(404).json({ ok: false });
@@ -118,7 +119,7 @@ router.delete('/api/invoices/:id/payment/:pid', auth.requireAuth, async (req, re
   } catch (e) { (console.error('[invoices.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.get('/api/invoices/:id/proof/:pid', auth.requireAuth, async (req, res) => {
+router.get('/api/invoices/:id/proof/:pid', auth.requireAuth, requireSub, async (req, res) => {
   try {
     const owner = ownerId(req); const inv = await loadInv(owner, req.params.id);
     const p = inv && (inv.payments || []).find((x) => x.id === req.params.pid);
@@ -129,7 +130,7 @@ router.get('/api/invoices/:id/proof/:pid', auth.requireAuth, async (req, res) =>
   } catch (e) { res.status(404).send(''); }
 });
 
-router.delete('/api/invoices/:id', auth.requireAuth, async (req, res) => {
+router.delete('/api/invoices/:id', auth.requireAuth, requireSub, async (req, res) => {
   try { const owner = ownerId(req); const inv = await loadInv(owner, req.params.id); if (inv) { await cfgDel(`inv:${owner}:${inv.id}`); await cfgDel(`invref:${inv.token}`); } res.json({ ok: true }); }
   catch (e) { res.status(500).json({ ok: false }); }
 });

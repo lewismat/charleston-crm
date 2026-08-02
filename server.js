@@ -348,7 +348,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // dashboard data
-app.get('/api/dashboard', auth.requireAuth, async (req, res) => {
+app.get('/api/dashboard', auth.requireAuth, billing.requireSubscription, async (req, res) => {
   try {
     const { inquiries, visits } = await store.getAll(ownerId(req));
     const uniqueVisitors = new Set(visits.map((v) => v.visitorId)).size;
@@ -366,7 +366,7 @@ app.get('/api/dashboard', auth.requireAuth, async (req, res) => {
 });
 
 // update inquiry status
-app.patch('/api/inquiries/:id', auth.requireAuth, async (req, res) => {
+app.patch('/api/inquiries/:id', auth.requireAuth, billing.requireSubscription, async (req, res) => {
   try {
     const id = req.params.id;
     const b = JSON.parse((await readBody(req)) || '{}');

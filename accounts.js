@@ -113,6 +113,7 @@ function requireOwner(req, res, next) {
   if (!req.account || req.account.role !== 'owner') return res.status(403).json({ ok: false, error: 'Owner only.' });
   next();
 }
+const requireSub = require('./billing').requireSubscription;
 async function accountCount() {
   const rows = await sb('accounts?select=id');
   return Array.isArray(rows) ? rows.length : 0;
@@ -276,11 +277,11 @@ router.post('/api/auth/register', async (req, res) => {
 });
 
 // Invite codes (owner generates; team can view).
-router.get('/api/invites', requireAuth, async (req, res) => {
+router.get('/api/invites', requireAuth, requireSub, async (req, res) => {
   try { res.json({ ok: true, invites: await sb(`invites?${oidF(ownerId(req))}&select=*&order=created_at.desc&limit=100`) }); }
   catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.post('/api/invites', requireAuth, requireOwner, async (req, res) => {
+router.post('/api/invites', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const code = crypto.randomBytes(4).toString('hex').toUpperCase();
     const rows = await sb('invites', { method: 'POST', body: JSON.stringify({
@@ -294,7 +295,7 @@ router.post('/api/auth/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-router.get('/api/referrals', requireAuth, async (req, res) => {
+router.get('/api/referrals', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`accounts?id=eq.${enc(req.account.id)}&select=slug&limit=1`);
     const slug = rows && rows[0] && rows[0].slug;
@@ -366,13 +367,13 @@ router.get('/api/auth/google/callback', async (req, res) => {
 });
 
 /* ================= STAFF (owner manages) ================= */
-router.get('/api/staff', requireAuth, async (req, res) => {
+router.get('/api/staff', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`accounts?${oidF(ownerId(req))}&select=id,name,email,username,role,active,last_login,created_at&order=created_at.asc`);
     res.json({ ok: true, staff: rows });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.post('/api/staff', requireAuth, requireOwner, async (req, res) => {
+router.post('/api/staff', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const name = clean(req.body.name, 120), email = clean(req.body.email, 200).toLowerCase();
     const username = clean(req.body.username, 60).toLowerCase(), password = String(req.body.password || '');
@@ -396,7 +397,7 @@ router.get('/api/profile', async (req, res) => {
     res.json({ ok: true, profile: (rows && rows[0]) || { id: oid } });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.put('/api/profile', requireAuth, async (req, res) => {
+router.put('/api/profile', requireAuth, requireSub, async (req, res) => {
   try {
     const patch = { updated_at: new Date().toISOString() };
     for (const f of PROFILE_FIELDS) if (f in req.body) patch[f] = clean(req.body[f], f === 'photo_url' ? 4000000 : 4000);
@@ -420,7 +421,7 @@ function stuBody(b) {
   if (o.email) o.email = o.email.toLowerCase();
   return o;
 }
-router.get('/api/students', requireAuth, async (req, res) => {
+router.get('/api/students', requireAuth, requireSub, async (req, res) => {
   try {
     const q = clean(req.query.q, 100);
     const status = ['lead', 'student'].includes(req.query.status) ? req.query.status : '';
@@ -436,7 +437,7 @@ router.get('/api/students', requireAuth, async (req, res) => {
 });
 
 // One-click CSV export of this studio's students + leads.
-router.get('/api/students/export.csv', requireAuth, async (req, res) => {
+router.get('/api/students/export.csv', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`students?select=first_name,last_name,email,phone,status,skill_level,tags,source,notes,birthday,created_at&${oidF(ownerId(req))}&archived=eq.false&order=created_at.desc&limit=5000`);
     const cols = ['first_name','last_name','email','phone','status','skill_level','tags','source','notes','birthday','created_at'];
@@ -448,7 +449,7 @@ router.get('/api/students/export.csv', requireAuth, async (req, res) => {
     res.send(out);
   } catch (e) { res.status(500).send('Could not export.'); }
 });
-router.post('/api/students', requireAuth, async (req, res) => {
+router.post('/api/students', requireAuth, requireSub, async (req, res) => {
   try {
     const body = stuBody(req.body);
     if (!body.first_name) return res.status(400).json({ ok: false, error: 'First name is required.' });
@@ -457,7 +458,7 @@ router.post('/api/students', requireAuth, async (req, res) => {
     res.json({ ok: true, student: rows[0] });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
-router.get('/api/students/:id', requireAuth, async (req, res) => {
+router.get('/api/students/:id', requireAuth, requireSub, async (req, res) => {
   try {
     const oid = ownerId(req);
     const rows = await sb(`students?id=eq.${enc(req.params.id)}&${oidF(oid)}&limit=1`);
@@ -474,7 +475,7 @@ router.get('/api/students/:id', requireAuth, async (req, res) => {
     res.json({ ok: true, student, history: { bookings, inquiries } });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.put('/api/students/:id', requireAuth, async (req, res) => {
+router.put('/api/students/:id', requireAuth, requireSub, async (req, res) => {
   try {
     const body = stuBody(req.body); body.updated_at = new Date().toISOString();
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(body) });
@@ -506,7 +507,7 @@ async function convertPaidLeads(emails, oid) {
 
 // Settings never leak the key back to the browser — only whether it's connected + a masked hint.
 // One honest answer to "is this thing actually working?" — used by the dashboard checklist.
-router.get('/api/health', requireAuth, async (req, res) => {
+router.get('/api/health', requireAuth, requireSub, async (req, res) => {
   try {
     const oid = ownerId(req);
     const rows = await sb(`settings?${oidF(oid)}&limit=1`).catch(() => []);
@@ -569,7 +570,7 @@ router.get('/api/branding', async (req, res) => {
   } catch (e) { res.json({ logo: '', name: '' }); }
 });
 
-router.get('/api/settings', requireAuth, async (req, res) => {
+router.get('/api/settings', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`settings?${oidF(ownerId(req))}&limit=1`);
     const s = (rows && rows[0]) || {};
@@ -595,7 +596,7 @@ router.get('/api/settings', requireAuth, async (req, res) => {
       msConnected: !!(s.ms_client_id && s.ms_client_secret), msClientId: s.ms_client_id || '', msTenant: s.ms_tenant || '' });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
+router.put('/api/settings', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const b = req.body || {};
     const patch = { updated_at: new Date().toISOString() };
@@ -647,7 +648,7 @@ router.put('/api/settings', requireAuth, requireOwner, async (req, res) => {
 });
 
 // Validate Twilio creds (no message sent).
-router.post('/api/settings/twilio/test', requireAuth, async (req, res) => {
+router.post('/api/settings/twilio/test', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`settings?${oidF(ownerId(req))}&select=twilio_account_sid,twilio_auth_token&limit=1`);
     const s = rows && rows[0];
@@ -687,7 +688,7 @@ router.get('/api/cal/:file', async (req, res) => {
   } catch (e) { res.status(500).send('error'); }
 });
 // Sends a real email to the alert address so Holly can confirm delivery end to end.
-router.post('/api/settings/email/test', requireAuth, async (req, res) => {
+router.post('/api/settings/email/test', requireAuth, requireSub, async (req, res) => {
   try {
     const rows = await sb(`settings?${oidF(ownerId(req))}&select=notify_email&limit=1`).catch(() => []);
     const to = (rows && rows[0] && rows[0].notify_email) || process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
@@ -702,7 +703,7 @@ router.post('/api/settings/email/test', requireAuth, async (req, res) => {
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
 
-router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
+router.post('/api/settings/stripe/test', requireAuth, requireSub, async (req, res) => {
   try {
     const key = await getStripeKey(ownerId(req));
     if (!key) return res.json({ ok: false, error: 'No key saved yet.' });
@@ -712,7 +713,7 @@ router.post('/api/settings/stripe/test', requireAuth, async (req, res) => {
 });
 
 // Revenue for the dashboard, computed from Stripe charges (best-effort, recent pages).
-router.get('/api/revenue', requireAuth, async (req, res) => {
+router.get('/api/revenue', requireAuth, requireSub, async (req, res) => {
   try {
     const oid = ownerId(req);
     const key = await getStripeKey(oid);
@@ -782,7 +783,7 @@ router.post('/api/lead', async (req, res) => {
 });
 
 // Archive (soft-remove) or restore a student/lead.
-router.post('/api/students/:id/archive', requireAuth, async (req, res) => {
+router.post('/api/students/:id/archive', requireAuth, requireSub, async (req, res) => {
   try {
     const archived = req.body.archived !== false;
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
@@ -793,7 +794,7 @@ router.post('/api/students/:id/archive', requireAuth, async (req, res) => {
 
 // Turn a lead into a student. Called manually now; the Stripe payment
 // handler will call this automatically once a lesson is actually paid.
-router.post('/api/students/:id/convert', requireAuth, async (req, res) => {
+router.post('/api/students/:id/convert', requireAuth, requireSub, async (req, res) => {
   try {
     await sb(`students?id=eq.${enc(req.params.id)}&${oidF(ownerId(req))}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'student', updated_at: new Date().toISOString() }) });
@@ -819,7 +820,7 @@ router.get('/api/inquiry-config', async (req, res) => {
     res.json({ ok: true, config: (rows && rows[0] && rows[0].inquiry_config) || {} });
   } catch (e) { res.json({ ok: true, config: {} }); }
 });
-router.put('/api/inquiry-config', requireAuth, async (req, res) => {
+router.put('/api/inquiry-config', requireAuth, requireSub, async (req, res) => {
   try {
     const b = req.body || {};
     const cfg = {
