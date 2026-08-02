@@ -5,10 +5,13 @@
 const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SB_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-async function getTwilio() {
+async function getTwilio(oid) {
   if (!SB_URL || !SB_KEY) return null;
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/settings?id=eq.app&select=twilio_account_sid,twilio_auth_token,twilio_from&limit=1`,
+    const q = oid
+      ? `settings?owner_id=eq.${encodeURIComponent(oid)}&select=twilio_account_sid,twilio_auth_token,twilio_from&limit=1`
+      : `settings?id=eq.app&select=twilio_account_sid,twilio_auth_token,twilio_from&limit=1`;
+    const r = await fetch(`${SB_URL}/rest/v1/${q}`,
       { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
     const rows = await r.json();
     const s = rows && rows[0];
@@ -27,8 +30,8 @@ function tidyPhone(p) {
   if (d.length === 11 && d[0] === '1') return '+' + d;
   return d ? '+' + d : '';
 }
-async function sendSMS(to, body) {
-  const t = await getTwilio();
+async function sendSMS(to, body, oid) {
+  const t = await getTwilio(oid);
   if (!t) return { skipped: true };
   const dest = tidyPhone(to);
   if (!dest) return { skipped: true, reason: 'no phone' };

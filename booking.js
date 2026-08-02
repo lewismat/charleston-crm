@@ -137,7 +137,7 @@ async function sendDueReminders() {
         if (start > new Date(now.getTime() + cfg.hours * 3600000)) continue;
         const brand = await studioName(slot.owner_id); mail.setBrand(brand);
         if (bk.email) { try { await mail.eventReminder(bk, slot, bk.manage_token); } catch (e) {} }
-        if (bk.phone) sms.sendSMS(bk.phone, `Reminder from ${brand}: ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${bk.manage_token}`).catch(() => {});
+        if (bk.phone) sms.sendSMS(bk.phone, `Reminder from ${brand}: ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${bk.manage_token}`, slot.owner_id).catch(() => {});
         await sb(`bookings?id=eq.${bk.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ reminder_sent_at: new Date().toISOString() }) }).catch(() => {});
       }
     } catch (e) { console.error('[booking] reminders:', e.message); }
@@ -259,7 +259,7 @@ async function upsertStudentFromBooking(person, slot) {
 
 async function tellHolly(subject, fields, oid) {
   const to = await ownerEmail(oid);
-  try { const r = await mail.ownerAlert(to, subject, fields); if (r && r.ok) return; } catch (e) {}
+  try { const r = await mail.ownerAlert(to, subject, fields, oid); if (r && r.ok) return; } catch (e) {}
   try {
     await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
       method: 'POST',
@@ -292,7 +292,7 @@ async function doSweep() {
       for (const o of offers) {
         let oOid = o.owner_id;
         if (!oOid && o.slot_id) { const sl = await sb(`slots?select=owner_id&id=eq.${encodeURIComponent(o.slot_id)}`).catch(() => []); oOid = sl && sl[0] && sl[0].owner_id; }
-        const sent = await mail.waitlistOffer(o);
+        const sent = await mail.waitlistOffer({ ...o, owner_id: oOid });
         // If the client could not be emailed, Holly gets the claim link to pass on
         // by text — the seat stays held either way, so the offer still means something.
         if (!sent?.ok) {
@@ -394,7 +394,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
 
   const brand = await studioName(slot && slot.owner_id); mail.setBrand(brand);
   mail.bookingConfirmed({ ...payload, seats }, slot, result.manage_token);
-  if (payload.phone) sms.sendSMS(payload.phone, `You're booked with ${brand} \u2014 ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
+  if (payload.phone) sms.sendSMS(payload.phone, `You're booked with ${brand} \u2014 ${slot.title || TYPE_LABEL[slot.slot_type]} on ${fmt(slot.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`, slot.owner_id).catch(() => {});
   tellHolly(`New booking — ${slot.title || TYPE_LABEL[slot.slot_type]} — ${fmt(slot.starts_at)}`, {
     Name: `${payload.first_name} ${payload.last_name}`,
     Email: payload.email,
@@ -652,8 +652,8 @@ router.post('/api/waitlist/:token/claim', async (req, res) => {
     if (!result.already && w) {
       const brand = await studioName(w.slots && w.slots.owner_id); mail.setBrand(brand);
       upsertStudentFromBooking(w, w.slots);
-      mail.offerClaimed({ ...w, starts_at: w.slots.starts_at, location: w.slots.location }, result.manage_token);
-      if (w.phone) sms.sendSMS(w.phone, `Your seat is confirmed with ${brand} \u2014 ${TYPE_LABEL[w.slots.slot_type]} on ${fmt(w.slots.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`).catch(() => {});
+      mail.offerClaimed({ ...w, owner_id: (w.owner_id || (w.slots && w.slots.owner_id)), starts_at: w.slots.starts_at, location: w.slots.location }, result.manage_token);
+      if (w.phone) sms.sendSMS(w.phone, `Your seat is confirmed with ${brand} \u2014 ${TYPE_LABEL[w.slots.slot_type]} on ${fmt(w.slots.starts_at)}. Manage: ${SITE_URL}/booking/${result.manage_token}`, w.slots && w.slots.owner_id).catch(() => {});
       tellHolly(`Waitlist claimed — ${w.first_name} ${w.last_name} — ${fmt(w.slots.starts_at)}`, {
         Name: `${w.first_name} ${w.last_name}`,
         Email: w.email,
@@ -892,8 +892,8 @@ router.post('/api/admin/announce', auth.requireAuth, async (req, res) => {
     const brand = await studioName(oid); mail.setBrand(brand);
     let emailed = 0, texted = 0;
     for (const r of recips) {
-      if (doEmail && r.email) { try { const out = await mail.announcement(r.email, subject, message); if (out && out.ok) emailed++; } catch (e) {} }
-      if (doSms && r.phone) { sms.sendSMS(r.phone, `${brand}: ${message}`.slice(0, 600)).catch(() => {}); texted++; }
+      if (doEmail && r.email) { try { const out = await mail.announcement(r.email, subject, message, oid); if (out && out.ok) emailed++; } catch (e) {} }
+      if (doSms && r.phone) { sms.sendSMS(r.phone, `${brand}: ${message}`.slice(0, 600), oid).catch(() => {}); texted++; }
     }
     res.json({ ok: true, recipients: recips.length, emailed, texted });
   } catch (e) { (console.error('[booking.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
@@ -1038,7 +1038,7 @@ router.patch('/api/admin/slots/:id', auth.requireAuth, async (req, res) => {
           if (out && out.ok) notified++;
           else { failed++; if (out && (out.reason || out.error)) warning = out.reason || out.error; }
           if (bk.phone) {
-            sms.sendSMS(bk.phone, `Update from ${brand} — your ${updated.title || TYPE_LABEL[updated.slot_type]} is now ${fmt(updated.starts_at)}. Details: ${SITE_URL}/booking/${bk.manage_token}`).catch(() => {});
+            sms.sendSMS(bk.phone, `Update from ${brand} — your ${updated.title || TYPE_LABEL[updated.slot_type]} is now ${fmt(updated.starts_at)}. Details: ${SITE_URL}/booking/${bk.manage_token}`, before.owner_id).catch(() => {});
           }
         } catch (e) { failed++; console.error('[booking] change notice failed:', e.message); }
       }

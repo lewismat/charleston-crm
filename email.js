@@ -20,30 +20,40 @@ const SB_KEY =
 
 // Credentials live in the settings table so Holly can manage them in the app.
 // Env vars still win if present, so existing deploys keep working.
-let _cache = { at: 0, val: null };
-async function cfg() {
-  if (_cache.val && Date.now() - _cache.at < 30000) return _cache.val;
+const _cache = {};
+// Per-studio email credentials. Pass the studio's owner id and we read THAT
+// studio's row; a studio that configured its own Resend sender uses it, and
+// everyone else falls back to the platform env sender. No studio ever borrows
+// another studio's row (that was the old id=eq.app cross-tenant leak).
+async function cfg(oid) {
+  const ckey = oid || '_app';
+  const hit = _cache[ckey];
+  if (hit && Date.now() - hit.at < 30000) return hit.val;
   let row = {};
   if (SB_URL && SB_KEY) {
     try {
-      const r = await fetch(`${SB_URL}/rest/v1/settings?id=eq.app&select=resend_api_key,from_email,notify_email&limit=1`,
+      const q = oid
+        ? `settings?owner_id=eq.${encodeURIComponent(oid)}&select=resend_api_key,from_email,notify_email&limit=1`
+        : `settings?id=eq.app&select=resend_api_key,from_email,notify_email&limit=1`;
+      const r = await fetch(`${SB_URL}/rest/v1/${q}`,
         { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
       if (r.ok) row = (await r.json())[0] || {};
     } catch (e) { /* fall back to env */ }
   }
+  const own = row.resend_api_key && row.from_email;
   const val = {
-    key: process.env.RESEND_API_KEY || row.resend_api_key || '',
-    from: process.env.FROM_EMAIL || row.from_email || '',
-    replyTo: process.env.REPLY_TO || row.notify_email || process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com',
+    key: own ? row.resend_api_key : (process.env.RESEND_API_KEY || ''),
+    from: own ? row.from_email : (process.env.FROM_EMAIL || ''),
+    replyTo: row.notify_email || process.env.REPLY_TO || process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com',
   };
-  _cache = { at: Date.now(), val };
+  _cache[ckey] = { at: Date.now(), val };
   return val;
 }
-function clearCache() { _cache = { at: 0, val: null }; }
+function clearCache() { for (const k in _cache) delete _cache[k]; }
 const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 const TZ = 'America/New_York';
 
-async function configured() { const c = await cfg(); return Boolean(c.key && c.from); }
+async function configured(oid) { const c = await cfg(oid); return Boolean(c.key && c.from); }
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -66,8 +76,8 @@ const deadline = (d) =>
     timeZone: TZ, weekday: 'long', hour: 'numeric', minute: '2-digit',
   }).format(new Date(d));
 
-async function send({ to, subject, html }) {
-  const c = await cfg();
+async function send({ to, subject, html, oid }) {
+  const c = await cfg(oid);
   if (!c.key || !c.from) return { skipped: true, reason: 'Email sending is not set up yet (missing API key or from address).' };
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -122,7 +132,7 @@ const where = (slot) => (slot.location ? p(esc(slot.location)) : '');
 // Sent the moment someone books.
 function bookingConfirmed(booking, slot, manageToken) {
   const url = `${SITE_URL}/booking/${manageToken}`;
-  return send({
+  return send({ oid: slot && slot.owner_id,
     to: booking.email,
     subject: `You're booked — ${when(slot.starts_at)}`,
     html: shell(
@@ -140,14 +150,14 @@ function bookingConfirmed(booking, slot, manageToken) {
 }
 
 // Sent when a session is full and they get in line.
-function announcement(to, subject, message) {
+function announcement(to, subject, message, oid) {
   const paras = String(message || '').split(/\n{2,}/).map((t) => p(esc(t).replace(/\n/g, '<br>'))).join('');
-  return send({ to, subject: subject || 'A note from your studio', html: shell(h1(subject || 'Hello!') + paras) });
+  return send({ oid: oid, to, subject: subject || 'A note from your studio', html: shell(h1(subject || 'Hello!') + paras) });
 }
 
 function eventReminder(booking, slot, manageToken) {
   const url = `${SITE_URL}/booking/${manageToken}`;
-  return send({
+  return send({ oid: slot && slot.owner_id,
     to: booking.email,
     subject: `Reminder — ${when(slot.starts_at)}`,
     html: shell(
@@ -162,7 +172,7 @@ function eventReminder(booking, slot, manageToken) {
 }
 
 function waitlistJoined(person, slot, token, position) {
-  return send({
+  return send({ oid: slot && slot.owner_id,
     to: person.email,
     subject: `You're #${position} on the list — ${when(slot.starts_at)}`,
     html: shell(
@@ -180,7 +190,7 @@ function waitlistJoined(person, slot, token, position) {
 // The one that matters: a seat opened and it is being held for them.
 function waitlistOffer(offer) {
   const url = `${SITE_URL}/waitlist/${offer.token}`;
-  return send({
+  return send({ oid: offer && offer.owner_id,
     to: offer.email,
     subject: `A seat opened up — ${when(offer.starts_at)}`,
     html: shell(
@@ -199,7 +209,7 @@ function waitlistOffer(offer) {
 // Sent when they claim a held seat.
 function offerClaimed(offer, manageToken) {
   const url = `${SITE_URL}/booking/${manageToken}`;
-  return send({
+  return send({ oid: offer && offer.owner_id,
     to: offer.email,
     subject: `Seat claimed — ${when(offer.starts_at)}`,
     html: shell(
@@ -216,12 +226,12 @@ function offerClaimed(offer, manageToken) {
 
 // Internal alert to Holly. Uses Resend (already verified) rather than formsubmit,
 // which silently drops mail until the recipient clicks a one-time activation link.
-function ownerAlert(to, subject, fields) {
+function ownerAlert(to, subject, fields, oid) {
   const rows = Object.entries(fields || {}).map(([k, v]) =>
     `<tr><td style="padding:6px 14px 6px 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#7A8A6B;white-space:nowrap;vertical-align:top;">${esc(k)}</td>` +
     `<td style="padding:6px 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:#3B4832;">${esc(String(v))}</td></tr>`
   ).join('');
-  return send({
+  return send({ oid: oid,
     to,
     subject,
     html: shell(
@@ -239,7 +249,7 @@ function eventChanged(booking, slot, manageToken, changes) {
     `<td style="padding:5px 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:#3B4832;">` +
     `<s style="color:#9AA88C;">${esc(c.from)}</s> &rarr; <b>${esc(c.to)}</b></td></tr>`
   ).join('');
-  return send({
+  return send({ oid: slot && slot.owner_id,
     to: booking.email,
     subject: `Updated — your ${LABEL[slot.slot_type]} on ${when(slot.starts_at)}`,
     html: shell(
@@ -258,7 +268,7 @@ function eventChanged(booking, slot, manageToken, changes) {
 
 // Holly cancelled someone's seat from her end.
 function bookingCancelledByHolly(booking, slot, note) {
-  return send({
+  return send({ oid: slot && slot.owner_id,
     to: booking.email,
     subject: `Cancelled — ${LABEL[slot.slot_type]} on ${when(slot.starts_at)}`,
     html: shell(

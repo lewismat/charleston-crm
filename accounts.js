@@ -53,7 +53,7 @@ async function tellHolly(subject, fields, oid) {
   let to = NOTIFY_EMAIL;
   try { if (oid) { const rows = await sb(`settings?owner_id=eq.${enc(oid)}&select=notify_email&limit=1`); if (rows && rows[0] && rows[0].notify_email) to = rows[0].notify_email;
     else { const a = await sb(`accounts?id=eq.${enc(oid)}&select=email&limit=1`); if (a && a[0] && a[0].email) to = a[0].email; } } } catch (e) {}
-  try { const r = await mail.ownerAlert(to, subject, fields); if (r && r.ok) return; } catch (e) {}
+  try { const r = await mail.ownerAlert(to, subject, fields, oid); if (r && r.ok) return; } catch (e) {}
   fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: subject, ...fields }),
@@ -695,7 +695,7 @@ router.post('/api/settings/email/test', requireAuth, async (req, res) => {
       Status: 'Email delivery is working.',
       'Sent to': to,
       When: new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }),
-    });
+    }, ownerId(req));
     if (out && out.ok) return res.json({ ok: true, to });
     if (out && out.skipped) return res.status(400).json({ ok: false, error: out.reason });
     return res.status(400).json({ ok: false, error: (out && out.error) || 'Could not send.' });
@@ -774,9 +774,9 @@ router.post('/api/lead', async (req, res) => {
       notes: message ? ('Lesson request: ' + message) : 'Lesson request',
     }) });
     tellHolly(`New lesson request: ${first} ${last}`.trim(), { Name: `${first} ${last}`.trim(), Email: email || '-', Phone: phone || '-', Message: message || '-' }, oid);
-    if (email) mail.send({ to: email, subject: 'Thanks for reaching out — ' + brandName,
+    if (email) mail.send({ oid, to: email, subject: 'Thanks for reaching out — ' + brandName,
       html: '<div style="font-family:Georgia,serif;color:#2C3327;max-width:460px"><h2 style="color:#3B4832">Thank you, ' + (first || 'friend') + '!</h2><p>We have your mahjong lesson request and will be in touch soon to set up your first game.</p><p style="color:#8A6D14">— ' + brandName + '</p></div>' }).catch(() => {});
-    if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your ' + brandName + ' lesson request — we will reach out soon. \u2014 ' + brandName + '').catch(() => {});
+    if (phone) sms.sendSMS(phone, 'Hi ' + (first || '') + '! Thanks for your ' + brandName + ' lesson request — we will reach out soon. \u2014 ' + brandName + '', oid).catch(() => {});
     res.json({ ok: true });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(400).json({ ok: false, error: 'We could not save that. Please check your entries and try again.' })); }
 });
@@ -879,7 +879,7 @@ router.post('/api/auth/forgot', async (req, res) => {
       'Reset link': link,
       'Good for': 'One hour, once.',
       'Not you?': 'Ignore this and nothing changes.',
-    });
+    }, acct.owner_id || acct.id);
     if (!out || !out.ok) console.error('[auth] reset email not sent to', email, out && (out.reason || out.error));
     return res.json(same);
   } catch (e) { console.error('[auth] forgot:', e.message); return res.json(same); }
