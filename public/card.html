@@ -92,6 +92,7 @@ function safeUrl(u){u=(u||'').trim();if(/^https?:\/\//i.test(u)||/^mailto:|^tel:
 })();
 (async function(){
   var p={}; try{ p=(await fetch('/api/profile').then(r=>r.json())).profile||{}; }catch(e){}
+  var studioBase = window.__STUDIO__ ? '/s/'+encodeURIComponent(window.__STUDIO__) : '';
   var name=p.display_name||'your teacher';
   var mono=p.photo_url?('<div class="mono"><img src="'+esc(p.photo_url)+'" alt="'+esc(name)+'"></div>')
                       :('<div class="mono"><span class="letter">'+esc(name.charAt(0))+'</span></div>');
@@ -113,8 +114,8 @@ function safeUrl(u){u=(u||'').trim();if(/^https?:\/\//i.test(u)||/^mailto:|^tel:
     (detHtml?'<div class="details">'+detHtml+'</div>':'') +
     (linkHtml?'<div class="links">'+linkHtml+'</div>':'') +
     '<div class="cta">' +
-      '<a class="primary" href="/inquire"><span class="ic">'+window.tbmIcon('sparkle')+'</span>Request a lesson</a>' +
-      '<a class="ghost" href="/book"><span class="ic">'+window.tbmIcon('calendar')+'</span>Event Calendar</a>' +
+      '<a class="primary" href="'+studioBase+'/inquire"><span class="ic">'+window.tbmIcon('sparkle')+'</span>Request a lesson</a>' +
+      '<a class="ghost" href="'+studioBase+'/book"><span class="ic">'+window.tbmIcon('calendar')+'</span>Event Calendar</a>' +
     '</div>' +
     '<div class="foot">Booked with Charleston</div>';
   document.title=name+' — Charleston';
