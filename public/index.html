@@ -389,9 +389,14 @@
         }
       } else { slot.classList.remove('up'); }
     });
-    document.getElementById('rackCount').textContent = n;
     var counter = document.querySelector('.rack-count');
-    if (form.checkValidity()) counter.innerHTML = n === FIELDS.length ? '<b>14 of 14</b> — that&#39;s a winning hand! Hit the button 🀄' : '<b>' + n + ' of 14</b> — enough to declare! (Optional tiles score bonus points 🀄)';
+    if (counter) {
+      if (form.checkValidity()) {
+        counter.innerHTML = n === FIELDS.length ? '<b>14 of 14</b> — that&#39;s a winning hand! Hit the button 🀄' : '<b>' + n + ' of 14</b> — enough to declare! (Optional tiles score bonus points 🀄)';
+      } else {
+        counter.innerHTML = '<b>' + n + '</b> of 14 tiles — fill the form to declare Mahjong!';
+      }
+    }
   }
 
   // ---- flying tile: input -> rack slot ----
