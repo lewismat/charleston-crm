@@ -103,7 +103,10 @@ async function resolveOwner(req) {
     const rows = await sb(`accounts?slug=eq.${encodeURIComponent(slug)}&role=eq.owner&select=id&limit=1`).catch(() => []);
     if (rows && rows[0]) return rows[0].id;
   }
-  return primaryOwnerId();
+  // Multi-tenant: no session + no (valid) studio slug = no default studio.
+  // Do NOT fall back to the first account, or slug-less anonymous requests
+  // would read and book into whichever studio happens to be first.
+  return null;
 }
 const oidF = (oid) => `owner_id=eq.${encodeURIComponent(oid)}`;
 const _snCache = {};
@@ -428,6 +431,7 @@ router.post('/api/book', async (req, res) => {
   try {
     const b = req.body || {};
     const oid = await resolveOwner(req);
+    if (!oid) return res.status(400).json({ error: 'Please use the full booking link from your instructor.' });
     const p = person(b);
     const seats = Math.max(1, parseInt(b.seats, 10) || 1);
     const bad = validate(p, b.slot_id);
@@ -582,6 +586,7 @@ router.post('/api/waitlist', async (req, res) => {
     if (bad) return res.status(400).json({ error: bad });
 
     const oid = await resolveOwner(req);
+    if (!oid) return res.status(400).json({ error: 'Please use the full booking link from your instructor.' });
     const result = await sb('rpc/join_waitlist', {
       method: 'POST',
       body: JSON.stringify({ p_slot_id: b.slot_id, p_seats: seats, p_person: p }),
