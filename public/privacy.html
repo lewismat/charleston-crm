@@ -24,7 +24,7 @@ footer{margin-top:40px;color:var(--stone);font-size:.82rem;border-top:1px solid 
 <li><b>Account information</b> — your name, email, username, and password (stored only as a secure hash).</li>
 <li><b>Billing information</b> — handled by Stripe. We never see or store your full card number; we keep only a Stripe customer/subscription reference and your subscription status.</li>
 <li><b>Studio data you enter</b> — your events, students, bookings, inquiries, and settings.</li>
-<li><b>Basic usage data</b> — page visits and simple analytics to help the Service work and improve.</li>
+<li><b>Basic usage data</b> — page visits and simple analytics, including IP address, browser/device type, referring page, and screen size, to help the Service work, prevent abuse, and improve.</li>
 </ul>
 
 <h2>How we use it</h2>
@@ -40,10 +40,10 @@ footer{margin-top:40px;color:var(--stone);font-size:.82rem;border-top:1px solid 
 <p>Information about your students is entered and controlled by you. Charleston processes it on your behalf to provide the Service. We do not sell it or use it for advertising.</p>
 
 <h2>Sharing</h2>
-<p>We don't sell your data. We share it only with the service providers needed to run Charleston (payments, hosting, email) and where required by law.</p>
+<p>We don't sell your data. We share it only with the service providers needed to run Charleston — Stripe (payments), Supabase (database), Render (hosting), and Resend (transactional email) — and where required by law.</p>
 
 <h2>Cookies</h2>
-<p>We use a single sign-in session cookie to keep you logged in. We don't use third-party advertising cookies.</p>
+<p>We use a sign-in session cookie to keep you logged in. On public booking and inquiry pages we also set a first-party visitor cookie to count unique visits, and, if you arrive through a referral link, a short-lived referral cookie. We don't use third-party advertising cookies.</p>
 
 <h2>Security and retention</h2>
 <p>Passwords are hashed, connections are encrypted in transit, and access is scoped per studio. We keep your data while your account is active; you can request export or deletion by contacting us.</p>
