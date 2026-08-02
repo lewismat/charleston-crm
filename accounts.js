@@ -11,7 +11,6 @@ const crypto = require('crypto');
 const router = express.Router();
 const mail = require('./email');
 const sms = require('./sms');
-const billing = require('./billing');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -166,10 +165,10 @@ router.get('/api/auth/state', async (req, res) => {
     const u = currentUser(req);
     let sub = 'none', active = false, exists = true;
     if (u) {
-      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug,created_at&limit=1`);
+      try { const rows = await sb(`accounts?id=eq.${enc(u.id)}&select=subscription_status,slug&limit=1`);
         if (rows && rows[0]) {
           sub = rows[0].subscription_status || 'none';
-          active = billing.acctActive(rows[0]); // active/trialing OR still inside the 14-day signup grace
+          active = sub === 'active' || sub === 'trialing';
           u.slug = rows[0].slug || null;
         } else { exists = false; }
       } catch (e) {}

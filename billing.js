@@ -79,33 +79,8 @@ router.get('/api/billing/plans', async (req, res) => {
 // its 14-day free trial by adding a card at signup (Stripe trial_period_days:14),
 // which then charges $9.99 automatically the moment the trial ends — no lapse,
 // no second step. 'trialing' therefore already means "card on file, in trial".
-const TRIAL_DAYS = 14;
-// Days left in the signup grace window (from accounts.created_at). New studios
-// get 14 days to use the app before a card is required — this is what lets a
-// fresh signup reach the dashboard, matching the signup/paywall promise.
-function trialDaysLeft(a) {
-  if (!a || !a.created_at) return 0;
-  const started = new Date(a.created_at).getTime();
-  if (!started) return 0;
-  const used = Math.floor((Date.now() - started) / 86400000);
-  return Math.max(0, TRIAL_DAYS - used);
-}
-// When (if ever) the grace window ends, as an ISO string — for display only.
-function graceTrialEndsAt(a) {
-  if (!a || !a.created_at) return null;
-  const started = new Date(a.created_at).getTime();
-  if (!started) return null;
-  return new Date(started + TRIAL_DAYS * 86400000).toISOString();
-}
-function inTrial(a) {
-  if (!a) return false;
-  if (a.subscription_status === 'trialing') return true;
-  // Brand-new studio, no card yet: still inside its free grace window.
-  const s = a.subscription_status;
-  if ((!s || s === 'none') && trialDaysLeft(a) > 0) return true;
-  return false;
-}
-function acctActive(a) { return !!(a && (ACTIVE.has(a.subscription_status) || inTrial(a))); }
+function inTrial(a) { return !!(a && a.subscription_status === 'trialing'); }
+function acctActive(a) { return !!(a && ACTIVE.has(a.subscription_status)); }
 async function subscriptionActive(accountId) {
   try { const a = await accountById(accountId); return acctActive(a); }
   catch { return false; }
@@ -229,8 +204,8 @@ router.get('/api/billing/status', auth.requireAuth, async (req, res) => {
   try {
     const a = await accountById(req.account.id);
     res.json({ ok: true, status: (a && a.subscription_status) || 'none',
-      active: acctActive(a), trial: inTrial(a), trialDaysLeft: trialDaysLeft(a),
-      trialEndsAt: inTrial(a) ? ((a && a.subscription_period_end) || graceTrialEndsAt(a)) : null,
+      active: acctActive(a), trial: inTrial(a),
+      trialEndsAt: inTrial(a) ? ((a && a.subscription_period_end) || null) : null,
       periodEnd: (a && a.subscription_period_end) || null,
       hasCustomer: !!(a && a.stripe_customer_id) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
@@ -346,4 +321,4 @@ async function handleWebhook(req, res) {
 }
 
 router.inTrial = inTrial; router.acctActive = acctActive;
-module.exports = { router, requireSubscription, subscriptionActive, acctActive, inTrial, trialDaysLeft, accountById, handleWebhook, ACTIVE };
+module.exports = { router, requireSubscription, subscriptionActive, acctActive, accountById, handleWebhook, ACTIVE };
