@@ -1,30 +1,15 @@
+// Resolve the notification inbox for a studio. Without an owner id we must NOT
+// run an unscoped query — that would return an arbitrary studio's address and
+// leak one studio's booking to another. Fall back to the platform inbox only.
 async function ownerEmail(oid) {
+  if (!oid) return NOTIFY_EMAIL;
   try {
-    const rows = await sb(oid ? `settings?${oidF(oid)}&select=notify_email&limit=1` : 'settings?select=notify_email&limit=1');
+    const rows = await sb(`settings?${oidF(oid)}&select=notify_email&limit=1`);
     const v = rows && rows[0] && rows[0].notify_email;
     if (v) return v;
   } catch (e) { /* fall through */ }
-  try { if (oid) { const a = await sb(`accounts?id=eq.${encodeURIComponent(oid)}&select=email&limit=1`); if (a && a[0] && a[0].email) return a[0].email; } } catch (e) {}
+  try { const a = await sb(`accounts?id=eq.${encodeURIComponent(oid)}&select=email&limit=1`); if (a && a[0] && a[0].email) return a[0].email; } catch (e) {}
   return NOTIFY_EMAIL;
-}
-
-async function tellHolly(subject, fields) {
-  const to = await ownerEmail();
-  // Resend first: it is already verified for guest confirmations.
-  try {
-    const r = await mail.ownerAlert(to, subject, fields);
-    if (r && r.ok) return;
-  } catch (e) { console.error('[booking] owner alert via Resend:', e.message); }
-  // Fallback: formsubmit (needs a one-time activation click from the recipient).
-  try {
-    await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ _subject: subject, ...fields }),
-    });
-  } catch (e) {
-    console.error('[booking] Holly notification failed:', e.message);
-  }
 }
 
 /**
@@ -52,7 +37,7 @@ const SUPABASE_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 const DASH_PASS = process.env.DASHBOARD_PASSWORD;
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hollymahj@outlook.com';
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
 const SITE_URL = (process.env.SITE_URL || 'https://charlestoncrm.com').replace(/\/$/, '');
 const OFFER_HOURS = parseInt(process.env.OFFER_HOURS, 10) || 24;
 
