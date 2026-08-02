@@ -331,7 +331,7 @@ const PAYMSG={
   missing:'We could not match that checkout to a reservation. If you were charged, email your teacher, who will sort it out right away.',
   oversold:'Your payment went through but that seat was taken in the meantime. Your teacher has been alerted and will contact you today to rebook or refund you.',
   unconfigured:'Online payment is not switched on for this event yet. Please text your teacher to reserve.',
-  error:'Something went wrong finishing that reservation. If you were charged, email your teacher — she has been alerted.',
+  error:'Something went wrong finishing that reservation. If you were charged, email your teacher, who has been alerted.',
   done:'That reservation is already confirmed.'
 };
 function showFlash(){
@@ -412,7 +412,7 @@ function render(){
   if(!visible().length){
     document.getElementById('panel').innerHTML=
       `<div class="panel"><p class="empty">No open times listed right now.<br>
-       Tell your teacher what you have in mind on the <a href="/">inquiry form</a> and she will open a date for you.</p></div>`;
+       Tell your teacher what you have in mind on the <a href="/">inquiry form</a> and they will open a date for you.</p></div>`;
     return;
   }
   renderPanel(map);
@@ -567,7 +567,7 @@ function confirmed(s,d){
     <h3>Mahjong.</h3>
     <p><strong>${LABEL[s.slot_type]}</strong> — ${longDate(selDay)} at ${time(s.starts_at)}</p>
     ${s.location?`<p>${esc(s.location)}</p>`:''}
-    <p>your teacher has your details. Check your email for the confirmation.</p>
+    <p>Your teacher has your details. Check your email for the confirmation.</p>
     <div class="donebtns">
       <a class="ghost" href="${d.manage_url}/google" target="_blank" rel="noopener">Add to Google Calendar</a>
       <a class="ghost" href="${d.manage_url}/calendar.ics">Apple / Outlook (.ics)</a>
