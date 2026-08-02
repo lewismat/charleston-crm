@@ -2,8 +2,10 @@
  * invoices.js — Charleston: text-to-invoice + payment tracking.
  * Invoices are stored as JSON in the existing app_config table (owner-scoped by
  * key prefix), so no schema migration is required. Card payments use the studio's
- * own Stripe key (settings.stripe_secret_key) when connected — so funds go to the
- * teacher — falling back to the platform key in test mode.
+ * own Stripe key (settings.stripe_secret_key) so funds go to that teacher. If a
+ * studio has not connected its own Stripe, no card option is offered (the
+ * customer is told to contact the studio) — payments never route to the
+ * platform owner's Stripe account.
  */
 const express = require('express');
 const path = require('path');
@@ -43,7 +45,10 @@ async function cfgList(prefix) { const r = await sb(`app_config?key=like.${prefi
 async function loadInv(owner, id) { const v = await cfgGet(`inv:${owner}:${id}`); return v ? JSON.parse(v) : null; }
 async function saveInv(inv) { await cfgSet(`inv:${inv.owner}:${inv.id}`, JSON.stringify(inv)); }
 async function resolveToken(token) { const v = await cfgGet(`invref:${token}`); if (!v) return null; const i = v.indexOf(':'); return { owner: v.slice(0, i), id: v.slice(i + 1) }; }
-async function ownerStripeKey(owner) { try { const s = await sb(`settings?owner_id=eq.${enc(owner)}&select=stripe_secret_key&limit=1`); if (s && s[0] && s[0].stripe_secret_key) return s[0].stripe_secret_key; } catch (e) {} return PLATFORM_STRIPE; }
+// Customer invoice payments ALWAYS use the studio's OWN Stripe key so funds go
+// to that teacher. Never fall back to the platform key, or one studio's invoice
+// would be paid into the platform owner's Stripe account.
+async function ownerStripeKey(owner) { try { const s = await sb(`settings?owner_id=eq.${enc(owner)}&select=stripe_secret_key&limit=1`); if (s && s[0] && s[0].stripe_secret_key) return s[0].stripe_secret_key; } catch (e) {} return ''; }
 async function ownerStripePk(owner) { try { const s = await sb(`settings?owner_id=eq.${enc(owner)}&select=stripe_publishable_key&limit=1`); return (s && s[0] && s[0].stripe_publishable_key) || ''; } catch (e) { return ''; } }
 
 function recompute(inv) {
@@ -135,7 +140,7 @@ router.get('/api/pi/:token', async (req, res) => {
     const ref = await resolveToken(req.params.token); if (!ref) return res.status(404).json({ ok: false });
     const inv = await loadInv(ref.owner, ref.id); if (!inv) return res.status(404).json({ ok: false });
     let studio = { name: '', logo: '' }, hasStripe = false;
-    try { const s = await sb(`settings?owner_id=eq.${enc(ref.owner)}&select=business_name,business_logo,stripe_secret_key&limit=1`); const row = (s && s[0]) || {}; studio = { name: row.business_name || '', logo: row.business_logo || '' }; hasStripe = !!(row.stripe_secret_key || PLATFORM_STRIPE); } catch (e) {}
+    try { const s = await sb(`settings?owner_id=eq.${enc(ref.owner)}&select=business_name,business_logo,stripe_secret_key&limit=1`); const row = (s && s[0]) || {}; studio = { name: row.business_name || '', logo: row.business_logo || '' }; hasStripe = !!row.stripe_secret_key; } catch (e) {}
     res.json({ ok: true, number: inv.number, customer: { name: inv.customer.name }, items: inv.items, amount: inv.amount, currency: inv.currency, dueDate: inv.dueDate, notes: inv.notes, status: inv.status, paidTotal: inv.paidTotal || 0, paidAt: inv.paidAt || null, createdAt: inv.createdAt, studio, canPay: hasStripe && inv.status !== 'paid' });
   } catch (e) { res.status(500).json({ ok: false }); }
 });
