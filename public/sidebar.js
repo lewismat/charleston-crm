@@ -73,7 +73,7 @@
       item('/profile','profile','Profile')+
     '</nav>'+
     '<div class="sb-bottom">'+
-      '<a href="/account"'+(path==='/account'?' class="active"':'')+'><span class="sb-ico">'+svg('account')+'</span><span class="lbl">Billing</span></a>'+'<a href="/settings"'+(path==='/settings'?' class="active"':'')+'><span class="sb-ico">'+svg('settings')+'</span><span class="lbl">Settings</span></a>'+
+      '<a href="/settings"'+(path==='/settings'?' class="active"':'')+'><span class="sb-ico">'+svg('settings')+'</span><span class="lbl">Settings</span></a>'+
       '<a id="sbLogout"><span class="sb-ico">'+svg('logout')+'</span><span class="lbl">Log out</span></a>'+
     '</div>';
   document.body.insertBefore(sb,document.body.firstChild);
