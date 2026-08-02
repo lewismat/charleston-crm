@@ -227,8 +227,8 @@ async function sweepPendingHolds() {
     for (const p of (stale || [])) {
       await sb(`pending_bookings?id=eq.${p.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ status: 'expired' }) }).catch(() => {});
-      const [sl] = await sb(`slots?select=seats_held&id=eq.${p.slot_id}`).catch(() => []);
-      if (sl) await sb(`slots?id=eq.${p.slot_id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
+      const [sl] = await sb(`slots?select=seats_held&id=eq.${encodeURIComponent(p.slot_id)}`).catch(() => []);
+      if (sl) await sb(`slots?id=eq.${encodeURIComponent(p.slot_id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ seats_held: Math.max(0, (sl.seats_held || 0) - p.seats) }) }).catch(() => {});
     }
   } catch (e) { console.error('[booking] sweepPendingHolds:', e.message); }
@@ -387,7 +387,7 @@ async function finalizeBooking(slot_id, seats, payload, paidCents) {
   });
   if (!result?.ok) return { ok: false, error: result?.error || 'That time just filled up.' };
 
-  const [slot] = await sb(`slots?select=*&id=eq.${slot_id}`);
+  const [slot] = await sb(`slots?select=*&id=eq.${encodeURIComponent(slot_id)}`);
   if (slot && slot.owner_id && result.manage_token) {
     await sb(`bookings?manage_token=eq.${encodeURIComponent(result.manage_token)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: slot.owner_id }) }).catch(() => {});
   }
@@ -432,7 +432,7 @@ router.post('/api/book', async (req, res) => {
       headcount: clean(String(b.headcount ?? ''), 10),
     };
 
-    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}&${oidF(oid)}`);
+    const [slot] = await sb(`slots?select=*&id=eq.${encodeURIComponent(b.slot_id)}&${oidF(oid)}`);
     if (!slot) return res.status(404).json({ error: 'That event is no longer on the calendar.' });
 
     const price = Math.max(0, parseInt(slot.price_cents, 10) || 0);
@@ -527,8 +527,8 @@ router.get('/api/book/complete', async (req, res) => {
     }
 
     // Release the hold first so book_slot sees the seat as available.
-    const [cur] = await sb(`slots?select=seats_held&id=eq.${pend.slot_id}`).catch(() => []);
-    if (cur) await sb(`slots?id=eq.${pend.slot_id}`, {
+    const [cur] = await sb(`slots?select=seats_held&id=eq.${encodeURIComponent(pend.slot_id)}`).catch(() => []);
+    if (cur) await sb(`slots?id=eq.${encodeURIComponent(pend.slot_id)}`, {
       method: 'PATCH', headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ seats_held: Math.max(0, (cur.seats_held || 0) - pend.seats) }),
     }).catch(() => {});
@@ -580,7 +580,7 @@ router.post('/api/waitlist', async (req, res) => {
     if (!result?.ok) return res.status(409).json({ error: result.error });
     if (result.token) sb(`waitlist?token=eq.${encodeURIComponent(result.token)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ owner_id: oid }) }).catch(() => {});
 
-    const [slot] = await sb(`slots?select=*&id=eq.${b.slot_id}&${oidF(oid)}`);
+    const [slot] = await sb(`slots?select=*&id=eq.${encodeURIComponent(b.slot_id)}&${oidF(oid)}`);
 
     if (!result.already) {
       mail.setBrand(await studioName(oid));
@@ -623,7 +623,7 @@ router.get('/api/waitlist/:token', async (req, res) => {
     let position = null;
     if (w.status === 'waiting' || w.status === 'offered') {
       const line = await sb(
-        `waitlist?select=created_at&slot_id=eq.${w.slot_id}&status=in.(waiting,offered)&created_at=lte.${encodeURIComponent(w.created_at)}`
+        `waitlist?select=created_at&slot_id=eq.${encodeURIComponent(w.slot_id)}&status=in.(waiting,offered)&created_at=lte.${encodeURIComponent(w.created_at)}`
       );
       position = line.length;
     }

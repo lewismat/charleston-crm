@@ -44,6 +44,9 @@ async function sb(pathname, opts = {}) {
   return data;
 }
 const enc = (v) => encodeURIComponent(v);
+// PostgREST value that is also safe inside an or=(...)/ilike group: encode the
+// grouping chars encodeURIComponent leaves alone so a value can't break out.
+const pgv = (v) => encodeURIComponent(String(v)).replace(/[()*]/g, (c) => '%' + c.charCodeAt(0).toString(16));
 const clean = (v, max = 500) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'hello@charlestoncrm.com';
@@ -202,7 +205,7 @@ router.post('/api/auth/login', async (req, res) => {
   try {
     const id = clean(req.body.identifier, 200).toLowerCase(), password = String(req.body.password || '');
     if (!id || !password) return res.status(400).json({ ok: false, error: 'Enter your login and password.' });
-    const rows = await sb(`accounts?or=(email.eq.${enc(id)},username.eq.${enc(id)})&limit=1`);
+    const rows = await sb(`accounts?or=(email.eq.${pgv(id)},username.eq.${pgv(id)})&limit=1`);
     const acct = rows && rows[0];
     if (!acct || !acct.active || !verifyPassword(password, acct.password_hash))
       return res.status(401).json({ ok: false, error: 'Wrong login or password.' });
@@ -249,7 +252,7 @@ router.post('/api/auth/register', async (req, res) => {
     // email/username already taken? If it's the same person re-signing-up (same
     // password) and they haven't finished paying, just log them back in and resume
     // — an account created at signup shouldn't lock them out.
-    const dupe = await sb(`accounts?or=(email.eq.${enc(email)},username.eq.${enc(username)})&select=id,email,name,role,active,password_hash,subscription_status&limit=1`);
+    const dupe = await sb(`accounts?or=(email.eq.${pgv(email)},username.eq.${pgv(username)})&select=id,email,name,role,active,password_hash,subscription_status&limit=1`);
     if (dupe && dupe.length) {
       const ex = dupe[0];
       if (ex.email === email && ex.active !== false && verifyPassword(password, ex.password_hash)) {
@@ -367,7 +370,7 @@ router.get('/api/auth/google/callback', async (req, res) => {
 });
 
 /* ================= STAFF (owner manages) ================= */
-router.get('/api/staff', requireAuth, requireSub, async (req, res) => {
+router.get('/api/staff', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const rows = await sb(`accounts?${oidF(ownerId(req))}&select=id,name,email,username,role,active,last_login,created_at&order=created_at.asc`);
     res.json({ ok: true, staff: rows });
@@ -397,7 +400,7 @@ router.get('/api/profile', async (req, res) => {
     res.json({ ok: true, profile: (rows && rows[0]) || { id: oid } });
   } catch (e) { (console.error('[accounts.js]', e && e.message), res.status(500).json({ ok: false, error: 'Something went wrong on our end. Please try again.' })); }
 });
-router.put('/api/profile', requireAuth, requireSub, async (req, res) => {
+router.put('/api/profile', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const patch = { updated_at: new Date().toISOString() };
     for (const f of PROFILE_FIELDS) if (f in req.body) patch[f] = clean(req.body[f], f === 'photo_url' ? 4000000 : 4000);
@@ -428,7 +431,7 @@ router.get('/api/students', requireAuth, requireSub, async (req, res) => {
     let filters = 'select=*';
     if (q) {
       const like = `*${q}*`;
-      filters += `&or=(first_name.ilike.${enc(like)},last_name.ilike.${enc(like)},email.ilike.${enc(like)},tags.ilike.${enc(like)})`;
+      filters += `&or=(first_name.ilike.${pgv(like)},last_name.ilike.${pgv(like)},email.ilike.${pgv(like)},tags.ilike.${pgv(like)})`;
     }
     if (status) filters += `&status=eq.${status}`;
     filters += `&${oidF(ownerId(req))}&archived=eq.false&order=updated_at.desc&limit=500`;
@@ -820,7 +823,7 @@ router.get('/api/inquiry-config', async (req, res) => {
     res.json({ ok: true, config: (rows && rows[0] && rows[0].inquiry_config) || {} });
   } catch (e) { res.json({ ok: true, config: {} }); }
 });
-router.put('/api/inquiry-config', requireAuth, requireSub, async (req, res) => {
+router.put('/api/inquiry-config', requireAuth, requireSub, requireOwner, async (req, res) => {
   try {
     const b = req.body || {};
     const cfg = {
