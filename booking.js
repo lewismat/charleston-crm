@@ -184,6 +184,29 @@ const fmt = (d) => new Date(d).toLocaleString('en-US', {
   timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short',
 });
 
+// Times are displayed in this zone everywhere; keep repeats/copies on the same
+// wall-clock time even across a daylight-saving boundary.
+const DISPLAY_TZ = 'America/New_York';
+function tzOffsetMs(utcMs, tz) {
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(new Date(utcMs)).reduce((o, x) => { if (x.type !== 'literal') o[x.type] = +x.value; return o; }, {});
+  const asUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+  return asUTC - utcMs;
+}
+// Add `days` calendar days to an instant, holding the wall-clock time in `tz`.
+function addDaysInTz(instant, days, tz) {
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(new Date(instant)).reduce((o, x) => { if (x.type !== 'literal') o[x.type] = +x.value; return o; }, {});
+  const guess = Date.UTC(p.year, p.month - 1, p.day + days, p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+  return new Date(guess - tzOffsetMs(guess, tz));
+}
+
 // Holly's notifications keep going through FormSubmit — already working, already activated.
 /* ---------------- Stripe (paid bookings) ---------------- */
 async function getStripeKey(oid) {
@@ -759,7 +782,7 @@ router.post('/api/admin/slots/:id/duplicate', auth.requireAuth, async (req, res)
   try {
     const [src] = await sb(`slots?select=*&id=eq.${encodeURIComponent(req.params.id)}&${oidF(ownerId(req))}`);
     if (!src) return res.status(404).json({ error: 'That event is no longer here.' });
-    const when = req.body && req.body.starts_at ? new Date(req.body.starts_at) : new Date(new Date(src.starts_at).getTime() + 7 * 864e5);
+    const when = req.body && req.body.starts_at ? new Date(req.body.starts_at) : addDaysInTz(src.starts_at, 7, DISPLAY_TZ);
     if (isNaN(when)) return res.status(400).json({ error: 'That date did not make sense.' });
     const [copy] = await sb('slots', {
       method: 'POST',
@@ -948,8 +971,7 @@ router.post('/api/admin/slots', auth.requireAuth, async (req, res) => {
     const weeks = Math.min(52, Math.max(1, parseInt(b.repeat_weeks, 10) || 1));
     const rows = [];
     for (let i = 0; i < weeks; i++) {
-      const d = new Date(b.starts_at);
-      d.setDate(d.getDate() + i * 7);
+      const d = addDaysInTz(b.starts_at, i * 7, DISPLAY_TZ);
       rows.push({ ...base, starts_at: d.toISOString() });
     }
     const created = await sb('slots', { method: 'POST', body: JSON.stringify(rows) });
